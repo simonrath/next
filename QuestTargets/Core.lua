@@ -479,6 +479,7 @@ function Core.ReadQuests(watchedOnly)
     local result, seen, pending = {}, {}, false
     local count = modern and api.GetNumQuestLogEntries() or GetNumQuestLogEntries()
     if not readable(count) or type(count) ~= "number" then return {}, NS.L("logPending") end
+    local zone
     for index = 1, count do
         local info
         if modern then
@@ -487,7 +488,10 @@ function Core.ReadQuests(watchedOnly)
             local title, _, _, isHeader, _, complete, _, questID = GetQuestLogTitle(index)
             info = {title = title, isHeader = isHeader, questID = questID, complete = complete}
         end
-        if info and readable(info.questID) and readable(info.isHeader) and not info.isHeader
+        if info and readable(info.isHeader) and info.isHeader then
+            local heading = Core.Clean(info.title)
+            zone = heading ~= "" and heading or nil
+        elseif info and readable(info.questID) and readable(info.isHeader) and not info.isHeader
             and type(info.questID) == "number" and info.questID > 0 and not seen[info.questID] then
             seen[info.questID] = true
             local included = true
@@ -510,7 +514,8 @@ function Core.ReadQuests(watchedOnly)
                     local ok, value = pcall(api.IsComplete, info.questID)
                     ready = ok and readable(value) and value == true
                 end
-                local quest = {id = info.questID, title = Core.Clean(info.title), objectives = {}, typeCounts = {}, ready = ready}
+                local quest = {id = info.questID, title = Core.Clean(info.title), zone = zone,
+                    objectives = {}, typeCounts = {}, ready = ready}
                 if quest.title == "" then quest.title = "Quest " .. info.questID end
                 if type(objectives) == "table" then
                     for objectiveIndex, source in ipairs(objectives) do

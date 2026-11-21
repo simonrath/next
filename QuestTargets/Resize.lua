@@ -10,10 +10,12 @@ function UI.LayoutWindow(app)
     if InCombatLockdown() then return end
     local width, height = UI.frame:GetWidth(), UI.frame:GetHeight()
     UI.PAGE_SIZE = math.max(2, math.min(20, math.floor((height - 120) / 39)))
-    for _, row in ipairs(UI.rows) do
+    for index, row in ipairs(UI.rows) do
         row:SetWidth(width - 44)
         row.nameText:SetWidth(width - 77)
         row.detail:SetWidth(width - 77)
+        UI.zoneHeaders[index]:SetWidth(width - 44)
+        UI.zoneHeaders[index].caption:SetWidth(width - 47)
     end
     UI.database:SetWidth(width - 169)
     UI.empty:SetWidth(width - 48)

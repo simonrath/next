@@ -6,7 +6,7 @@ import test_quest_targets as addon
 class CommandsPopupTests(unittest.TestCase):
     setUp = addon.QuestTargetsTests.setUp
 
-    def test_feedback_popup_inserts_reusable_qr_with_localized_phone_hint(self):
+    def test_feedback_popup_places_localized_instructions_next_to_their_controls(self):
         self.lua.execute('''
             StaticPopupDialogs={}
             StaticPopup_Show=function(key, a, b, data, inserted)
@@ -16,11 +16,13 @@ class CommandsPopupTests(unittest.TestCase):
             assert(qr, 'feedback QR missing from copy-link popup')
             assert(qr.code.texture=='Interface\\\\AddOns\\\\QuestTargets\\\\Textures\\\\FeedbackQR')
             assert(qr.code.width==256 and qr.code.height==256)
-            assert(qr.hint.text==NS.L('feedbackQRHint'))
+            assert(qr.hint.text==NS.L('feedbackLink'))
+            assert(qr.hint.point[2]==qr.code and qr.hint.point[3]=='BOTTOM')
+            assert(StaticPopupDialogs.QUESTTARGETS_FEEDBACK_LINK.text==NS.L('feedbackQRHint'))
             local original=qr
             NS.app.db.language='deDE'; NS.UI.FeedbackLink()
-            assert(qr==original and qr.hint.text==NS.L('feedbackQRHint'))
-            assert(qr.hint.text:find('Handy',1,true))
+            assert(qr==original and qr.hint.text==NS.L('feedbackLink'))
+            assert(StaticPopupDialogs.QUESTTARGETS_FEEDBACK_LINK.text:find('Handy',1,true))
             assert(StaticPopupDialogs.QUESTTARGETS_FEEDBACK_LINK.hasEditBox)
         ''')
 

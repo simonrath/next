@@ -23,6 +23,7 @@ foreach ($locale in $locales) {
     $previous = $null
     $sections = 0
     $items = 0
+    $hasParagraph = $false
     $lines.Add("    $locale = {")
     foreach ($line in [IO.File]::ReadLines((Join-Path $root $relativePath))) {
         if ($line -match '^## (\d+\.\d+\.\d+) . (.+)$') {
@@ -42,6 +43,7 @@ foreach ($locale in $locales) {
             $lines.Add(('        {{ version = {0}, date = {1}, sections = {{' -f (LuaString $number), (LuaString $date)))
             $sections = 0
             $items = 0
+            $hasParagraph = $false
         } elseif ($null -ne $previous -and $line -match '^### (.+)$') {
             if ($sections -gt 0) {
                 if ($items -eq 0) { throw "$($relativePath): empty section before $line" }
@@ -51,9 +53,15 @@ foreach ($locale in $locales) {
             $lines.Add(('                {{ title = {0}, items = {{' -f (LuaString $Matches[1])))
             $sections += 1
             $items = 0
+            $hasParagraph = $false
         } elseif ($sections -gt 0 -and $line -match '^- (.+)$') {
+            if ($hasParagraph) { throw "$($relativePath): bullets must precede the section paragraph." }
             $lines.Add(('                    {0},' -f (LuaString $Matches[1])))
             $items += 1
+        } elseif ($items -gt 0 -and -not $hasParagraph -and $line -match '^([^#\s-].*)$') {
+            $lines.Add(('                    paragraph = {0},' -f (LuaString $Matches[1])))
+            $hasParagraph = $true
+            $shape.Add('paragraph')
         } elseif ($null -ne $previous -and $line.Trim()) {
             throw "$($relativePath): unexpected changelog line: $line"
         }

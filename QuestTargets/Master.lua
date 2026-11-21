@@ -86,6 +86,77 @@ local function updateBarDecoration(app, master, first, count, vertical, spacing)
     if not border:IsShown() then border:Show() end
 end
 
+local function applyBarInput(button, locked)
+    if button.barInputLocked == locked then return end
+    button.barInputLocked = locked
+    if locked then button:RegisterForDrag() else button:RegisterForDrag("RightButton") end
+    if button.SetPassThroughButtons then
+        if locked then pcall(button.SetPassThroughButtons, button, "RightButton")
+        else pcall(button.SetPassThroughButtons, button) end
+    end
+end
+
+local function layoutBarLock(app, first, last)
+    local hover = UI.barLockHover
+    if not first then
+        if hover then hover:Hide(); UI.barLock:Hide() end
+        return
+    end
+    if not hover then
+        hover = CreateFrame("Frame", nil, UIParent)
+        UI.barLockHover = hover
+        local lock = CreateFrame("Button", nil, hover)
+        UI.barLock = lock
+        lock:SetSize(22, 26)
+        lock:SetFrameStrata("HIGH")
+        lock:SetPoint("CENTER", hover, "TOPLEFT", -3, 3)
+        lock:SetNormalAtlas("QuestSharing-Padlock")
+        lock:Hide()
+        lock:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+            GameTooltip:SetText(L(app.db.masterLocked and "masterUnlock" or "masterLock"))
+            GameTooltip:Show()
+        end)
+        lock:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        lock:SetScript("OnHide", function() GameTooltip:Hide() end)
+        lock:SetScript("OnClick", function(self)
+            if not IsShiftKeyDown() or InCombatLockdown() then return end
+            UI.SetTargetBarLocked(app, not app.db.masterLocked)
+            self:GetScript("OnEnter")(self)
+        end)
+        hover:SetScript("OnUpdate", function(self)
+            local shown = not InCombatLockdown() and not UI.masterMoveActive
+                and not UI.master.moving and IsShiftKeyDown()
+                and (self:IsMouseOver() or (lock:IsShown() and lock:IsMouseOver()))
+            if lock:IsShown() ~= shown then lock:SetShown(shown) end
+        end)
+    end
+    if hover.first ~= first or hover.last ~= last then
+        hover:ClearAllPoints()
+        hover:SetPoint("TOPLEFT", first, "TOPLEFT")
+        hover:SetPoint("BOTTOMRIGHT", last, "BOTTOMRIGHT")
+        hover.first, hover.last = first, last
+    end
+    if hover.locked ~= app.db.masterLocked then
+        hover.locked = app.db.masterLocked
+        local icon = UI.barLock:GetNormalTexture()
+        icon:SetDesaturated(not hover.locked)
+        icon:SetAlpha(hover.locked and 1 or 0.65)
+    end
+    hover:Show()
+end
+
+function UI.SetTargetBarLocked(app, locked)
+    if InCombatLockdown() then return end
+    app.db.masterLocked = locked
+    if UI.master and UI.master.moving then
+        UI.master.pendingStop = true
+        UI.StopMaster(app)
+    end
+    UI.LayoutTargetButtons(app)
+    UI.UpdateMasterSettings(app)
+end
+
 function UI.LayoutTargetButtons(app)
     local master = UI.master
     if not master or InCombatLockdown() then return end
@@ -97,9 +168,12 @@ function UI.LayoutTargetButtons(app)
     local first = previous
     local count = masterShown and 1 or 0
     local barWidth, barHeight = 0, 0
+    local locked = app.db.masterLocked == true
+    applyBarInput(master, locked)
     if masterShown then barWidth, barHeight = width, height end
     local function place(button)
         if not button then return end
+        applyBarInput(button, locked)
         count = count + 1
         first = first or button
         local anchor = previous or master
@@ -137,6 +211,7 @@ function UI.LayoutTargetButtons(app)
     master.barWidth, master.barHeight = barWidth, barHeight
     master.barOffsetX, master.barOffsetY = offsetX, offsetY
     updateBarDecoration(app, master, first, count, vertical, spacing)
+    layoutBarLock(app, first, previous)
     if changed and UI.masterMoveActive then
         if barWidth == 0 then UI.EndMasterMove(app, false)
         else UI.UpdateMasterMove(app) end
@@ -167,6 +242,7 @@ function UI.RenderMaster(app)
             frame:SetPoint("CENTER", UIParent, "CENTER", 0, -180)
         end
         frame:SetScript("OnDragStart", function(self)
+            if app.db.masterLocked then return end
             if UI.masterMoveActive then UI.StartMasterMoveDrag(app); return end
             if not InCombatLockdown() then
                 self.pendingStop = false
@@ -202,7 +278,7 @@ function UI.RenderMaster(app)
                 GameTooltip:AddLine(L("masterTip1"), 1, 1, 1, true)
                 GameTooltip:AddLine(L("masterTip3"), 0.75, 0.75, 0.75, true)
             end
-            GameTooltip:AddLine(L("masterTip2"), 1, 0.82, 0, true)
+            GameTooltip:AddLine(L(app.db.masterLocked and "masterLockTip" or "masterTip2"), 1, 0.82, 0, true)
             GameTooltip:Show()
         end)
         frame:SetScript("OnLeave", function() GameTooltip:Hide() end)

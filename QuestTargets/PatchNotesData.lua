@@ -2,6 +2,21 @@
 local _, NS = ...
 NS.PatchNotesData = {
     deDE = {
+        { version = "1.7.4", date = "21.11.2026", sections = {
+                { title = "Questliste", items = {
+                    "Die **Questliste** gruppiert Quests alphabetisch nach den Gebieten aus dem Questlog. Klicke außerhalb des Kampfes auf eine Gebietsüberschrift, um die Gruppe ein- oder auszuklappen. Die Auswahl wird pro Charakter gespeichert.",
+                }},
+                { title = "Zielleiste", items = {
+                    "**Position der Buttonleiste sperren** verhindert versehentliches Verschieben beim Rechtsziehen. Aktiviere die Sperre unter **Buttons → Zielleiste** oder halte außerhalb des Kampfes **Umschalt** über die Leiste und klicke auf das Schloss oben links.",
+                    paragraph = "Danke an **virtual_pip** für die Idee auf CurseForge!",
+                }},
+                { title = "Patchnotes-Fenster", items = {
+                    "Aktiviere **Künftige Patchnotes ausblenden** unten rechts, um das automatische Öffnen bei Updates zu überspringen. Unter **Optionen → AddOns → Quest Targets → Patchnotes** kannst du das Fenster weiterhin öffnen und die Einstellung zurücknehmen.",
+                }},
+                { title = "Feedback", items = {
+                    "Die **Scan-Anleitung** steht über dem QR-Code und der Hinweis zum Kopieren direkt über dem URL-Feld.",
+                }},
+            }},
         { version = "1.7.3", date = "20.11.2026", sections = {
                 { title = "Optionen", items = {
                     "Fehler in Blizzards **Kontaktoptionen** behoben.",
@@ -230,6 +245,21 @@ NS.PatchNotesData = {
             }},
     },
     enUS = {
+        { version = "1.7.4", date = "Nov 21, 2026", sections = {
+                { title = "Quest list", items = {
+                    "The **quest list** groups quests alphabetically by the zones in your quest log. Click a zone heading out of combat to collapse or expand it. Your choices are saved per character.",
+                }},
+                { title = "Targeting bar", items = {
+                    "**Lock button bar position** prevents accidental movement when right-dragging. Enable it under **Buttons → Targeting bar**, or hold **Shift** over the bar outside combat and click the lock in its top-left corner.",
+                    paragraph = "Thanks to **virtual_pip** for suggesting this on CurseForge!",
+                }},
+                { title = "Patch Notes window", items = {
+                    "Check **Don't show next Patch Notes** in the bottom-right corner to skip automatic opening after updates. Open **Options → AddOns → Quest Targets → Patch Notes** to read the notes or re-enable automatic opening.",
+                }},
+                { title = "Feedback", items = {
+                    "**Scanning instructions** appear above the QR code, and the copy instructions appear directly above the URL field.",
+                }},
+            }},
         { version = "1.7.3", date = "Nov 20, 2026", sections = {
                 { title = "Options", items = {
                     "Fixed an error in Blizzard's **Social settings**.",
@@ -458,6 +488,21 @@ NS.PatchNotesData = {
             }},
     },
     esES = {
+        { version = "1.7.4", date = "21 nov. 2026", sections = {
+                { title = "Lista de misiones", items = {
+                    "La **lista de misiones** agrupa las misiones por las zonas del registro en orden alfabético. Fuera de combate, haz clic en una zona para plegarla o desplegarla. La selección se guarda por personaje.",
+                }},
+                { title = "Barra de objetivos", items = {
+                    "**Bloquear la posición de la barra** evita que se mueva por accidente al arrastrar con el botón derecho. Activa la opción en **Botones → Barra de objetivos** o mantén pulsada **Mayús** sobre la barra fuera de combate y haz clic en el candado de arriba a la izquierda.",
+                    paragraph = "¡Gracias a **virtual_pip** por la sugerencia en CurseForge!",
+                }},
+                { title = "Ventana de notas del parche", items = {
+                    "Marca **No mostrar las próximas notas** abajo a la derecha para omitir la apertura automática tras las actualizaciones. Abre **Opciones → AddOns → Quest Targets → Notas del parche** para leerlas o volver a activar su apertura automática.",
+                }},
+                { title = "Comentarios", items = {
+                    "Las **instrucciones de escaneo** aparecen encima del código QR y las de copia justo encima del campo de la URL.",
+                }},
+            }},
         { version = "1.7.3", date = "20.11.2026", sections = {
                 { title = "Opciones", items = {
                     "Corregido un error en los **ajustes sociales** de Blizzard.",
@@ -686,6 +731,21 @@ NS.PatchNotesData = {
             }},
     },
     frFR = {
+        { version = "1.7.4", date = "21 nov. 2026", sections = {
+                { title = "Liste des quêtes", items = {
+                    "La **liste des quêtes** classe les quêtes par zone du journal, dans l’ordre alphabétique. Hors combat, cliquez sur une zone pour la replier ou la déplier. Vos choix sont enregistrés par personnage.",
+                }},
+                { title = "Barre de ciblage", items = {
+                    "**Verrouiller la position de la barre** évite de la déplacer par erreur avec le bouton droit. Activez cette option dans **Boutons → Barre de ciblage** ou maintenez **Maj** sur la barre hors combat et cliquez sur le cadenas en haut à gauche.",
+                    paragraph = "Merci à **virtual_pip** pour cette idée proposée sur CurseForge !",
+                }},
+                { title = "Fenêtre des notes de mise à jour", items = {
+                    "Cochez **Masquer les prochaines notes** en bas à droite pour désactiver leur ouverture automatique après les mises à jour. Ouvrez **Options → AddOns → Quest Targets → Notes de mise à jour** pour les consulter ou réactiver leur ouverture automatique.",
+                }},
+                { title = "Avis", items = {
+                    "Les **instructions de lecture** apparaissent au-dessus du code QR et les instructions de copie juste au-dessus du champ de l’URL.",
+                }},
+            }},
         { version = "1.7.3", date = "20.11.2026", sections = {
                 { title = "Options", items = {
                     "Correction d’une erreur dans les **options sociales** de Blizzard.",
@@ -914,6 +974,21 @@ NS.PatchNotesData = {
             }},
     },
     trTR = {
+        { version = "1.7.4", date = "21 Kas 2026", sections = {
+                { title = "Görev listesi", items = {
+                    "**Görev listesi**, görevleri günlüğündeki bölgelere göre alfabetik olarak gruplar. Savaş dışında bölge başlığına tıklayarak grubu daraltabilir veya genişletebilirsin. Seçimlerin karakter başına kaydedilir.",
+                }},
+                { title = "Hedef çubuğu", items = {
+                    "**Düğme çubuğunun konumunu kilitle** seçeneği, sağ tuşla sürüklerken çubuğun yanlışlıkla taşınmasını önler. **Düğmeler → Hedef çubuğu** altında açabilir veya savaş dışında çubuğun üzerinde **Shift** tuşunu basılı tutup sol üstteki kilide tıklayabilirsin.",
+                    paragraph = "CurseForge’daki önerisi için **virtual_pip**’e teşekkürler!",
+                }},
+                { title = "Yama notları penceresi", items = {
+                    "Güncellemelerden sonra pencerenin kendiliğinden açılmasını durdurmak için sağ alttaki **Sonraki yama notlarını gösterme** kutusunu işaretle. Notları okumak veya otomatik açılmayı yeniden etkinleştirmek için **Seçenekler → Eklentiler → Quest Targets → Yama Notları** bölümünü aç.",
+                }},
+                { title = "Geri bildirim", items = {
+                    "**Tarama talimatları** QR kodunun üzerinde, kopyalama talimatları ise adres alanının hemen üzerinde görünür.",
+                }},
+            }},
         { version = "1.7.3", date = "20.11.2026", sections = {
                 { title = "Seçenekler", items = {
                     "Blizzard’ın **sosyal ayarlarındaki** bir hata düzeltildi.",
@@ -1142,6 +1217,21 @@ NS.PatchNotesData = {
             }},
     },
     zhCN = {
+        { version = "1.7.4", date = "2026年11月21日", sections = {
+                { title = "任务列表", items = {
+                    "**任务列表**按任务日志中的区域名称排序并分组。非战斗状态下，点击区域标题可折叠或展开分组。设置按角色保存。",
+                }},
+                { title = "目标按钮栏", items = {
+                    "**锁定按钮栏位置**可防止右键拖动时误移按钮栏。在**按钮 → 目标按钮栏**中启用此选项，或在非战斗状态下将鼠标移到按钮栏上，按住 **Shift** 并点击左上角的锁。",
+                    paragraph = "感谢 **virtual_pip** 在 CurseForge 上提出这个建议！",
+                }},
+                { title = "更新说明窗口", items = {
+                    "勾选右下角的**不再自动显示更新说明**，更新后就不会自动打开窗口。你可以在**选项 → 插件 → Quest Targets → 更新说明**中手动查看或恢复自动打开。",
+                }},
+                { title = "反馈", items = {
+                    "**扫码说明**位于二维码上方，复制说明位于网址输入框正上方。",
+                }},
+            }},
         { version = "1.7.3", date = "2026年11月20日", sections = {
                 { title = "选项", items = {
                     "修复了暴雪**社交设置**中的一个错误。",

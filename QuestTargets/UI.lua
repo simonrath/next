@@ -455,7 +455,7 @@ function UI.Create(app)
     UI.database = label(frame, 132, -35, 113)
     local help = button(frame, "?", 24, function() app:Help() end)
     help:SetPoint("TOPRIGHT", -10, -30)
-    UI.rows = {}
+    UI.rows, UI.zoneHeaders = {}, {}
     for index = 1, 20 do
         local row = CreateFrame("Button", "QuestTargetsTarget" .. index, frame, "SecureActionButtonTemplate")
         row:SetPoint("TOPLEFT", 10, -62 - (index - 1) * 39)
@@ -518,6 +518,21 @@ function UI.Create(app)
         row:SetScript("OnLeave", function() GameTooltip:Hide() end)
         row:Hide()
         UI.rows[index] = row
+
+        local header = CreateFrame("Button", nil, frame)
+        header:SetPoint("TOPLEFT", 10, -62 - (index - 1) * 39)
+        header:SetSize(238, 36)
+        header.caption = label(header, 3, -10, 235, "GameFontNormal")
+        header:EnableMouseWheel(true)
+        header:SetScript("OnMouseWheel", function(_, delta) UI.ScrollQuests(app, -delta) end)
+        header:SetScript("OnClick", function(self)
+            if InCombatLockdown() or self.zoneKey == nil then return end
+            local collapsed = app.db.collapsedQuestZones
+            collapsed[self.zoneKey] = not collapsed[self.zoneKey] or nil
+            UI.Render(app)
+        end)
+        header:Hide()
+        UI.zoneHeaders[index] = header
     end
     UI.empty = label(frame, 14, -112, 234, "GameFontHighlight")
     UI.empty:SetJustifyH("CENTER")
@@ -586,7 +601,7 @@ function UI.FeedbackLink()
         frame:Hide()
         UI.feedbackQR = frame
     end
-    UI.feedbackQR.hint:SetText(L("feedbackQRHint"))
+    UI.feedbackQR.hint:SetText(L("feedbackLink"))
     local key = "QUESTTARGETS_FEEDBACK_LINK"
     local function selectLink(self)
         local box = self.GetEditBox and self:GetEditBox() or self.editBox or self.EditBox
@@ -594,7 +609,7 @@ function UI.FeedbackLink()
         return true
     end
     StaticPopupDialogs[key] = {
-        text = L("feedbackLink"),
+        text = L("feedbackQRHint"),
         button1 = L("selectLink"),
         button2 = OKAY or "OK",
         hasEditBox = true,
@@ -716,7 +731,7 @@ function UI.LayoutSettings(app)
     local panel, master = UI.settings, UI.masterSettings
     panel.pages, panel.tabs, panel.groups = {}, {}, {}
     local keys = {"general", "targetMarkers", "buttons", "hotkeys"}
-    local heights = {500, 340, 980, 310}
+    local heights = {500, 340, 1010, 310}
     panel.body = CreateFrame("Frame", nil, panel, "BackdropTemplate")
     panel.body:SetPoint("TOPLEFT", 8, -78)
     panel.body:SetPoint("BOTTOMRIGHT", -8, 8)
@@ -762,7 +777,7 @@ function UI.LayoutSettings(app)
     local language = settingsBox(general, "language", -350, 102)
     local marking = settingsBox(markers, "targetMarkers", -32, 292)
     local toggles = settingsBox(master, "buttons", -32, 334)
-    local bar = settingsBox(master, "targetBar", -390, 565)
+    local bar = settingsBox(master, "targetBar", -390, 595)
     local bindings = settingsBox(hotkeys, "hotkeys", -32, 271)
     panel.groups = {display, window, language, marking, toggles, bar, bindings}
     panel.displayText:Hide()
@@ -787,6 +802,7 @@ function UI.LayoutSettings(app)
     master.spacingControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -220)
     place(master.borderToggle, bar, 18, -389)
     place(master.dividersToggle, bar, 18, -419)
+    place(master.lockToggle, bar, 18, -449)
     place(panel.scaleControl, window, 22, -31)
     panel.scaleControl:SetPoint("TOPRIGHT", window, "TOPRIGHT", -22, -31)
     place(panel.languageDropdown, language, 2, -42)
@@ -798,9 +814,9 @@ function UI.LayoutSettings(app)
     end
     place(master.modernScaleControl, bar, 22, -305)
     master.modernScaleControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -305)
-    place(master.moveButton, bar, 18, -464)
-    place(master.moveHelp, bar, 18, -500)
-    master.moveHelp:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -18, -500)
+    place(master.moveButton, bar, 18, -494)
+    place(master.moveHelp, bar, 18, -530)
+    master.moveHelp:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -18, -530)
     panel.bindingHeaders = {}
     for slot = 1, 2 do
         local header = label(bindings, 0, 0, 160, "GameFontNormalSmall")
@@ -1214,6 +1230,8 @@ local function nativeSettings(app)
         function(value) app.db.masterBorder = value; app:Schedule() end)
     checkboxSetting("masterDividers", false, function() return app.db.masterDividers end,
         function(value) app.db.masterDividers = value; app:Schedule() end)
+    checkboxSetting("masterLocked", false, function() return app.db.masterLocked end,
+        function(value) UI.SetTargetBarLocked(app, value) end, "masterLockTip")
 
     sliderSetting("buttonSize", "masterModernScale", 0.3, 2, 0.01)
 
@@ -1534,6 +1552,9 @@ function UI.CreateMasterSettings(app, category)
     end)
 
     panel.modernScaleControl = settingsSlider(panel, "QuestTargetsMasterScaleSlider", "masterModernScale", 0.3, 2, 0.01, app)
+    panel.lockToggle = checkbox(panel, L("masterLocked"), function()
+        UI.SetTargetBarLocked(app, not app.db.masterLocked)
+    end)
 
     panel.moveButton = button(panel, L("masterMove"), 260, function() UI.BeginMasterMove(app) end)
     panel.moveHelp = label(panel, 20, -390, 500)
@@ -1554,6 +1575,8 @@ function UI.UpdateMasterSettings(app)
     panel.borderToggle:SetChecked(app.db.masterBorder)
     panel.dividersToggle.caption:SetText(L("masterDividers"))
     panel.dividersToggle:SetChecked(app.db.masterDividers)
+    panel.lockToggle.caption:SetText(L("masterLocked"))
+    panel.lockToggle:SetChecked(app.db.masterLocked)
     panel.modernScaleControl.caption:SetText(L("buttonSize"))
     panel.modernScaleControl:Refresh()
 end
@@ -1773,13 +1796,50 @@ function UI.OpenQuest(entry)
     end
 end
 
+local function questListRows(quests, entries, collapsed)
+    local zones, groups, headings = {}, {}, {}
+    for _, quest in ipairs(quests or {}) do zones[quest.id] = quest.zone end
+    for index, entry in ipairs(entries) do
+        local zone = zones[entry.questID] or ""
+        if not groups[zone] then
+            groups[zone] = {}
+            headings[#headings + 1] = zone
+        end
+        local group = groups[zone]
+        group[#group + 1] = {entry = entry, number = index}
+    end
+    if #headings == 1 and headings[1] == "" then return groups[""] end
+    table.sort(headings, function(a, b)
+        if a == "" then return false end
+        if b == "" then return true end
+        local lowerA, lowerB = a:lower(), b:lower()
+        if lowerA == lowerB then return a < b end
+        return lowerA < lowerB
+    end)
+    local rows, number = {}, 0
+    for _, zone in ipairs(headings) do
+        local folded = collapsed and collapsed[zone] == true
+        local title = zone ~= "" and zone or L("questZoneOther")
+        local group = groups[zone]
+        rows[#rows + 1] = {zoneKey = zone, title = (folded and "+  " or "−  ") .. title .. " (" .. #group .. ")"}
+        if not folded then
+            for index, item in ipairs(group) do
+                item.number = number + index
+                rows[#rows + 1] = item
+            end
+        end
+        number = number + #group
+    end
+    return rows
+end
+
 function UI.Render(app)
     assert(not InCombatLockdown(), "Quest Targets: protected update during combat")
     local scale = math.min(1, UIParent:GetHeight() / 410) * app.db.menuScale
     if UI.frame:GetScale() ~= scale then UI.frame:SetScale(scale) end
     local entries = NS.Core.QuestEntriesFor(app, false)
-    app.questEntries = entries
-    local maxOffset = math.max(0, #entries - UI.PAGE_SIZE)
+    app.questListRows = questListRows(app.quests, entries, app.db.collapsedQuestZones)
+    local maxOffset = math.max(0, #app.questListRows - UI.PAGE_SIZE)
     app.scrollOffset = math.max(0, math.min(maxOffset, app.scrollOffset or 0))
     UI.filter:SetText(app.db.watchedOnly and L("tracked") or L("all"))
     UI.scrollbar:SetMinMaxValues(0, maxOffset)
@@ -1793,16 +1853,21 @@ end
 
 function UI.ScrollQuests(app, delta)
     if InCombatLockdown() or not UI.scrollbar then return end
-    local maxOffset = math.max(0, #(app.questEntries or {}) - UI.PAGE_SIZE)
+    local maxOffset = math.max(0, #(app.questListRows or {}) - UI.PAGE_SIZE)
     local nextOffset = math.max(0, math.min(maxOffset, (app.scrollOffset or 0) + delta))
     UI.scrollbar:SetValue(nextOffset)
 end
 
 function UI.RenderRows(app)
     assert(not InCombatLockdown(), "Quest Targets: protected scroll during combat")
-    local entries = app.questEntries or {}
+    local entries = app.questListRows or {}
     for index, row in ipairs(UI.rows) do
-        local entry = index <= UI.PAGE_SIZE and entries[(app.scrollOffset or 0) + index] or nil
+        local item = index <= UI.PAGE_SIZE and entries[(app.scrollOffset or 0) + index] or nil
+        local entry = item and item.entry
+        local header = UI.zoneHeaders[index]
+        header.zoneKey = item and item.zoneKey
+        if header.zoneKey ~= nil then header.caption:SetText(item.title) end
+        header:SetShown(header.zoneKey ~= nil)
         row:SetAttribute("macrotext1", nil)
         row.entry = entry
         if row.fallbackQuestID ~= (entry and entry.questID) then row.fallbackIndex = nil end
@@ -1821,7 +1886,7 @@ function UI.RenderRows(app)
             row.pushedIcon:ClearAllPoints()
             row.pushedIcon:SetSize(20, 20)
             row.pushedIcon:SetPoint("LEFT", 2, -1)
-            row.number:SetText((app.scrollOffset or 0) + index)
+            row.number:SetText(item.number)
             row.focusMark:SetShown(entry.questID == app.db.focusQuestID)
             local progress = entry.total > 0 and (entry.done .. "/" .. entry.total) or L("open")
             row.detail:SetText(string.format(L("detail"), progress, #entry.refs, #entry.nameList))

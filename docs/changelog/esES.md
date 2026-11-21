@@ -2,6 +2,22 @@
 
 Cambios para jugadores, empezando por la versión más reciente. Las indicaciones de instalación históricas se aplican a la versión indicada.
 
+## 1.7.4 – 21 nov. 2026
+
+### Lista de misiones
+- La **lista de misiones** agrupa las misiones por las zonas del registro en orden alfabético. Fuera de combate, haz clic en una zona para plegarla o desplegarla. La selección se guarda por personaje.
+
+### Barra de objetivos
+- **Bloquear la posición de la barra** evita que se mueva por accidente al arrastrar con el botón derecho. Activa la opción en **Botones → Barra de objetivos** o mantén pulsada **Mayús** sobre la barra fuera de combate y haz clic en el candado de arriba a la izquierda.
+
+¡Gracias a **virtual_pip** por la sugerencia en CurseForge!
+
+### Ventana de notas del parche
+- Marca **No mostrar las próximas notas** abajo a la derecha para omitir la apertura automática tras las actualizaciones. Abre **Opciones → AddOns → Quest Targets → Notas del parche** para leerlas o volver a activar su apertura automática.
+
+### Comentarios
+- Las **instrucciones de escaneo** aparecen encima del código QR y las de copia justo encima del campo de la URL.
+
 ## 1.7.3 – 20.11.2026
 
 ### Opciones

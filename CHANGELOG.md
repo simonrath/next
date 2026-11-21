@@ -4,6 +4,22 @@ Spielerchronik ab der ersten belegten Veröffentlichung. Die neueste Version ste
 
 [English](docs/changelog/enUS.md) · [Español](docs/changelog/esES.md) · [Français](docs/changelog/frFR.md) · [Türkçe](docs/changelog/trTR.md) · [简体中文](docs/changelog/zhCN.md)
 
+## 1.7.4 – 21.11.2026
+
+### Questliste
+- Die **Questliste** gruppiert Quests alphabetisch nach den Gebieten aus dem Questlog. Klicke außerhalb des Kampfes auf eine Gebietsüberschrift, um die Gruppe ein- oder auszuklappen. Die Auswahl wird pro Charakter gespeichert.
+
+### Zielleiste
+- **Position der Buttonleiste sperren** verhindert versehentliches Verschieben beim Rechtsziehen. Aktiviere die Sperre unter **Buttons → Zielleiste** oder halte außerhalb des Kampfes **Umschalt** über die Leiste und klicke auf das Schloss oben links.
+
+Danke an **virtual_pip** für die Idee auf CurseForge!
+
+### Patchnotes-Fenster
+- Aktiviere **Künftige Patchnotes ausblenden** unten rechts, um das automatische Öffnen bei Updates zu überspringen. Unter **Optionen → AddOns → Quest Targets → Patchnotes** kannst du das Fenster weiterhin öffnen und die Einstellung zurücknehmen.
+
+### Feedback
+- Die **Scan-Anleitung** steht über dem QR-Code und der Hinweis zum Kopieren direkt über dem URL-Feld.
+
 ## 1.7.3 – 20.11.2026
 
 ### Optionen

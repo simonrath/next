@@ -2,6 +2,22 @@
 
 Oyuncuları ilgilendiren değişiklikler en yeni sürümden başlayarak sıralanır. Eski kurulum notları yalnızca belirtilen sürüm için geçerlidir.
 
+## 1.7.4 – 21 Kas 2026
+
+### Görev listesi
+- **Görev listesi**, görevleri günlüğündeki bölgelere göre alfabetik olarak gruplar. Savaş dışında bölge başlığına tıklayarak grubu daraltabilir veya genişletebilirsin. Seçimlerin karakter başına kaydedilir.
+
+### Hedef çubuğu
+- **Düğme çubuğunun konumunu kilitle** seçeneği, sağ tuşla sürüklerken çubuğun yanlışlıkla taşınmasını önler. **Düğmeler → Hedef çubuğu** altında açabilir veya savaş dışında çubuğun üzerinde **Shift** tuşunu basılı tutup sol üstteki kilide tıklayabilirsin.
+
+CurseForge’daki önerisi için **virtual_pip**’e teşekkürler!
+
+### Yama notları penceresi
+- Güncellemelerden sonra pencerenin kendiliğinden açılmasını durdurmak için sağ alttaki **Sonraki yama notlarını gösterme** kutusunu işaretle. Notları okumak veya otomatik açılmayı yeniden etkinleştirmek için **Seçenekler → Eklentiler → Quest Targets → Yama Notları** bölümünü aç.
+
+### Geri bildirim
+- **Tarama talimatları** QR kodunun üzerinde, kopyalama talimatları ise adres alanının hemen üzerinde görünür.
+
 ## 1.7.3 – 20.11.2026
 
 ### Seçenekler

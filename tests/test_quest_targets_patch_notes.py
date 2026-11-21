@@ -5,6 +5,26 @@ import test_quest_targets as addon
 class PatchNotesTests(unittest.TestCase):
     setUp = addon.QuestTargetsTests.setUp
 
+    def test_skip_automatic_notes_persists_across_updates_and_can_be_reversed(self):
+        self.lua.execute('''
+            local version='1.7.3'
+            GetAddOnMetadata=function() return version end
+            boot()
+            local panel=QuestTargetsPatchNotes
+            local toggle=panel.autoOpenToggle
+            assert(panel:IsShown() and not toggle:GetChecked())
+            toggle:SetChecked(true); toggle.scripts.OnClick(toggle)
+            panel:Hide()
+            version='1.7.4'; NS.PatchNotes.OnLogin(); flush()
+            assert(not panel:IsShown() and QuestTargetsNewsDB.seenVersion=='1.7.3')
+            NS.PatchNotes.Open()
+            assert(panel:IsShown() and toggle:GetChecked())
+            toggle:SetChecked(false); toggle.scripts.OnClick(toggle)
+            panel:Hide()
+            version='1.7.5'; NS.PatchNotes.OnLogin(); flush()
+            assert(panel:IsShown() and QuestTargetsNewsDB.seenVersion=='1.7.5')
+        ''')
+
     def test_complete_history_updates_in_place_for_each_language(self):
         self.lua.execute('''
             GetAddOnMetadata=function() return '1.7.0' end
@@ -30,6 +50,8 @@ class PatchNotesTests(unittest.TestCase):
                 assert(#sections==3 and sections[1].heading:GetText()=='RareScanner', locale)
                 assert(sections[2].heading:GetText()==expected[locale][1], locale)
                 assert(sections[3].heading:GetText()==expected[locale][2], locale)
+                assert(sections[3].notes:GetText():find(' > ', 1, true), locale)
+                assert(not sections[3].notes:GetText():find('→', 1, true), locale)
                 for index, count in ipairs({7,3,1}) do
                     local notes=sections[index].notes:GetText()
                     local _, bullets=notes:gsub('• ', '')

@@ -14,6 +14,70 @@ class QuestTargetsTests(unittest.TestCase):
             self.lua.execute('assert(loadstring(...))("QuestTargets", NS)',
                              (ROOT / 'QuestTargets' / name).read_text(encoding='utf-8'))
 
+    def test_quest_zones_sort_and_collapse_without_removing_targets(self):
+        self.lua.execute('''
+            table.insert(quests, 2, {title='Ashenvale',isHeader=true})
+            table.insert(quests, 1, {title='Westfall',isHeader=true})
+            boot()
+            local ui, app=NS.UI, NS.app
+            assert(ui.zoneHeaders[1].zoneKey=='Ashenvale')
+            assert(ui.rows[2].entry.questID==2 and ui.rows[2].number.text==1)
+            assert(ui.zoneHeaders[3].zoneKey=='Westfall')
+            assert(ui.rows[4].entry.questID==1 and ui.rows[4].number.text==2)
+            ui.zoneHeaders[1].scripts.OnClick(ui.zoneHeaders[1])
+            assert(app.db.collapsedQuestZones.Ashenvale and #app.questEntries==2)
+            assert(ui.zoneHeaders[2].zoneKey=='Westfall' and ui.rows[2].attributes.macrotext1==nil)
+            assert(ui.rows[3].entry.questID==1 and not ui.rows[4]:IsShown())
+            event('ADDON_LOADED','QuestTargets'); app:Refresh()
+            assert(ui.zoneHeaders[2].zoneKey=='Westfall')
+            ui.zoneHeaders[1].scripts.OnClick(ui.zoneHeaders[1])
+            assert(not app.db.collapsedQuestZones.Ashenvale and ui.rows[2].entry.questID==2)
+            app:ToggleFilter()
+            assert(ui.zoneHeaders[1].zoneKey=='Westfall' and ui.rows[2].entry.questID==1)
+        ''')
+
+    def test_shift_lock_controls_the_shared_bar_and_leaves_edit_mode_available(self):
+        self.lua.execute('''
+            boot(); NS.UI.Settings(NS.app)
+            local ui, app=NS.UI, NS.app
+            local master, lock, hover=ui.master, ui.barLock, ui.barLockHover
+            local item=CreateFrame('Button',nil,UIParent,'SecureActionButtonTemplate')
+            ui.StyleTargetButton(item,1,1,1)
+            item.inBar=true; NS.ItemTree.target=item
+            ui.LayoutTargetButtons(app)
+            hover.mouseOver=true
+            hover.scripts.OnUpdate(hover)
+            assert(not lock:IsShown())
+            shiftDown=true; hover.scripts.OnUpdate(hover)
+            assert(lock:IsShown() and hover.last==item)
+            assert(lock:GetWidth()==22 and lock:GetHeight()==26 and lock.point[3]=='TOPLEFT')
+            hover.mouseOver=false; lock.mouseOver=true
+            hover.scripts.OnUpdate(hover)
+            assert(lock:IsShown())
+            lock.mouseOver=false; hover.scripts.OnUpdate(hover)
+            assert(not lock:IsShown())
+            hover.mouseOver=true; hover.scripts.OnUpdate(hover)
+            lock.scripts.OnClick(lock)
+            assert(app.db.masterLocked and ui.masterSettings.lockToggle:GetChecked())
+            assert(master.passThrough[1]=='RightButton' and item.passThrough[1]=='RightButton')
+            item.scripts.OnDragStart(item)
+            assert(not master.moving)
+            event('ADDON_LOADED','QuestTargets')
+            assert(app.db.masterLocked)
+            assert(ui.BeginMasterMove(app))
+            hover.scripts.OnUpdate(hover)
+            assert(not lock:IsShown())
+            ui.EndMasterMove(app, false)
+            hover.scripts.OnUpdate(hover)
+            lock.scripts.OnClick(lock)
+            assert(not app.db.masterLocked and #item.passThrough==0)
+            item.scripts.OnDragStart(item)
+            assert(master.moving)
+            item.scripts.OnDragStop(item)
+            combat=true; hover.scripts.OnUpdate(hover)
+            assert(not lock:IsShown())
+        ''')
+
     def test_retail_uses_live_quest_objectives_without_classic_database(self):
         self.lua.execute('''
             WOW_PROJECT_MAINLINE=1; WOW_PROJECT_ID=1
@@ -617,7 +681,7 @@ class QuestTargetsTests(unittest.TestCase):
                 questieTrackerOffset=true,ellesmereTrackerButtons=true,ellesmereTrackerOffset=true}
             local barOptions={showMaster=true,restedXPIntegration=true,showItemTreeButton=true,
                 showRareScannerButton=true,rareScannerZone=true,masterOrientation=true,
-                masterSpacing=true,masterBorder=true,masterDividers=true,buttonSize=true}
+                masterSpacing=true,masterBorder=true,masterDividers=true,masterLocked=true,buttonSize=true}
             for _,item in ipairs(layout.initializers) do
                 local kind=item.data.kind
                 if kind=='section' then currentSection=item.data.name end
@@ -631,7 +695,7 @@ class QuestTargetsTests(unittest.TestCase):
             end
             assert(table.concat(sections,'|')==table.concat({NS.L('display'),NS.L('window'),
                 NS.L('targetMarkers'),NS.L('buttons'),NS.L('targetBar'),NS.L('hotkeys'),NS.L('language')},'|'))
-            assert(counts.section==7 and counts.checkbox==15 and counts.slider==5
+            assert(counts.section==7 and counts.checkbox==16 and counts.slider==5
                 and counts.dropdown==3 and counts.button==4 and counts.editbox==0)
             assert(counts.move==2, 'expected move and patch note action rows')
             local soundSetting=nativeSettings.QUESTTARGETS_muteDeadTargetSound
