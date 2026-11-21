@@ -83,6 +83,14 @@ local function polestarNames(validNames)
     local friendlyTypes = {accept=true, turnin=true, talk=true, train=true, vendor=true,
         buy=true, auction=true, sethome=true, getfp=true, learn=true}
     local names, friendly, seen = {}, {}, {}
+    local function addName(raw, isFriendly, explicitFriendly)
+        local name = Core.SafeName(raw)
+        if name and not seen[name] then
+            seen[name] = true
+            names[#names + 1] = name
+        end
+        if name and isFriendly and (explicitFriendly or not validNames[name]) then friendly[name] = true end
+    end
     for i, goal in ipairs(view.goals) do
         if type(goal) == "table" and (goal.status == "active" or goal.status == "pending") then
             local source = type(raw[i]) == "table" and raw[i] or {}
@@ -99,12 +107,15 @@ local function polestarNames(validNames)
                 if not name and kind == "kill" then name = goal.subject or source.target end
                 if not name and kind == "collect" and type(goal.source) == "table"
                     and goal.source.kind == "npc" then name = goal.source.name end
-                name = Core.SafeName(name)
-                if name and not seen[name] then
-                    seen[name] = true
-                    names[#names + 1] = name
+                local collectSource = kind == "collect" and type(goal.source) == "table"
+                    and goal.source.kind == "npc" and goal.source or nil
+                local sourceFriendly = collectSource and collectSource.enemy == false
+                local isSource = collectSource and Core.SafeName(name) ~= nil
+                    and Core.SafeName(name) == Core.SafeName(collectSource.name)
+                addName(name, friendlyTypes[kind] or (sourceFriendly and isSource), sourceFriendly and isSource)
+                if kind == "collect" and type(goal.source) == "table" and goal.source.kind == "npc" then
+                    addName(goal.source.also, sourceFriendly, sourceFriendly)
                 end
-                if name and friendlyTypes[kind] and not validNames[name] then friendly[name] = true end
             end
         end
     end

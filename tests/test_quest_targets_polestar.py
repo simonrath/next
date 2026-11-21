@@ -6,6 +6,70 @@ import test_quest_targets as addon
 class PolestarTests(unittest.TestCase):
     setUp = addon.QuestTargetsTests.setUp
 
+    def test_collect_alternative_cycles_and_excludes_unsafe_or_object_sources(self):
+        self.lua.execute('''
+            Polestar={Engine={GetStepIndex=function() return 1 end,
+                GetStepView=function() return {goals={
+                    {t='collect',status='active',source={kind='npc',name='Grell',also='Grellkin',enemy=true}},
+                    {t='collect',status='pending',source={kind='npc',name='Grell',also='Bad/quit',enemy=true}},
+                    {t='collect',status='active',source={kind='object',name='Chest',also='Crate'}},
+                }} end}}
+            QuestTargetsDB={polestarIntegration=true,autoMark=false}
+            boot()
+            assert(table.concat(NS.RestedXP.targets,'|')=='Grell|Grellkin')
+            local button=NS.UI.master
+            button.scripts.PreClick(button,'LeftButton',false)
+            assert(button.attributes.macrotext1:find('Grell',1,true))
+            button.scripts.PostClick(button,'LeftButton',false)
+            assert(button.entry.name=='Grellkin')
+            button.scripts.PreClick(button,'LeftButton',false)
+            assert(button.attributes.macrotext1:find('Grellkin',1,true))
+        ''')
+
+    def test_friendly_collect_sources_stay_selected_across_master_clicks(self):
+        self.lua.execute('''
+            local goals={{t='collect',status='active',source={kind='npc',
+                name='Friendly Trader',also='Other Trader',enemy=false}}}
+            Polestar={Engine={GetStepIndex=function() return 1 end,
+                GetStepView=function() return {goals=goals} end}}
+            QuestTargetsDB={polestarIntegration=true,autoMark=false}
+            boot()
+            assert(NS.RestedXP.allEntry.finisherNames['Friendly Trader'])
+            assert(NS.RestedXP.allEntry.finisherNames['Other Trader'])
+            units.target={name='Friendly Trader',friendly=true}
+            assert(NS.Core.ValidCurrentTarget(NS.RestedXP.allEntry))
+            local button=NS.UI.master
+            button.scripts.PreClick(button,'LeftButton',false)
+            assert(not button.attributes.macrotext1:find('/cleartarget',1,true))
+            button.scripts.PostClick(button,'LeftButton',false)
+            button.scripts.PreClick(button,'LeftButton',false)
+            assert(not button.attributes.macrotext1:find('/cleartarget',1,true))
+            goals[1].source.enemy=true
+            NS.RestedXP.Sync(NS.app)
+            assert(not NS.RestedXP.allEntry.finisherNames['Friendly Trader'])
+            assert(not NS.Core.ValidCurrentTarget(NS.RestedXP.allEntry))
+        ''')
+
+    def test_friendly_collect_source_overrides_matching_native_name_only(self):
+        self.lua.execute('''
+            local goals={{t='collect',status='active',source={kind='npc',
+                name='Waldwolf',also='Other Trader',enemy=false}}}
+            Polestar={Engine={GetStepIndex=function() return 1 end,
+                GetStepView=function() return {goals=goals} end}}
+            QuestTargetsDB={polestarIntegration=true,autoMark=false}
+            boot()
+            assert(NS.UI.master.defaultEntry.names['Waldwolf'])
+            assert(NS.RestedXP.allEntry.finisherNames['Waldwolf'])
+            units.target={name='Other Trader',friendly=true}
+            assert(NS.Core.ValidCurrentTarget(NS.RestedXP.allEntry))
+            NS.UI.master.scripts.PreClick(NS.UI.master,'LeftButton',false)
+            assert(not NS.UI.master.attributes.macrotext1:find('/cleartarget',1,true))
+            goals[1].npcName='Different Mob'
+            NS.RestedXP.Sync(NS.app)
+            assert(not NS.RestedXP.allEntry.finisherNames['Different Mob'])
+            assert(NS.RestedXP.allEntry.finisherNames['Other Trader'])
+        ''')
+
     def test_master_follows_open_polestar_goals_and_returns_to_native(self):
         self.lua.execute('''
             local goals = {
