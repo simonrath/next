@@ -2,10 +2,26 @@
 
 Changements pour les joueurs, de la version la plus récente à la plus ancienne. Les indications d’installation historiques s’appliquent à la version indiquée.
 
-## 1.7.4 – Aperçu
+## 1.7.5 – Aperçu
 
 ### Polestar
 - **Cibles Polestar :** Sur WoW Forever, avec Polestar installé, activez **Boutons → Barre de ciblage → Suivre les cibles Polestar**, désactivé par défaut. La boussole principale recherche les objectifs ouverts nommés de l’étape affichée ; à défaut, elle recherche les objectifs de quête. Les changements s’appliquent après le combat. Si RestedXP est aussi activé et disponible, il est prioritaire.
+
+## 1.7.4 – 21 nov. 2026
+
+### Liste des quêtes
+- La **liste des quêtes** classe les quêtes par zone du journal, dans l’ordre alphabétique. Hors combat, cliquez sur une zone pour la replier ou la déplier. Vos choix sont enregistrés par personnage.
+
+### Barre de ciblage
+- **Verrouiller la position de la barre** évite de la déplacer par erreur avec le bouton droit. Activez cette option dans **Boutons → Barre de ciblage** ou maintenez **Maj** sur la barre hors combat et cliquez sur le cadenas en haut à gauche.
+
+Merci à **virtual_pip** pour cette idée proposée sur CurseForge !
+
+### Fenêtre des notes de mise à jour
+- Cochez **Masquer les prochaines notes** en bas à droite pour désactiver leur ouverture automatique après les mises à jour. Ouvrez **Options → AddOns → Quest Targets → Notes de mise à jour** pour les consulter ou réactiver leur ouverture automatique.
+
+### Avis
+- Les **instructions de lecture** apparaissent au-dessus du code QR et les instructions de copie juste au-dessus du champ de l’URL.
 
 ## 1.7.3 – 20.11.2026
 

@@ -6,6 +6,10 @@ local WIDTH, HEIGHT, CARD_WIDTH = 624, 444, 547
 local SCROLL_TOP, SCROLL_BOTTOM = 58, 36
 local frame, pending
 
+local function autoOpenDisabled()
+    return type(QuestTargetsNewsDB) == "table" and QuestTargetsNewsDB.hideAutomatic == true
+end
+
 local function version()
     local get = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
     local value = get and get(addonName, "Version")
@@ -89,6 +93,16 @@ local function createWindow()
     close:SetScript("OnClick", function() window:Hide() end)
     window.close = close
     window.footer = label(window, "GameFontDisableSmall", 24, -421)
+    local check = CreateFrame("CheckButton", nil, window, "UICheckButtonTemplate")
+    check:SetSize(22, 22)
+    check:SetPoint("BOTTOMRIGHT", -19, 7)
+    check:SetScript("OnClick", function(self)
+        QuestTargetsNewsDB.hideAutomatic = self:GetChecked() and true or nil
+        if QuestTargetsNewsDB.hideAutomatic then pending = nil end
+    end)
+    check.caption = check:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    check.caption:SetPoint("RIGHT", check, "LEFT", -4, 0)
+    window.autoOpenToggle = check
     return window
 end
 
@@ -124,7 +138,10 @@ local function updateCard(card, entry)
         local notes = row.notes
         notes:SetPoint("TOPLEFT", 16, -y - 17)
         local bullets = "• " .. table.concat(section.items, "\n• ")
-        notes:SetText((bullets:gsub("%*%*(.-)%*%*", "|cffffd100%1|r")))
+        if section.items.paragraph then bullets = bullets .. "\n\n" .. section.items.paragraph end
+        -- The native patch notes font may not contain the Unicode right arrow.
+        local text = bullets:gsub("→", ">")
+        notes:SetText((text:gsub("%*%*(.-)%*%*", "|cffffd100%1|r")))
         notes:Show()
         y = y + 17 + math.ceil(notes:GetStringHeight()) + 11
     end
@@ -173,6 +190,7 @@ local function refreshText(installedVersion)
     frame.TitleContainer.TitleText:SetText(NS.L("title") .. " – " .. NS.L("patchNotes"))
     frame.subtitle:SetText(installedVersion and NS.L("patchNotesVersion"):format(installedVersion) or "")
     frame.footer:SetText(NS.L("patchNotesFooter"))
+    frame.autoOpenToggle.caption:SetText(NS.L("patchNotesHideAutomatic"))
     render(frame, installedVersion)
 end
 
@@ -183,18 +201,20 @@ function Notes.RefreshLanguage()
 end
 
 function Notes.Open()
+    if type(QuestTargetsNewsDB) ~= "table" then QuestTargetsNewsDB = {} end
     if not frame then frame = createWindow() end
     local installedVersion = version()
     frame:SetScale(math.min(1, UIParent:GetWidth() / (WIDTH + 24), UIParent:GetHeight() / (HEIGHT + 24)))
     refreshText(installedVersion)
+    frame.autoOpenToggle:SetChecked(autoOpenDisabled())
     scrollTo(frame, 0)
     frame:Show()
-    if type(QuestTargetsNewsDB) ~= "table" then QuestTargetsNewsDB = {} end
     if installedVersion then QuestTargetsNewsDB.seenVersion = installedVersion end
     pending = nil
 end
 
 function Notes.TryPending()
+    if autoOpenDisabled() then pending = nil; return end
     if not pending or InCombatLockdown() then return end
     if type(QuestTargetsNewsDB) ~= "table" or QuestTargetsNewsDB.seenVersion ~= pending then
         Notes.Open()
@@ -204,6 +224,7 @@ function Notes.TryPending()
 end
 
 function Notes.OnLogin()
+    if autoOpenDisabled() then return end
     local installedVersion = version()
     if not installedVersion or (type(QuestTargetsNewsDB) == "table"
         and QuestTargetsNewsDB.seenVersion == installedVersion) then return end

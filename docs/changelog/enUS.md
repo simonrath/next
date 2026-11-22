@@ -2,10 +2,26 @@
 
 Player-facing changes, newest version first. Historical installation notes apply to the version listed.
 
-## 1.7.4 – Preview
+## 1.7.5 – Preview
 
 ### Polestar
 - **Polestar guide targets:** On WoW Forever, with Polestar installed, enable the normally disabled **Buttons → Targeting bar → Follow Polestar guide targets** option. The main compass searches named open goals in the displayed guide step; without targets it falls back to quest search. Changes apply after combat. If RestedXP is also enabled and available, it takes precedence.
+
+## 1.7.4 – Nov 21, 2026
+
+### Quest list
+- The **quest list** groups quests alphabetically by the zones in your quest log. Click a zone heading out of combat to collapse or expand it. Your choices are saved per character.
+
+### Targeting bar
+- **Lock button bar position** prevents accidental movement when right-dragging. Enable it under **Buttons → Targeting bar**, or hold **Shift** over the bar outside combat and click the lock in its top-left corner.
+
+Thanks to **virtual_pip** for suggesting this on CurseForge!
+
+### Patch Notes window
+- Check **Don't show next Patch Notes** in the bottom-right corner to skip automatic opening after updates. Open **Options → AddOns → Quest Targets → Patch Notes** to read the notes or re-enable automatic opening.
+
+### Feedback
+- **Scanning instructions** appear above the QR code, and the copy instructions appear directly above the URL field.
 
 ## 1.7.3 – Nov 20, 2026
 

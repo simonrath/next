@@ -148,7 +148,8 @@ function methods:SetTexture(texture)
 end
 function methods:SetAtlas(atlas)
     assert(atlas == "UI-QuestPoi-QuestNumber-SuperTracked" or atlas == "UI-QuestPoi-QuestNumber"
-        or atlas == "UI-QuestPoi-InnerGlow" or atlas == "UI-QuestPoiImportant-QuestBang", atlas)
+        or atlas == "UI-QuestPoi-InnerGlow" or atlas == "UI-QuestPoiImportant-QuestBang"
+        or atlas == "QuestSharing-Padlock", atlas)
     self.atlas = atlas
 end
 function methods:SetHighlightAtlas(atlas)
@@ -165,6 +166,7 @@ function methods:SetClampedToScreen() guard(self) end
 function methods:SetMovable() guard(self) end
 function methods:EnableMouse() guard(self) end
 function methods:RegisterForDrag() guard(self) end
+function methods:SetPassThroughButtons(...) guard(self); self.passThrough = {...} end
 function methods:SetJustifyH() end
 function methods:SetTextColor(...) self.textColor = {...} end
 function methods:SetOwner() end

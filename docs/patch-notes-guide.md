@@ -69,7 +69,8 @@ Jeder Listenpunkt beginnt mit `- ` und steht im Quelltext auf einer Zeile.
 Nutze `**Fettdruck**` sparsam für die Hauptfunktion, konkrete UI-Namen und
 wichtige Menüpfade. Im Spiel erscheint diese Hervorhebung goldfarben.
 Der Text soll auch ohne Farbe klar sein. Im Versionsblock funktionieren
-Rubriken, einfache Listen und Fettdruck. Weitere Markdown-Formatierung wird
+Rubriken, einfache Listen, Fettdruck und ein eigener Absatz nach der Liste einer Rubrik funktionieren.
+Setze einen Dank in diesen Absatz und trenne ihn mit einer Leerzeile von der Liste. Weitere Markdown-Formatierung wird
 im Spiel nicht aufbereitet.
 
 Pflege alle Sprachfassungen im selben Änderungssatz. Versionen, Reihenfolge,

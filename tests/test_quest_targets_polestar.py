@@ -6,6 +6,26 @@ import test_quest_targets as addon
 class PolestarTests(unittest.TestCase):
     setUp = addon.QuestTargetsTests.setUp
 
+    def test_polestar_option_and_upstream_lock_fit_and_work_together(self):
+        self.lua.execute('''
+            C_AddOns={IsAddOnLoaded=function(name) return name=='Polestar' end}
+            Polestar={Engine={GetStepIndex=function() return 1 end,
+                GetStepView=function() return {goals={{t='kill',status='active',subject='Wolf'}}} end}}
+            boot()
+            NS.UI.Settings(NS.app)
+            local options, master = NS.UI.settings, NS.UI.masterSettings
+            local bar = master.lockToggle.parent
+            assert(options.polestarToggle.parent==bar)
+            assert(master.dividersToggle.point[3] > master.lockToggle.point[3])
+            assert(master.lockToggle.point[3] > master.moveButton.point[3])
+            assert(master.moveHelp.point[5] - master.moveHelp.height >= -bar.height)
+            assert(options.pages[3].content.height >= 390 + bar.height)
+            options.polestarToggle.scripts.OnClick()
+            assert(NS.app.db.polestarIntegration and NS.UI.master.entry.name=='Wolf')
+            master.lockToggle.scripts.OnClick()
+            assert(NS.app.db.masterLocked and NS.UI.master.entry.name=='Wolf')
+        ''')
+
     def test_collect_alternative_cycles_and_excludes_unsafe_or_object_sources(self):
         self.lua.execute('''
             Polestar={Engine={GetStepIndex=function() return 1 end,

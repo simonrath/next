@@ -206,6 +206,8 @@ events:SetScript("OnEvent", function(_, event, loadedName)
         app.db.masterSpacing = type(spacing) == "number" and spacing == spacing
             and math.max(0, math.min(32, math.floor(spacing + 0.5))) or 4
         app.db.masterBorder = app.db.masterBorder == true
+        app.db.masterLocked = app.db.masterLocked == true
+        if type(app.db.collapsedQuestZones) ~= "table" then app.db.collapsedQuestZones = {} end
         if app.db.masterDividers == nil then app.db.masterDividers = app.db.masterBorder end
         app.db.masterDividers = app.db.masterDividers == true
         app.db.actionBarMode = nil -- obsolete setting from the former docking mode

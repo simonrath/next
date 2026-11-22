@@ -14,7 +14,7 @@
 ## IconTexture: Interface\AddOns\QuestTargets\Textures\QuestCompassUp
 ## Notes: Anklickbare Ziele für offene Quests.
 ## Author: jackNine
-## Version: 1.7.3
+## Version: 1.7.4
 ## OptionalDeps: QuestieDB, Questie, RXPGuides, Polestar, ItemTree, EllesmereUIQuestTracker, RareScanner
 ## SavedVariablesPerCharacter: QuestTargetsDB
 ## SavedVariables: QuestTargetsNewsDB
