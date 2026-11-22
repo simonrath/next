@@ -682,13 +682,18 @@ class QuestTargetsTests(unittest.TestCase):
             local barOptions={showMaster=true,restedXPIntegration=true,showItemTreeButton=true,
                 showRareScannerButton=true,rareScannerZone=true,masterOrientation=true,
                 masterSpacing=true,masterBorder=true,masterDividers=true,masterLocked=true,buttonSize=true}
-            for _,item in ipairs(layout.initializers) do
+            for index,item in ipairs(layout.initializers) do
                 local kind=item.data.kind
                 if kind=='section' then currentSection=item.data.name end
                 if item.data.setting then
                     local key=item.data.setting.variable:gsub('^QUESTTARGETS_','')
                     if buttonOptions[key] then assert(currentSection==NS.L('buttons')) end
                     if barOptions[key] then assert(currentSection==NS.L('targetBar')) end
+                    if key=='polestarIntegration' then
+                        assert(currentSection==NS.L('targetBar'))
+                        assert(item.parentInitializer==layout.initializers[index-1])
+                        assert(item.parentInitializer.data.setting==nativeSettings.QUESTTARGETS_showMaster)
+                    end
                 end
                 counts[kind]=counts[kind]+1
                 if kind=='section' then sections[#sections+1]=item.data.name end

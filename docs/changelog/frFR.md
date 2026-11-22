@@ -2,10 +2,13 @@
 
 Changements pour les joueurs, de la version la plus récente à la plus ancienne. Les indications d’installation historiques s’appliquent à la version indiquée.
 
-## 1.7.5 – Aperçu
+## 1.7.5 – 22 nov. 2026
 
 ### Polestar
-- **Cibles Polestar :** Sur WoW Forever, avec Polestar installé, activez **Boutons → Barre de ciblage → Suivre les cibles Polestar**, désactivé par défaut. La boussole principale recherche les objectifs ouverts nommés de l’étape affichée ; à défaut, elle recherche les objectifs de quête. Les changements s’appliquent après le combat. Si RestedXP est aussi activé et disponible, il est prioritaire.
+- **Cibles Polestar :** Sur WoW Forever, avec Polestar installé, activez **Boutons → Barre de ciblage → Suivre les cibles Polestar**, désactivé par défaut. Le bouton principal recherche les objectifs ouverts nommés de l’étape affichée ; à défaut, elle recherche les objectifs de quête. Les changements s’appliquent après le combat. Si RestedXP est aussi activé et disponible, il est prioritaire.
+- Pour les objectifs de collecte, le bouton principal recherche aussi les PNJ qui constituent des sources alternatives. Un nouveau clic conserve le PNJ amical valide déjà ciblé.
+
+Merci à **postblink** pour l’intégration de Polestar !
 
 ## 1.7.4 – 21 nov. 2026
 

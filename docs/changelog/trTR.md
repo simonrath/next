@@ -2,10 +2,13 @@
 
 Oyuncuları ilgilendiren değişiklikler en yeni sürümden başlayarak sıralanır. Eski kurulum notları yalnızca belirtilen sürüm için geçerlidir.
 
-## 1.7.5 – Önizleme
+## 1.7.5 – 22 Kas 2026
 
 ### Polestar
-- **Polestar rehber hedefleri:** WoW Forever'da Polestar yüklüyken varsayılan olarak kapalı **Düğmeler → Hedef çubuğu → Polestar hedeflerini izle** seçeneğini açın. Ana pusula, görüntülenen rehber adımındaki adlı açık hedefleri arar; hedef yoksa görev aramasına döner. Değişiklikler çatışmadan sonra uygulanır. RestedXP de açık ve kullanılabilir olduğunda önceliklidir.
+- **Polestar rehber hedefleri:** WoW Forever'da Polestar yüklüyken varsayılan olarak kapalı **Düğmeler → Hedef çubuğu → Polestar hedeflerini izle** seçeneğini açın. Ana düğme, görüntülenen rehber adımındaki adlı açık hedefleri arar; hedef yoksa görev aramasına döner. Değişiklikler çatışmadan sonra uygulanır. RestedXP de açık ve kullanılabilir olduğunda önceliklidir.
+- Toplama hedeflerinde ana düğme alternatif NPC kaynaklarını da arar. Geçerli bir dost NPC zaten hedefteyse tekrar tıklamak onu hedefte tutar.
+
+Polestar entegrasyonu için **postblink**’e teşekkürler!
 
 ## 1.7.4 – 21 Kas 2026
 

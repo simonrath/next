@@ -16,6 +16,9 @@ class PolestarTests(unittest.TestCase):
             local options, master = NS.UI.settings, NS.UI.masterSettings
             local bar = master.lockToggle.parent
             assert(options.polestarToggle.parent==bar)
+            assert(options.polestarToggle.point[2] > options.masterToggle.point[2])
+            assert(options.masterToggle.point[3] > options.polestarToggle.point[3])
+            assert(options.polestarToggle.point[3] > options.restedXPToggle.point[3])
             assert(master.dividersToggle.point[3] > master.lockToggle.point[3])
             assert(master.lockToggle.point[3] > master.moveButton.point[3])
             assert(master.moveHelp.point[5] - master.moveHelp.height >= -bar.height)

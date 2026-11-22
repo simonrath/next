@@ -792,9 +792,9 @@ function UI.LayoutSettings(app)
     place(panel.questieOffsetControl, toggles, 22, -122)
     place(panel.ellesmereToggle, toggles, 18, -210)
     place(panel.ellesmereOffsetControl, toggles, 22, -240)
-    for i, control in ipairs({panel.masterToggle, panel.restedXPToggle, panel.polestarToggle, panel.itemTreeToggle,
+    for i, control in ipairs({panel.masterToggle, panel.polestarToggle, panel.restedXPToggle, panel.itemTreeToggle,
         panel.rareScannerToggle, panel.rareScannerZoneToggle}) do
-        place(control, bar, 18, -32 - (i-1)*30)
+        place(control, bar, control == panel.polestarToggle and 38 or 18, -32 - (i-1)*30)
     end
     place(master.orientationLabel, bar, 22, -217)
     place(master.orientationDropdown, bar, 176, -209)
@@ -1182,8 +1182,19 @@ local function nativeSettings(app)
     end)
 
     section("targetBar")
-    checkboxSetting("showMaster", true, function() return not app.db.masterHidden end,
+    local masterToggle = checkboxSetting("showMaster", true, function() return not app.db.masterHidden end,
         function(value) app.db.masterHidden = not value; app:Schedule() end, "masterMoveTip")
+    local polestarToggle = checkboxSetting("polestarIntegration", false,
+        function() return app.db.polestarIntegration end,
+        function(value)
+            if InCombatLockdown() or not addonLoaded("Polestar") then return end
+            app.db.polestarIntegration = value
+            NS.RestedXP.Sync(app)
+        end)
+    polestarToggle:SetParentInitializer(masterToggle)
+    if privateList then polestarToggle.IsParentInitializerInLayout = questieOffset.IsParentInitializerInLayout end
+    polestarToggle:AddModifyPredicate(function() return addonLoaded("Polestar") end)
+
     local restedXPToggle = checkboxSetting("restedXPIntegration", false,
         function() return app.db.restedXPIntegration end,
         function(value)
@@ -1192,15 +1203,6 @@ local function nativeSettings(app)
             NS.RestedXP.Sync(app)
         end)
     restedXPToggle:AddModifyPredicate(function() return addonLoaded("RXPGuides") end)
-
-    local polestarToggle = checkboxSetting("polestarIntegration", false,
-        function() return app.db.polestarIntegration end,
-        function(value)
-            if InCombatLockdown() or not addonLoaded("Polestar") then return end
-            app.db.polestarIntegration = value
-            NS.RestedXP.Sync(app)
-        end)
-    polestarToggle:AddModifyPredicate(function() return addonLoaded("Polestar") end)
 
     local itemTreeToggle = checkboxSetting("showItemTreeButton", false,
         function() return app.db.itemTreeButton == true end,

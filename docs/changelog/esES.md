@@ -2,10 +2,13 @@
 
 Cambios para jugadores, empezando por la versión más reciente. Las indicaciones de instalación históricas se aplican a la versión indicada.
 
-## 1.7.5 – Vista previa
+## 1.7.5 – 22 nov. 2026
 
 ### Polestar
-- **Objetivos de Polestar:** En WoW Forever, con Polestar instalado, activa **Botones → Barra de objetivos → Seguir objetivos de Polestar**, desactivado por defecto. La brújula principal busca objetivos abiertos con nombre del paso mostrado; si no hay ninguno, busca objetivos de misión. Los cambios se aplican después del combate. Si RestedXP también está activado y disponible, tiene prioridad.
+- **Objetivos de Polestar:** En WoW Forever, con Polestar instalado, activa **Botones → Barra de objetivos → Seguir objetivos de Polestar**, desactivado por defecto. El botón maestro busca objetivos abiertos con nombre del paso mostrado; si no hay ninguno, busca objetivos de misión. Los cambios se aplican después del combate. Si RestedXP también está activado y disponible, tiene prioridad.
+- Para los objetivos de recolección, el botón maestro también busca fuentes PNJ alternativas. Si ya tienes seleccionado un PNJ amistoso válido, vuelve a hacer clic para conservarlo como objetivo.
+
+¡Gracias a **postblink** por la integración con Polestar!
 
 ## 1.7.4 – 21 nov. 2026
 

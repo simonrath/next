@@ -2,10 +2,13 @@
 
 Player-facing changes, newest version first. Historical installation notes apply to the version listed.
 
-## 1.7.5 – Preview
+## 1.7.5 – Nov 22, 2026
 
 ### Polestar
-- **Polestar guide targets:** On WoW Forever, with Polestar installed, enable the normally disabled **Buttons → Targeting bar → Follow Polestar guide targets** option. The main compass searches named open goals in the displayed guide step; without targets it falls back to quest search. Changes apply after combat. If RestedXP is also enabled and available, it takes precedence.
+- **Polestar guide targets:** On WoW Forever, with Polestar installed, enable the normally disabled **Buttons → Targeting bar → Follow Polestar guide targets** option. The master button searches named open goals in the displayed guide step; without targets it falls back to quest search. Changes apply after combat. If RestedXP is also enabled and available, it takes precedence.
+- For collection goals, the master button also searches alternate NPC sources. Clicking again keeps a valid friendly NPC selected.
+
+Thanks to **postblink** for the Polestar integration!
 
 ## 1.7.4 – Nov 21, 2026
 

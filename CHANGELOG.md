@@ -4,10 +4,13 @@ Spielerchronik ab der ersten belegten Veröffentlichung. Die neueste Version ste
 
 [English](docs/changelog/enUS.md) · [Español](docs/changelog/esES.md) · [Français](docs/changelog/frFR.md) · [Türkçe](docs/changelog/trTR.md) · [简体中文](docs/changelog/zhCN.md)
 
-## 1.7.5 – Vorschau
+## 1.7.5 – 22.11.2026
 
 ### Polestar
-- **Polestar-Guideziele:** In WoW Forever kannst du mit installiertem Polestar unter **Buttons → Zielleiste → Polestar-Guideziele verwenden** die standardmäßig ausgeschaltete Option aktivieren. Der Hauptbutton sucht benannte offene Ziele des angezeigten Guide-Schritts; ohne Ziele übernimmt die Questsuche. Änderungen werden nach dem Kampf angewendet. Ist auch RestedXP aktiv und verfügbar, hat es Vorrang.
+- **Polestar-Guideziele:** In WoW Forever kannst du mit installiertem Polestar unter **Buttons → Zielleiste → Polestar-Guideziele verwenden** die standardmäßig ausgeschaltete Option aktivieren. Der Masterbutton sucht benannte offene Ziele des angezeigten Guide-Schritts; ohne Ziele übernimmt die Questsuche. Änderungen werden nach dem Kampf angewendet. Ist auch RestedXP aktiv und verfügbar, hat es Vorrang.
+- Bei Sammelzielen durchsucht der Masterbutton auch alternative NPC-Quellen. Ein bereits anvisierter, passender freundlicher NPC bleibt beim erneuten Klick ausgewählt.
+
+Danke an **postblink** für die Polestar-Integration!
 
 ## 1.7.4 – 21.11.2026
 

@@ -2,9 +2,11 @@
 local _, NS = ...
 NS.PatchNotesData = {
     deDE = {
-        { version = "1.7.5", date = "Vorschau", sections = {
+        { version = "1.7.5", date = "22.11.2026", sections = {
                 { title = "Polestar", items = {
-                    "**Polestar-Guideziele:** In WoW Forever kannst du mit installiertem Polestar unter **Buttons → Zielleiste → Polestar-Guideziele verwenden** die standardmäßig ausgeschaltete Option aktivieren. Der Hauptbutton sucht benannte offene Ziele des angezeigten Guide-Schritts; ohne Ziele übernimmt die Questsuche. Änderungen werden nach dem Kampf angewendet. Ist auch RestedXP aktiv und verfügbar, hat es Vorrang.",
+                    "**Polestar-Guideziele:** In WoW Forever kannst du mit installiertem Polestar unter **Buttons → Zielleiste → Polestar-Guideziele verwenden** die standardmäßig ausgeschaltete Option aktivieren. Der Masterbutton sucht benannte offene Ziele des angezeigten Guide-Schritts; ohne Ziele übernimmt die Questsuche. Änderungen werden nach dem Kampf angewendet. Ist auch RestedXP aktiv und verfügbar, hat es Vorrang.",
+                    "Bei Sammelzielen durchsucht der Masterbutton auch alternative NPC-Quellen. Ein bereits anvisierter, passender freundlicher NPC bleibt beim erneuten Klick ausgewählt.",
+                    paragraph = "Danke an **postblink** für die Polestar-Integration!",
                 }},
             }},
         { version = "1.7.4", date = "21.11.2026", sections = {
@@ -250,9 +252,11 @@ NS.PatchNotesData = {
             }},
     },
     enUS = {
-        { version = "1.7.5", date = "Preview", sections = {
+        { version = "1.7.5", date = "Nov 22, 2026", sections = {
                 { title = "Polestar", items = {
-                    "**Polestar guide targets:** On WoW Forever, with Polestar installed, enable the normally disabled **Buttons → Targeting bar → Follow Polestar guide targets** option. The main compass searches named open goals in the displayed guide step; without targets it falls back to quest search. Changes apply after combat. If RestedXP is also enabled and available, it takes precedence.",
+                    "**Polestar guide targets:** On WoW Forever, with Polestar installed, enable the normally disabled **Buttons → Targeting bar → Follow Polestar guide targets** option. The master button searches named open goals in the displayed guide step; without targets it falls back to quest search. Changes apply after combat. If RestedXP is also enabled and available, it takes precedence.",
+                    "For collection goals, the master button also searches alternate NPC sources. Clicking again keeps a valid friendly NPC selected.",
+                    paragraph = "Thanks to **postblink** for the Polestar integration!",
                 }},
             }},
         { version = "1.7.4", date = "Nov 21, 2026", sections = {
@@ -498,9 +502,11 @@ NS.PatchNotesData = {
             }},
     },
     esES = {
-        { version = "1.7.5", date = "Vista previa", sections = {
+        { version = "1.7.5", date = "22 nov. 2026", sections = {
                 { title = "Polestar", items = {
-                    "**Objetivos de Polestar:** En WoW Forever, con Polestar instalado, activa **Botones → Barra de objetivos → Seguir objetivos de Polestar**, desactivado por defecto. La brújula principal busca objetivos abiertos con nombre del paso mostrado; si no hay ninguno, busca objetivos de misión. Los cambios se aplican después del combate. Si RestedXP también está activado y disponible, tiene prioridad.",
+                    "**Objetivos de Polestar:** En WoW Forever, con Polestar instalado, activa **Botones → Barra de objetivos → Seguir objetivos de Polestar**, desactivado por defecto. El botón maestro busca objetivos abiertos con nombre del paso mostrado; si no hay ninguno, busca objetivos de misión. Los cambios se aplican después del combate. Si RestedXP también está activado y disponible, tiene prioridad.",
+                    "Para los objetivos de recolección, el botón maestro también busca fuentes PNJ alternativas. Si ya tienes seleccionado un PNJ amistoso válido, vuelve a hacer clic para conservarlo como objetivo.",
+                    paragraph = "¡Gracias a **postblink** por la integración con Polestar!",
                 }},
             }},
         { version = "1.7.4", date = "21 nov. 2026", sections = {
@@ -746,9 +752,11 @@ NS.PatchNotesData = {
             }},
     },
     frFR = {
-        { version = "1.7.5", date = "Aperçu", sections = {
+        { version = "1.7.5", date = "22 nov. 2026", sections = {
                 { title = "Polestar", items = {
-                    "**Cibles Polestar :** Sur WoW Forever, avec Polestar installé, activez **Boutons → Barre de ciblage → Suivre les cibles Polestar**, désactivé par défaut. La boussole principale recherche les objectifs ouverts nommés de l’étape affichée ; à défaut, elle recherche les objectifs de quête. Les changements s’appliquent après le combat. Si RestedXP est aussi activé et disponible, il est prioritaire.",
+                    "**Cibles Polestar :** Sur WoW Forever, avec Polestar installé, activez **Boutons → Barre de ciblage → Suivre les cibles Polestar**, désactivé par défaut. Le bouton principal recherche les objectifs ouverts nommés de l’étape affichée ; à défaut, elle recherche les objectifs de quête. Les changements s’appliquent après le combat. Si RestedXP est aussi activé et disponible, il est prioritaire.",
+                    "Pour les objectifs de collecte, le bouton principal recherche aussi les PNJ qui constituent des sources alternatives. Un nouveau clic conserve le PNJ amical valide déjà ciblé.",
+                    paragraph = "Merci à **postblink** pour l’intégration de Polestar !",
                 }},
             }},
         { version = "1.7.4", date = "21 nov. 2026", sections = {
@@ -994,9 +1002,11 @@ NS.PatchNotesData = {
             }},
     },
     trTR = {
-        { version = "1.7.5", date = "Önizleme", sections = {
+        { version = "1.7.5", date = "22 Kas 2026", sections = {
                 { title = "Polestar", items = {
-                    "**Polestar rehber hedefleri:** WoW Forever'da Polestar yüklüyken varsayılan olarak kapalı **Düğmeler → Hedef çubuğu → Polestar hedeflerini izle** seçeneğini açın. Ana pusula, görüntülenen rehber adımındaki adlı açık hedefleri arar; hedef yoksa görev aramasına döner. Değişiklikler çatışmadan sonra uygulanır. RestedXP de açık ve kullanılabilir olduğunda önceliklidir.",
+                    "**Polestar rehber hedefleri:** WoW Forever'da Polestar yüklüyken varsayılan olarak kapalı **Düğmeler → Hedef çubuğu → Polestar hedeflerini izle** seçeneğini açın. Ana düğme, görüntülenen rehber adımındaki adlı açık hedefleri arar; hedef yoksa görev aramasına döner. Değişiklikler çatışmadan sonra uygulanır. RestedXP de açık ve kullanılabilir olduğunda önceliklidir.",
+                    "Toplama hedeflerinde ana düğme alternatif NPC kaynaklarını da arar. Geçerli bir dost NPC zaten hedefteyse tekrar tıklamak onu hedefte tutar.",
+                    paragraph = "Polestar entegrasyonu için **postblink**’e teşekkürler!",
                 }},
             }},
         { version = "1.7.4", date = "21 Kas 2026", sections = {
@@ -1242,9 +1252,11 @@ NS.PatchNotesData = {
             }},
     },
     zhCN = {
-        { version = "1.7.5", date = "预览", sections = {
+        { version = "1.7.5", date = "2026年11月22日", sections = {
                 { title = "Polestar", items = {
-                    "**Polestar 指南目标：** 在 WoW Forever 中安装 Polestar 后，可在**按钮 → 目标按钮栏 → 跟随 Polestar 指南目标**启用默认关闭的选项。主罗盘会搜索当前显示步骤中有名称的未完成目标；没有目标时会回退到任务搜索。战斗中的更改会在战斗结束后应用。如果同时启用且可使用 RestedXP，则优先使用 RestedXP。",
+                    "**Polestar 指南目标：** 在 WoW Forever 中安装 Polestar 后，可在**按钮 → 目标按钮栏 → 跟随 Polestar 指南目标**启用默认关闭的选项。主按钮会搜索当前显示步骤中有名称的未完成目标；没有目标时会回退到任务搜索。战斗中的更改会在战斗结束后应用。如果同时启用且可使用 RestedXP，则优先使用 RestedXP。",
+                    "对于收集目标，主按钮也会搜索备选 NPC 来源。再次点击时，已选中的有效友方 NPC 会保持为目标。",
+                    paragraph = "感谢 **postblink** 提供 Polestar 集成！",
                 }},
             }},
         { version = "1.7.4", date = "2026年11月21日", sections = {
