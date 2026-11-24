@@ -1,6 +1,6 @@
 local _, NS = ...
-local Core, UI = NS.Core, NS.UI
-local Integration = {targets = {}, cursor = 1, guideCursor = 1}
+local Core, UI, Proximity = NS.Core, NS.UI, NS.Proximity
+local Integration = {}
 NS.RestedXP = Integration
 
 local function restedXP()
@@ -82,7 +82,7 @@ local function polestarNames(validNames)
     end
     local friendlyTypes = {accept=true, turnin=true, talk=true, train=true, vendor=true,
         buy=true, auction=true, sethome=true, getfp=true, learn=true}
-    local names, friendly, seen = {}, {}, {}
+    local names, friendly, seen, npcIDs, points = {}, {}, {}, {}, {}
     local function addName(raw, isFriendly, explicitFriendly)
         local name = Core.SafeName(raw)
         if name and not seen[name] then
@@ -113,13 +113,109 @@ local function polestarNames(validNames)
                 local isSource = collectSource and Core.SafeName(name) ~= nil
                     and Core.SafeName(name) == Core.SafeName(collectSource.name)
                 addName(name, friendlyTypes[kind] or (sourceFriendly and isSource), sourceFriendly and isSource)
+                local safe = Core.SafeName(name)
+                if safe and type(id) == "number" and id > 0 then npcIDs[safe] = id end
+                if safe and friendlyTypes[kind] and goal.f ~= "e"
+                    and type(goal.x) == "number" and type(goal.y) == "number"
+                    and (goal.x ~= 0 or goal.y ~= 0) then
+                    local point = Proximity.MapPoint(goal.map, goal.x / 100, goal.y / 100)
+                    if point then
+                        local locations = points[safe] or {}
+                        locations[#locations + 1] = point
+                        points[safe] = locations
+                    end
+                end
                 if kind == "collect" and type(goal.source) == "table" and goal.source.kind == "npc" then
                     addName(goal.source.also, sourceFriendly, sourceFriendly)
                 end
             end
         end
     end
-    return names, friendly
+    return names, friendly, npcIDs, points
+end
+
+local function readGuide(provider, baseNames)
+    if provider == "restedxp" then
+        local rxp = restedXP()
+        if rxp then return currentNames(rxp, baseNames) end
+    elseif provider == "polestar" then
+        return polestarNames(baseNames)
+    end
+end
+
+local function rankedEntry(app, base)
+    local db = NS.Database.Provider()
+    local entry = {nameList={}, names={}, finisherNames={}, refs={}, mapPoints={}, distanceOrder=true,
+        title=NS.L(base and "active" or "restedXPButton"), questID=0}
+    local hasSources = false
+    local function add(names, friendly, ids, points)
+        if not names or #names == 0 then return end
+        hasSources = true
+        for _, name in ipairs(names) do
+            if db and ids then
+                if ids[name] then Proximity.Register(db, ids[name], name)
+                else Proximity.RegisterName(db, name) end
+            end
+            if not entry.names[name] then
+                entry.nameList[#entry.nameList + 1] = name
+                entry.names[name] = true
+            end
+            if friendly and friendly[name] then entry.finisherNames[name] = true end
+            if points and points[name] then
+                local combined = entry.mapPoints[name] or {}
+                for _, point in ipairs(points[name]) do combined[#combined + 1] = point end
+                entry.mapPoints[name] = combined
+            end
+        end
+    end
+    local questEntry = UI.master.defaultEntry
+    local baseNames = questEntry.names or {}
+    local useModules = app.db.masterAllModules ~= false
+    if app.db.restedXPIntegration and (not base or useModules) then
+        local names, friendly = readGuide("restedxp", baseNames)
+        for _, name in ipairs(names or {}) do
+            if questEntry.finisherNames and questEntry.finisherNames[name] then friendly[name] = true end
+        end
+        add(names, friendly, {})
+    end
+    if base and useModules then
+        if app.db.polestarIntegration then add(readGuide("polestar", baseNames)) end
+        local itemTree = NS.ItemTree.SearchEntry(app)
+        local rareScanner = NS.RareScanner.SearchEntry(app)
+        if itemTree then add(itemTree.nameList, itemTree.finisherNames, {}, itemTree.mapPoints) end
+        if rareScanner then add(rareScanner.nameList, rareScanner.finisherNames, nil, rareScanner.mapPoints) end
+    end
+    if base then
+        local hasModules = hasSources
+        add(base.nameList, base.finisherNames)
+        if not hasModules then
+            Proximity.Order(entry)
+            if not entry.name or not Proximity.EntryDistance(entry, entry.name) then return base end
+        end
+    end
+    if #entry.nameList == 0 then return end
+    Proximity.Order(entry)
+    return entry
+end
+
+local function prepareClick(app, button, base, setting)
+    Proximity.Sample()
+    local entry = rankedEntry(app, base)
+    button.entry = entry
+    local settings = Core.TargetFeedbackSettings(app.db, setting)
+    Core.SetClickMacro(button, Core.ClickMacro(entry, {}, settings, button, nil, true), app.db)
+end
+
+local function prepareCombatMacro(app, button, setting)
+    local settings = Core.TargetFeedbackSettings(app.db, setting)
+    local entry = button.entry
+    local macro
+    if entry and Core.ValidCurrentTarget(entry) then
+        macro = Core.MarkerMacro(settings, true, entry.finisherNames[Core.SafeName(UnitName("target"))])
+    else
+        macro = Core.EntryMacro(entry, settings)
+    end
+    if button:GetAttribute("macrotext1") ~= macro then button:SetAttribute("macrotext1", macro) end
 end
 
 local function createButton()
@@ -133,23 +229,21 @@ local function createButton()
         local app = NS.app
         if InCombatLockdown() then
             Core.PrepareDeadTargetSound(self:GetAttribute("macrotext1"), app.db)
-        elseif Integration.active and self.entry then
-            local macro = Core.ClickMacro(self.entry, {}, app.db, nil, Integration.guideTargets)
-            Core.SetClickMacro(self, macro, app.db)
+        else
+            prepareClick(app, self, nil, "restedXP")
         end
     end)
     button:SetScript("PostClick", function(self, mouseButton, down)
-        if mouseButton ~= "LeftButton" or down or InCombatLockdown() or not Integration.active
-            or not self.entry then return end
+        if mouseButton ~= "LeftButton" or down or InCombatLockdown() then return end
         Core.RecordClickResult()
-        Integration.guideCursor = Integration.guideCursor % #Integration.targets + 1
-        Integration.Sync(NS.app)
+        prepareCombatMacro(NS.app, self, "restedXP")
     end)
     button:SetScript("OnEnter", function(self)
         if not NS.app.db.showTooltips then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(NS.L("restedXPButton"))
-        if self.entry then GameTooltip:AddLine(self.entry.name, 1, 1, 1, true) end
+        GameTooltip:AddLine(NS.L("restedXPSourceTip"), 1, 1, 1, true)
+        if not self.entry then GameTooltip:AddLine(NS.L("restedXPNoTarget"), 1, 0.82, 0, true) end
         GameTooltip:Show()
     end)
     button:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -157,181 +251,23 @@ local function createButton()
     return button
 end
 
-local function setMacro(button, entry, settings, preserveEntry)
-    if not button then return end
-    button.entry = entry
-    local macro = entry and Core.EntryMacro(entry, settings) or nil
-    if entry and preserveEntry and Core.ValidCurrentTarget(preserveEntry) then
-        local name = Core.SafeName(UnitName("target"))
-        local friendly = preserveEntry.finisherNames[name]
-        macro = Core.MarkerMacro(settings, true, friendly)
-    end
-    button:SetAttribute("macrotext1", macro)
-end
-
-local function guideEntry(name, friendlyNames, provider)
-    if not name then return end
-    local friendly = friendlyNames[name]
-    return {name=name, title=NS.L(provider == "polestar" and "polestarButton" or "restedXPButton"), questID=0,
-        nameList={name}, names={[name]=true}, refs={},
-        finisherNames=friendly and {[name]=true} or {},
-        mobCount=friendly and 0 or 1, turnInCount=friendly and 1 or 0}
-end
-
-local function appendNativeFallback(macro, base, settings)
-    if not macro or not macro:find("/cleartarget", 1, true)
-        or not base or not base.nameList or #base.nameList == 0 then return macro end
-    local proximity = NS.Proximity
-    if proximity then
-        proximity.Order(base)
-        if proximity.MovedFrom(Integration.nativePosition)
-            or (Integration.nativeProximityKey and Integration.nativeProximityKey ~= base.proximityKey) then
-            Integration.nativeCursor = 1
-        end
-        Integration.nativePosition = proximity.position
-        Integration.nativeProximityKey = base.proximityKey
-    end
-    local marker = Core.MarkerMacro(settings, true)
-    -- Native targets can shrink while the active guide step stays unchanged.
-    local index = ((Integration.nativeCursor or 1) - 1) % #base.nameList + 1
-    for _ = 1, #base.nameList do
-        local name = base.nameList[index]
-        local line = "\n/targetexact [noexists] " .. name .. "\n/cleartarget [dead]"
-        if #macro + #line + #marker > Core.MACRO_BYTES then break end
-        macro = macro .. line
-        index = index % #base.nameList + 1
-    end
-    Integration.nativeCursor = index
-    if #macro + #marker <= Core.MACRO_BYTES then macro = macro .. marker end
-    return macro
-end
-
 function Integration.Sync(app)
     if InCombatLockdown() or not app.db or not UI.master then return end
     local rxp = app.db.restedXPIntegration and restedXP()
-    local polestar = not rxp and app.db.polestarIntegration and _G.Polestar
-        and type(_G.Polestar.Engine) == "table" and _G.Polestar.Engine
-    local wasActive = Integration.active
-    Integration.provider = rxp and "restedxp" or polestar and "polestar" or nil
-    Integration.active = Integration.provider ~= nil
-    if not Integration.active then
-        Integration.targets = {}
-        Integration.allEntry = nil
-        Integration.guideTargets = nil
-        Integration.signature = nil
-        Integration.cursor = 1
-        Integration.guideCursor = 1
-        Integration.nativeCursor = 1
-        Integration.fallbackOnce = false
-        if wasActive then setMacro(UI.master, UI.master.defaultEntry, app.db) end
-        if Integration.button then
-            setMacro(Integration.button, nil, app.db)
-            Integration.button:Hide()
-        end
-        UI.LayoutTargetButtons(app)
-        return
-    end
-
-    local base = UI.master.defaultEntry or {}
-    local names, guideFriendlyNames
-    if rxp then names, guideFriendlyNames = currentNames(rxp, base.names or {})
-    else names, guideFriendlyNames = polestarNames(base.names or {}) end
-    names, guideFriendlyNames = names or {}, guideFriendlyNames or {}
-    local signatureParts = {}
-    for i, target in ipairs(names) do
-        signatureParts[i] = target .. (guideFriendlyNames[target] and ":friendly" or "")
-    end
-    local signature = Integration.provider .. "\n" .. table.concat(signatureParts, "\n")
-    if signature ~= Integration.signature then
-        Integration.cursor = 1
-        Integration.guideCursor = 1
-        Integration.nativeCursor = 1
-        Integration.fallbackOnce = false
-    end
-    Integration.signature = signature
-    Integration.targets = names
-    local allNames, allFriendly, guideNames = {}, {}, {}
-    for target in pairs(base.names or {}) do allNames[target] = true end
-    for target in pairs(base.finisherNames or {}) do allFriendly[target] = true end
-    for _, target in ipairs(names) do
-        allNames[target] = true
-        guideNames[target] = true
-        if guideFriendlyNames[target]
-            or (base.finisherNames and base.finisherNames[target]) then
-            allFriendly[target] = true
-            guideFriendlyNames[target] = true
-        end
-    end
-    Integration.allEntry = {names=allNames, finisherNames=allFriendly}
-    Integration.guideTargets = {names=guideNames, finisherNames=guideFriendlyNames}
-    local name = names[Integration.cursor]
-    local entry = (not name or Integration.fallbackOnce) and base.name and base
-        or guideEntry(name, guideFriendlyNames, Integration.provider)
-    setMacro(UI.master, entry, app.db, Integration.allEntry)
-
-    if rxp then
-        if not Integration.button then Integration.button = createButton() end
-        setMacro(Integration.button, guideEntry(names[Integration.guideCursor], guideFriendlyNames),
-            app.db, Integration.guideTargets)
-        Integration.button:Show()
-    elseif Integration.button then
-        setMacro(Integration.button, nil, app.db)
-        Integration.button:Hide()
+    Integration.active = rxp and true or false
+    local polestar = app.db.polestarIntegration and _G.Polestar and type(_G.Polestar.Engine) == "table"
+    if rxp or polestar or app.db.itemTreeButton then Proximity.PrepareNameIndex(NS.Database.Provider()) end
+    UI.master.entry = rankedEntry(app, UI.master.defaultEntry)
+    prepareCombatMacro(app, UI.master, "master")
+    if rxp and not Integration.button then Integration.button = createButton() end
+    if Integration.button then
+        Integration.button.entry = rxp and rankedEntry(app) or nil
+        prepareCombatMacro(app, Integration.button, "restedXP")
+        if Integration.button:IsShown() ~= Integration.active then Integration.button:SetShown(Integration.active) end
     end
     UI.LayoutTargetButtons(app)
 end
 
 function Integration.PreClick(app, button)
-    if not Integration.active then return false end
-    if InCombatLockdown() then
-        Core.PrepareDeadTargetSound(button:GetAttribute("macrotext1"), app.db)
-        return true
-    end
-    local entry = button.entry
-    local native = entry and entry == UI.master.defaultEntry
-    Integration.attemptSerial = (Integration.attemptSerial or 0) + 1
-    Integration.lastAttempt = {serial=Integration.attemptSerial,
-        signature=Integration.signature, native=native}
-    local macro
-    if native then
-        button.nativeState = button.nativeState or {}
-        button.nativeState.entry = entry
-        macro = Core.ClickMacro(entry, {}, app.db,
-            button.nativeState, Integration.allEntry)
-    else
-        button.rxpState = {entry=entry}
-        macro = entry and Core.ClickMacro(entry, {entry}, app.db,
-            button.rxpState, Integration.allEntry) or nil
-        if entry and not Core.ValidCurrentTarget(Integration.allEntry) then
-            macro = appendNativeFallback(macro, UI.master.defaultEntry, app.db)
-        end
-    end
-    Core.SetClickMacro(button, macro, app.db)
-    return true
-end
-
-function Integration.PostClick(app)
-    if not Integration.active then return false end
-    if InCombatLockdown() then return true end
-    local attempt = Integration.lastAttempt
-    Integration.lastAttempt = nil
-    if attempt and attempt.native then
-        Integration.fallbackOnce = false
-    elseif attempt then
-        local serial, signature = attempt.serial, attempt.signature
-        C_Timer.After(0, function()
-            if not Integration.active or serial ~= Integration.attemptSerial
-                or signature ~= Integration.signature or InCombatLockdown() then return end
-            if not Core.ValidCurrentTarget(Integration.allEntry)
-                and not Core.ValidCurrentTarget(UI.master.defaultEntry or {}) then
-                Integration.fallbackOnce = true
-            end
-            Integration.Sync(app)
-        end)
-        if #Integration.targets > 0 then
-            Integration.cursor = Integration.cursor % #Integration.targets + 1
-        end
-    end
-    Integration.Sync(app)
-    return true
+    prepareClick(app, button, button.defaultEntry, "master")
 end

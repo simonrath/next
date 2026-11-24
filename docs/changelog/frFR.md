@@ -2,6 +2,25 @@
 
 Changements pour les joueurs, de la version la plus récente à la plus ancienne. Les indications d’installation historiques s’appliquent à la version indiquée.
 
+## 1.8.0 – 24 nov. 2026
+
+### Améliorations majeures
+- **Recherche combinée** — Le bouton principal recherche dans le journal de quêtes et les sources activées RestedXP, Polestar, ItemTree et RareScanner. Chaque clic hors combat donne la priorité aux cibles proches aux coordonnées connues, y compris les PNJ de remise de quête. Le bouton bleu recherche uniquement les objectifs de RestedXP.
+- **Rechercher dans tous les modules** est activé par défaut sous **Afficher le bouton principal**. Désactivez cette option pour limiter le bouton principal aux cibles du journal de quêtes.
+- **Bouton RareScanner** — Actualise l’ordre par distance même lorsqu’un rare est ciblé et vérifie les plaques de nom proches et lisibles avant de poursuivre la recherche par macro. Même immobile, chaque clic peut rechercher de nouveau le rare le plus proche si la macro peut aussi contenir un autre nom.
+
+### Marqueurs de cible
+- **Marquage par bouton :** Sous **Marquage**, choisissez **Marqueur de raid** ou **Aucun marquage** pour chaque bouton de ciblage. Dans WoW Forever et Retail, **Signal** est aussi disponible. Les options de WoW déterminent si les signaux apparaissent dans votre discussion.
+
+Merci à **Caedis** pour l’idée des pings sur les cibles !
+
+### Options
+- Les options natives sont regroupées sous **Quest Targets** et **Boutons et barre**. Ouvrez les **Notes de mise à jour** ou les **Avis** sous **Général**. Les options en retrait sont accessibles lorsque la fonction associée est disponible et activée.
+- Activez **Afficher le fond de la barre** sous **Apparence et position** pour afficher un fond sombre de WoW derrière la barre. Le cadre en bronze est légèrement plus épais.
+
+### Problèmes connus
+- **Problème connu sur le client allemand de WoW Forever** — Certains PNJ portent un nom différent selon leur genre. QuestieDB fournit une seule forme par PNJ. Si la forme affichée en jeu manque, le bouton principal peut ignorer le PNJ lors d'une recherche par nom, comme pour « Diebin der Wüstenläufer ».
+
 ## 1.7.5 – 22 nov. 2026
 
 ### Polestar

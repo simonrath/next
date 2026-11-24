@@ -42,7 +42,7 @@ local function createButton(slot)
         if down or InCombatLockdown() or not self.entry then return end
         if not valid(self, NS.app) then clear(self); return end
         if mouseButton == "LeftButton" then
-            Core.SetClickMacro(self, Core.ClickMacro(self.entry, {self.entry}, NS.app.db, self), NS.app.db)
+            Core.SetClickMacro(self, Core.ClickMacro(self.entry, {self.entry}, Core.TargetFeedbackSettings(NS.app.db, "ellesmere"), self), NS.app.db)
         end
     end)
     button:SetScript("PostClick", function(self, mouseButton, down)
@@ -50,7 +50,7 @@ local function createButton(slot)
         if mouseButton == "RightButton" then UI.ToggleFocus(NS.app, self.entry); return end
         if mouseButton ~= "LeftButton" then return end
         Core.RecordClickResult()
-        self:SetAttribute("macrotext1", Core.EntryMacro(self.entry, NS.app.db))
+        self:SetAttribute("macrotext1", Core.EntryMacro(self.entry, Core.TargetFeedbackSettings(NS.app.db, "ellesmere")))
     end)
     button:SetScript("OnEnter", function(self) UI.Tooltip(self) end)
     button:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -104,7 +104,7 @@ function Integration.Sync(app)
                 button.fallbackIndex, button.fallbackFinisherIndex = nil, nil
             end
             button.entry, button.questID = entry, questID
-            button:SetAttribute("macrotext1", Core.EntryMacro(entry, app.db))
+            button:SetAttribute("macrotext1", Core.EntryMacro(entry, Core.TargetFeedbackSettings(app.db, "ellesmere")))
             button:Show()
             button.focusMark:SetShown(questID == app.db.focusQuestID)
         elseif button then

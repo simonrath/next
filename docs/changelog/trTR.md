@@ -2,6 +2,25 @@
 
 Oyuncuları ilgilendiren değişiklikler en yeni sürümden başlayarak sıralanır. Eski kurulum notları yalnızca belirtilen sürüm için geçerlidir.
 
+## 1.8.0 – 24 Kas 2026
+
+### Büyük iyileştirmeler
+- **Birleşik hedef araması** — Ana düğme görev günlüğünü ve açık RestedXP, Polestar, ItemTree ve RareScanner kaynaklarını birlikte arar. Savaş dışında her tıklama, görev teslim NPC’leri dahil koordinatları bilinen yakın hedeflere öncelik verir. Mavi düğme yalnızca RestedXP rehber hedeflerini arar.
+- **Tüm modülleri ara** seçeneği **Ana düğmeyi göster** altında varsayılan olarak açıktır. Ana düğmeyi görev günlüğü hedefleriyle sınırlamak için kapatın.
+- **RareScanner düğmesi** — Bir nadir hedefliyken de mesafe sırasını günceller ve sonraki makro sayfasından önce yakındaki okunabilir isim plakalarını kontrol eder. Hareketsizken bile makroya bir ad daha sığıyorsa her tıklama en yakın nadir hedefi yeniden dener.
+
+### Hedef işaretleri
+- **Düğme başına işaretleme:** **Hedef işaretleri** altında her hedefleme düğmesi için **Baskın işareti** veya **İşaretleme yok** seçeneğini belirle. WoW Forever ve Retail’de **Sinyal** de seçilebilir. Sinyallerin sohbetinde görünmesini WoW ayarlarından kontrol edebilirsin.
+
+Hedeflere ping atma fikri için **Caedis**’e teşekkürler!
+
+### Seçenekler
+- Yerleşik ayarlar **Quest Targets** ve **Düğmeler ve çubuk** altında gruplandı. **Yama Notları** ve **Geri bildirim** artık **Genel** altında. Girintili ayarlar, bağlı oldukları özellik kullanılabilir ve açık olduğunda etkinleşir.
+- Çubuğun arkasına koyu bir WoW arka planı eklemek için **Görünüm ve Konum** altında **Çubuk arka planını göster** seçeneğini açın. Bronz çerçeve biraz daha kalın.
+
+### Bilinen sorunlar
+- **Almanca WoW Forever istemcisinde bilinen sorun** — Bazı NPC'lerin adı cinsiyete göre değişir. QuestieDB her NPC için tek bir ad biçimi sunar. Oyunda görünen ad eksikse ana düğme, “Diebin der Wüstenläufer” örneğinde olduğu gibi, ada göre aramada NPC'yi atlayabilir.
+
 ## 1.7.5 – 22 Kas 2026
 
 ### Polestar

@@ -14,6 +14,40 @@ class QuestTargetsTests(unittest.TestCase):
             self.lua.execute('assert(loadstring(...))("QuestTargets", NS)',
                              (ROOT / 'QuestTargets' / name).read_text(encoding='utf-8'))
 
+    def test_target_ping_uses_a_guarded_native_macro_and_excludes_raid_markers(self):
+        self.lua.execute('''
+            C_Ping={SendMacroPing=function() error('Ping must run in the secure macro') end}
+            QuestTargetsDB={autoPing=true, autoMark=true}
+            boot()
+            local app, core, ui = NS.app, NS.Core, NS.UI
+            local ping='/ping [@target,exists,harm,nodead]'
+            assert(app.db.autoPing and not app.db.autoMark)
+            local macro=core.EntryMacro(ui.master.defaultEntry, app.db)
+            assert(#macro<=255 and macro:find(ping,1,true) and not macro:find('/tm',1,true))
+            assert(core.Macro('Friendly NPC', app.db, true):find('/ping [@target,exists,nodead]',1,true))
+            ui.Settings(app)
+            local master = ui.settings.feedbackControls[1].selector
+            local rested = ui.settings.feedbackControls[2].selector
+            local tooltipLine
+            GameTooltip.AddLine=function(_, text) tooltipLine=text end
+            master.scripts.OnEnter(master)
+            assert(tooltipLine:find('255',1,true) and tooltipLine:find('Show Pings in Chat',1,true))
+            master.scripts.OnClick()
+            assert(core.TargetFeedbackMode(app.db,'master')==1)
+            assert(core.TargetFeedbackMode(app.db,'restedXP')==3)
+            rested.scripts.OnClick()
+            rested.scripts.OnClick()
+            assert(core.TargetFeedbackMode(app.db,'restedXP')==2)
+            assert(core.TargetFeedbackMode(app.db,'itemTree')==3)
+            assert(core.TargetFeedbackMode(app.db,'rare')==1)
+            app:Refresh()
+            macro=ui.master.attributes.macrotext1
+            assert(not macro:find('/ping',1,true) and not macro:find('/tm',1,true))
+            assert(ui.rows[1].attributes.macrotext1:find('/ping',1,true))
+            C_Ping=nil
+            assert(not core.Macro('Wolf', app.db):find('/ping',1,true))
+        ''')
+
     def test_quest_zones_sort_and_collapse_without_removing_targets(self):
         self.lua.execute('''
             table.insert(quests, 2, {title='Ashenvale',isHeader=true})
@@ -475,7 +509,7 @@ class QuestTargetsTests(unittest.TestCase):
         ''')
 
     def test_all_flavors_use_native_compact_controls_and_keep_saved_values(self):
-        for flavor, interface in (('Forever', 16001), ('Retail', 120100),
+        for flavor, interface in (('Forever', 16001), ('Retail', 120105),
                                   ('Classic', 11509), ('TBC', 20506), ('Mists', 50504)):
             with self.subTest(flavor=flavor):
                 self.setUp()
@@ -487,6 +521,8 @@ class QuestTargetsTests(unittest.TestCase):
             loadedAddons={Questie=false,RXPGuides=false}
             C_AddOns={IsAddOnLoaded=function(name) return loadedAddons[name] end}
             GetBuildInfo=function() return '', '', '', settingsTestInterface end
+            local supportsPing=settingsTestInterface==16001 or settingsTestInterface==120105
+            C_Ping=supportsPing and {SendMacroPing=function() error('Insecure ping') end} or nil
             StaticPopupDialogs={}
             StaticPopup_Show=function(key) shownPopup=key end
             local categoryID=71
@@ -508,8 +544,8 @@ class QuestTargetsTests(unittest.TestCase):
                 return initializer({name=name, kind='section'})
             end
             CreateSettingsButtonInitializer=function(name, text, callback, description)
-                return initializer({name=name, text=text, callback=callback,
-                    tooltip=description, kind='button'})
+                return initializer({name=name, buttonText=text, buttonClick=callback,
+                    tooltip=description, kind='action'})
             end
             SettingsListElementMixin={
                 OnLoad=function() end,
@@ -531,8 +567,7 @@ class QuestTargetsTests(unittest.TestCase):
             Settings={VarType={Boolean='boolean', Number='number'},
                 CreateElementInitializer=function(template,data)
                     local item=initializer(data)
-                    item.data.kind=template=='QuestTargetsMoveSettingTemplate' and 'move'
-                        or template=='QuestTargetsBindingSettingTemplate' and 'button' or 'editbox'
+                    item.data.kind=template=='QuestTargetsBindingSettingTemplate' and 'button' or 'editbox'
                     item.template=template
                     return item
                 end,
@@ -547,7 +582,9 @@ class QuestTargetsTests(unittest.TestCase):
                     -- before registering it in the map read by ActionBar clicks.
                     assert(type(name)=='string', 'Proxy setting name must be resolved before registration')
                     local item={variable=variable,kind=kind,name=name,default=default,
-                        GetValue=get,SetValue=set,GetName=function() return name end}
+                        GetValue=get,SetValue=function(first, second)
+                            if second~=nil then set(second) else set(first) end
+                        end,GetName=function() return name end}
                     nativeSettings[variable]=item
                     return item
                 end,
@@ -561,13 +598,13 @@ class QuestTargetsTests(unittest.TestCase):
                     return {min=minimum,max=maximum,step=step,
                         SetLabelFormatter=function() end}
                 end,
-                CreateSlider=function(category,value,options)
-                    local item=initializer({kind='slider',setting=value,options=options})
+                CreateSlider=function(category,value,options,description)
+                    local item=initializer({kind='slider',setting=value,options=options,description=description})
                     category.layout:AddInitializer(item)
                     return item
                 end,
-                CreateDropdown=function(category,value,choices)
-                    local item=initializer({kind='dropdown',setting=value,choices=choices})
+                CreateDropdown=function(category,value,choices,description)
+                    local item=initializer({kind='dropdown',setting=value,choices=choices,description=description})
                     category.layout:AddInitializer(item)
                     return item
                 end,
@@ -579,6 +616,10 @@ class QuestTargetsTests(unittest.TestCase):
                 RegisterAddOnCategory=function(category) nativeRegistered=category; nativeRegistrations=(nativeRegistrations or 0)+1 end,
                 OpenToCategory=function(id) assert(id==categoryID); nativeOpened=id end}
             local buttonsLayout={initializers={},AddInitializer=layout.AddInitializer,GetInitializers=layout.GetInitializers}
+            Settings.RegisterVerticalLayoutSubcategory=function(parent,name)
+                assert(parent==nativeCategory)
+                return {name=name,layout=buttonsLayout,SetName=function(self,value) self.name=value end},buttonsLayout
+            end
             if settingsTestInterface==16001 then
                 SettingsListMixin={}
                 local nextLayout=0
@@ -606,11 +647,11 @@ class QuestTargetsTests(unittest.TestCase):
                 Settings.CreateCheckboxInitializer=function(value,options,description)
                     return initializer({kind='checkbox',setting=value,description=description})
                 end
-                Settings.CreateSliderInitializer=function(value,options)
-                    return initializer({kind='slider',setting=value,options=options})
+                Settings.CreateSliderInitializer=function(value,options,description)
+                    return initializer({kind='slider',setting=value,options=options,description=description})
                 end
-                Settings.CreateDropdownInitializer=function(value,choices)
-                    return initializer({kind='dropdown',setting=value,choices=choices})
+                Settings.CreateDropdownInitializer=function(value,choices,description)
+                    return initializer({kind='dropdown',setting=value,choices=choices,description=description})
                 end
                 Settings.RegisterCanvasLayoutCategory=function(page,name)
                     nativeCategory={name=name,page=page,GetID=function() return categoryID end,
@@ -631,9 +672,17 @@ class QuestTargetsTests(unittest.TestCase):
             nativeSettings={}
             boot()
             assert(nativeCategory and nativeRegistered==nativeCategory, 'Category missing at login')
+            assert(layout.initializers[1].data.name=='General', 'The main page must begin with General')
+            assert(NS.UI.nativeButtonsCategory.name=='Buttons & Bar', 'The subpage must be named Buttons & Bar')
             assert(nativeOpened==nil, 'Login must not open Options')
             assert(not QuestTargetsPatchNotes)
-            NS.UI.nativePatchNotes.data.callback()
+            assert(NS.UI.nativePatchNotes.data.buttonText=='View')
+            NS.UI.nativePatchNotes.data.buttonClick()
+            local openedFeedback
+            StaticPopup_Show=function(key) openedFeedback=key end
+            NS.UI.nativeFeedback.data.buttonClick()
+            assert(openedFeedback=='QUESTTARGETS_FEEDBACK_LINK')
+            StaticPopup_Show=function(key) shownPopup=key end
             assert(QuestTargetsPatchNotes:IsShown())
             assert(QuestTargetsPatchNotes.scripts.OnUpdate==nil)
             QuestTargetsPatchNotes.close.scripts.OnClick()
@@ -663,55 +712,84 @@ class QuestTargetsTests(unittest.TestCase):
                 buttonsPage:Show()
                 buttonsPage.scripts.OnShow()
                 assert(buttonsPage.rows==buttonsLayout.initializers and buttonsPage~=nativeCategory.page)
-                assert(buttonsLayout.initializers[1].data.name==NS.L('buttons'))
-                assert(buttonsLayout.initializers[#buttonsLayout.initializers]==NS.UI.nativeMove)
-                for index,item in ipairs(layout.initializers) do
-                    if item.data.name==NS.L('hotkeys') then
-                        for offset,row in ipairs(buttonsLayout.initializers) do
-                            table.insert(layout.initializers,index+offset-1,row)
-                        end
-                        break
+            end
+            local function verifyPage(pageLayout, expected)
+                local rows=pageLayout.initializers
+                assert(#rows==#expected, 'Wrong number of options')
+                for index,key in ipairs(expected) do
+                    local item=rows[index]
+                    local data=item.data
+                    if data.setting then
+                        assert(data.setting.variable=='QUESTTARGETS_'..key, key)
+                        assert(data.description and data.description~='', 'Missing tooltip: '..key)
+                    else
+                        assert(data.name==NS.L(key), key)
+                        if data.kind~='section' then assert(data.tooltip or data.help, key) end
                     end
                 end
             end
-            local sections={}
-            local counts={section=0,checkbox=0,slider=0,dropdown=0,button=0,editbox=0,move=0}
-            local currentSection
-            local buttonOptions={showTooltips=true,showMinimap=true,questieTrackerButtons=true,
-                questieTrackerOffset=true,ellesmereTrackerButtons=true,ellesmereTrackerOffset=true}
-            local barOptions={showMaster=true,restedXPIntegration=true,showItemTreeButton=true,
-                showRareScannerButton=true,rareScannerZone=true,masterOrientation=true,
-                masterSpacing=true,masterBorder=true,masterDividers=true,masterLocked=true,buttonSize=true}
-            for index,item in ipairs(layout.initializers) do
-                local kind=item.data.kind
-                if kind=='section' then currentSection=item.data.name end
-                if item.data.setting then
-                    local key=item.data.setting.variable:gsub('^QUESTTARGETS_','')
-                    if buttonOptions[key] then assert(currentSection==NS.L('buttons')) end
-                    if barOptions[key] then assert(currentSection==NS.L('targetBar')) end
-                    if key=='polestarIntegration' then
-                        assert(currentSection==NS.L('targetBar'))
-                        assert(item.parentInitializer==layout.initializers[index-1])
-                        assert(item.parentInitializer.data.setting==nativeSettings.QUESTTARGETS_showMaster)
-                    end
-                end
-                counts[kind]=counts[kind]+1
-                if kind=='section' then sections[#sections+1]=item.data.name end
+            verifyPage(layout, {'general','language','showMinimap','patchNotes','feedback',
+                'questWindowSection','showMenu','transparencyMode','windowSize','targetMarkers',
+                'feedbackMaster','feedbackRestedXP','feedbackItemTree','feedbackRareScanner','feedbackFocus',
+                'window','feedbackQuestie','feedbackEllesmere','preferredRaidIcon','muteDeadTargetSound',
+                'hotkeys','masterDefault','focusHotkey','itemTreeBinding','rareScannerBinding'})
+            verifyPage(buttonsLayout, {'barModulesSection','showMaster','masterAllModules','polestarIntegration','restedXPIntegration',
+                'showItemTreeButton','showRareScannerButton','rareScannerZone','barAppearanceSection',
+                'masterOrientation','buttonSize','masterSpacing','masterBackground','masterBorder','masterDividers',
+                'masterLocked','masterMove','integrationSection','showTooltips',
+                'questieTrackerButtons','questieTrackerOffset','ellesmereTrackerButtons','ellesmereTrackerOffset'})
+            local feedbackDescription=layout.initializers[11].data.description
+            assert(feedbackDescription:find('255',1,true))
+            assert((feedbackDescription:find('Show Pings in Chat',1,true)~=nil)==supportsPing)
+            local controls={}
+            for _,item in ipairs(buttonsLayout.initializers) do
+                if item.data.setting then controls[item.data.setting.variable:gsub('^QUESTTARGETS_','')]=item end
             end
-            assert(table.concat(sections,'|')==table.concat({NS.L('display'),NS.L('window'),
-                NS.L('targetMarkers'),NS.L('buttons'),NS.L('targetBar'),NS.L('hotkeys'),NS.L('language')},'|'))
-            assert(counts.section==7 and counts.checkbox==17 and counts.slider==5
-                and counts.dropdown==3 and counts.button==4 and counts.editbox==0)
+            for child,parent in pairs({masterAllModules='showMaster',polestarIntegration='showMaster',rareScannerZone='showRareScannerButton',
+                questieTrackerOffset='questieTrackerButtons',ellesmereTrackerOffset='ellesmereTrackerButtons'}) do
+                assert(controls[child].parentInitializer==controls[parent] and controls[child].predicate, child)
+            end
+            local moduleSetting=nativeSettings.QUESTTARGETS_masterAllModules
+            assert(moduleSetting.GetValue()==true and controls.masterAllModules.predicate())
+            moduleSetting.SetValue(false)
+            assert(NS.app.db.masterAllModules==false and moduleSetting.GetValue()==false)
+            moduleSetting.SetValue(true)
+            assert(NS.app.db.masterAllModules==true)
+            assert(not controls.polestarIntegration.predicate())
+            assert(not controls.rareScannerZone.predicate())
+            local zoneAvailable=NS.RareScanner.ZoneAvailable
+            NS.RareScanner.ZoneAvailable=function() return true end
+            assert(controls.rareScannerZone.predicate())
+            NS.app.db.rareScannerButton=false
+            assert(not controls.rareScannerZone.predicate())
+            NS.app.db.rareScannerButton=true
+            NS.RareScanner.ZoneAvailable=zoneAvailable
+            local allOptions={}
+            for _,layoutToRead in ipairs({layout,buttonsLayout}) do
+                for _,item in ipairs(layoutToRead.initializers) do allOptions[#allOptions+1]=item end
+            end
+            local masterFeedback=nativeSettings.QUESTTARGETS_feedbackMaster
+            local itemTreeFeedback=nativeSettings.QUESTTARGETS_feedbackItemTree
+            assert(masterFeedback.GetValue()==2 and itemTreeFeedback.GetValue()==2)
+            masterFeedback.SetValue(1)
+            assert(masterFeedback.GetValue()==1 and itemTreeFeedback.GetValue()==2)
+            if supportsPing then
+                masterFeedback.SetValue(3)
+                assert(masterFeedback.GetValue()==3 and itemTreeFeedback.GetValue()==2)
+            end
             local polestarSetting=nativeSettings.QUESTTARGETS_polestarIntegration
             assert(polestarSetting.GetValue()==false)
             polestarSetting.SetValue(true)
             assert(not NS.app.db.polestarIntegration)
             loadedAddons.Polestar=true
+            assert(controls.polestarIntegration.predicate())
+            nativeSettings.QUESTTARGETS_showMaster.SetValue(false)
+            assert(not controls.polestarIntegration.predicate())
+            nativeSettings.QUESTTARGETS_showMaster.SetValue(true)
             polestarSetting.SetValue(true)
             assert(NS.app.db.polestarIntegration==true)
             polestarSetting.SetValue(false)
             assert(NS.app.db.polestarIntegration==false)
-            assert(counts.move==2, 'expected move and patch note action rows')
             local soundSetting=nativeSettings.QUESTTARGETS_muteDeadTargetSound
             assert(soundSetting.GetValue()==false)
             soundSetting.SetValue(true)
@@ -719,14 +797,16 @@ class QuestTargetsTests(unittest.TestCase):
             soundSetting.SetValue(false)
             assert(NS.app.db.muteDeadTargetSound==false)
             local moveRow=NS.UI.nativeMove
-            assert(moveRow and moveRow.template=='QuestTargetsMoveSettingTemplate')
-            assert(moveRow.data.help==NS.L('masterMoveHelp'))
-            moveRow.data.callback()
+            assert(moveRow and moveRow.data.kind==NS.UI.nativePatchNotes.data.kind
+                and moveRow.data.kind==NS.UI.nativeFeedback.data.kind)
+            assert(moveRow.data.buttonText==NS.L('masterMoveStart'))
+            assert(moveRow.data.tooltip==NS.L('masterMoveHelp'))
+            moveRow.data.buttonClick()
             assert(NS.UI.masterMoveActive)
             NS.UI.EndMasterMove(NS.app,false)
             assert(not nativeSettings.QUESTTARGETS_focusMarkEnabled)
             local masterCheckbox
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 if item.data.kind=='checkbox' and
                     item.data.setting.variable=='QUESTTARGETS_showMaster' then masterCheckbox=item end
             end
@@ -735,7 +815,7 @@ class QuestTargetsTests(unittest.TestCase):
             assert(nativeSettings.QUESTTARGETS_questieTrackerButtons.GetValue()==true)
             nativeSettings.QUESTTARGETS_questieTrackerButtons.SetValue(false)
             assert(NS.app.db.questieTrackerButtons==true) -- absent addon
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 if item.data.setting and item.data.setting.variable=='QUESTTARGETS_questieTrackerOffset' then
                     assert(not item.predicate())
                 end
@@ -747,11 +827,11 @@ class QuestTargetsTests(unittest.TestCase):
             nativeSettings.QUESTTARGETS_questieTrackerOffset.SetValue(15)
             assert(NS.app.db.questieTrackerOffset==15)
             loadedAddons.Questie=false
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 assert(not (item.data.kind=='button' and item.data.name==NS.L('clear')))
             end
             local hotkeyButton
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 if item.data.kind=='button' and item.data.name==NS.L('masterDefault') then hotkeyButton=item end
             end
             local capture=CreateFrame('Button',nil,UIParent)
@@ -766,7 +846,7 @@ class QuestTargetsTests(unittest.TestCase):
             capture.scripts.OnKeyDown(capture,'DELETE')
             assert(GetBindingKey('CLICK QuestTargetsMaster:LeftButton')==nil)
             local focusButton
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 if item.data.kind=='button' and item.data.name==NS.L('focusHotkey') then focusButton=item end
             end
             assert(focusButton)
@@ -816,7 +896,7 @@ class QuestTargetsTests(unittest.TestCase):
             end
             assert(NS.app.db.focusHotkeyKey=='PAD2' and NS.app.db.focusHotkeyKey2=='PAD4')
             local itemTreeInitializer
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 if item.data.name==NS.L('itemTreeBinding') then itemTreeInitializer=item end
             end
             assert(itemTreeInitializer)
@@ -834,7 +914,7 @@ class QuestTargetsTests(unittest.TestCase):
             assert(itemTreeRow.Text.textColor[1]==1)
             itemTreeRow:Release()
             local rareBinding
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 if item.data.name==NS.L('rareScannerBinding') then rareBinding=item end
             end
             assert(rareBinding and not rareBinding.data.isEnabled())
@@ -871,7 +951,7 @@ class QuestTargetsTests(unittest.TestCase):
             for _,row in ipairs(rows) do row:Release() end
             StaticPopupDialogs[pendingPopup.which].OnAccept(pendingPopup,pendingPopup.data)
             assert(GetBindingAction('SPACE')=='JUMP', 'released row applied an obsolete confirmation')
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 if item.data.kind=='checkbox' and
                     item.data.setting.variable=='QUESTTARGETS_restedXPIntegration' then
                     assert(item.predicate and not item.predicate())
@@ -881,7 +961,7 @@ class QuestTargetsTests(unittest.TestCase):
             assert(not NS.app.db.restedXPIntegration)
             loadedAddons.Questie=true; loadedAddons.RXPGuides=true
             assert(shownPopup~='QUESTTARGETS_QUESTIE_RELOAD' and not reloaded)
-            for _,item in ipairs(layout.initializers) do
+            for _,item in ipairs(allOptions) do
                 if item.data.kind=='checkbox' and
                     item.data.setting.variable=='QUESTTARGETS_restedXPIntegration' then
                     assert(item.predicate())
@@ -916,14 +996,17 @@ class QuestTargetsTests(unittest.TestCase):
             nativeSettings.QUESTTARGETS_buttonSize.SetValue(1.25)
             flush()
             assert(NS.UI.master.width==75 and NS.UI.master.height==75)
-            nativeSettings.QUESTTARGETS_targetMarkers.SetValue(4)
+            nativeSettings.QUESTTARGETS_preferredRaidIcon.SetValue(4)
             assert(NS.app.db.markerIcon==4)
             nativeSettings.QUESTTARGETS_language.SetValue(2)
             assert(NS.app.db.language=='deDE' and nativeCategory.name=='Quest Targets')
             assert(focusButton.data.tooltip==NS.L('focusHotkeyTip'))
-            assert(moveRow.data.name==NS.L('masterMove') and moveRow.data.help==NS.L('masterMoveHelp'))
-            assert(layout.initializers[1].data.name==NS.L('display'))
-            for _,item in ipairs(layout.initializers) do
+            assert(moveRow.data.name==NS.L('masterMove') and moveRow.data.tooltip==NS.L('masterMoveHelp'))
+            assert(layout.initializers[1].data.name==NS.L('general'))
+            assert(NS.UI.nativeButtonsCategory.name==NS.L('buttonsBar'))
+            assert(NS.UI.nativeFeedback.data.name==NS.L('feedback'))
+            assert(layout.initializers[11].data.tooltip:find(NS.L('targetFeedbackLimitTip'),1,true))
+            for _,item in ipairs(allOptions) do
                 if item.data.setting then
                     local key=item.data.setting.variable:gsub('^QUESTTARGETS_', '')
                     assert(item:GetName()==NS.L(key), 'Setting label did not follow language change: '..key)
@@ -1077,11 +1160,11 @@ class QuestTargetsTests(unittest.TestCase):
             NS.UI.Settings(NS.app)
             assert(openCategory == 42 and NS.UI.settingsCategoryID == 42)
             assert(NS.UI.settings.template == nil)
-            for _, control in ipairs({NS.UI.settings.toggle, NS.UI.settings.masterToggle,
+            for _, control in ipairs({NS.UI.settings.masterToggle,
                     NS.UI.settings.menuToggle, NS.UI.settings.tooltipToggle, NS.UI.settings.minimapToggle}) do
                 assert(control.template == 'UICheckButtonTemplate')
             end
-            assert(NS.UI.settings.toggle:GetChecked())
+            assert(NS.UI.settings.feedbackControls[1].selector:GetText()==NS.L('feedbackRaidMarker'))
             assert(NS.UI.settings.masterToggle:GetChecked())
             NS.UI.settings.masterToggle.scripts.OnEnter(NS.UI.settings.masterToggle)
             assert(GameTooltip.lines[1]==NS.L('masterMoveTip'))
@@ -1289,6 +1372,18 @@ class QuestTargetsTests(unittest.TestCase):
             ui.LayoutTargetButtons(app)
             assert(item.point[1]=='LEFT' and item.point[2]==master and item.point[4]==4)
             assert(rare.point[2]==item and not master.barBorder)
+            options.backgroundToggle.scripts.OnClick()
+            flush()
+            local background=master.barBorder.background
+            assert(background:IsShown() and master.barBorder:IsShown())
+            assert(not master.barBorder.borderVisible and not app.db.masterDividers)
+            assert(background.backdrop.bgFile:find('UI-DialogBox-Background',1,true))
+            local insets=background.backdrop.insets
+            assert(insets.left==4 and insets.right==4 and insets.top==4 and insets.bottom==4)
+            options.backgroundToggle.scripts.OnClick()
+            flush()
+            assert(not master.barBorder:IsShown())
+
             dropdownChoices = {}
             options.orientationDropdown.initialize()
             dropdownChoices[2].func()
@@ -1301,15 +1396,20 @@ class QuestTargetsTests(unittest.TestCase):
             assert(master.barWidth==60 and master.barHeight==204)
             local border=master.barBorder
             assert(border:IsShown() and border.parent==master and border.point[5]==-72)
-            assert(border.backdrop.edgeSize==6 and border.backdrop.edgeFile:find('TargetBarBorder',1,true))
-            assert(border.width==66 and border.height==210)
+            assert(border.backdrop.edgeSize==7 and border.backdrop.edgeFile:find('TargetBarBorder',1,true))
+            assert(border.width==77 and border.height==220)
+            options.backgroundToggle.scripts.OnClick()
+            flush()
+            local framedInsets=border.background.backdrop.insets
+            assert(framedInsets.left==4 and framedInsets.right==4 and framedInsets.top==4 and framedInsets.bottom==4)
+
             assert(not app.db.masterDividers and #border.dividers==0 and border.borderColor[4]==1)
             assert(options.borderToggle.parent==options.dividersToggle.parent
                 and options.borderToggle.parent.localeKey=='targetBar')
             options.dividersToggle.scripts.OnClick(); flush()
             local divider=border.dividers[1]
             assert(#border.dividers==2 and divider:IsShown() and border.dividers[2]:IsShown())
-            assert(divider.point[3]=='TOP' and divider.point[5]==-69 and divider.width==52 and divider.height==6)
+            assert(divider.point[3]=='CENTER' and divider.point[5]==36 and divider.width==52 and divider.height==6)
             options.borderToggle.scripts.OnClick(); flush()
             assert(border:IsShown() and divider:IsShown() and border.borderColor[4]==0)
             options.borderToggle.scripts.OnClick(); flush()
@@ -1319,19 +1419,22 @@ class QuestTargetsTests(unittest.TestCase):
             app.db.masterHidden=true
             app:Refresh()
             assert(item.point[1]=='CENTER' and item.point[2]==master and rare.point[2]==item)
-            assert(border.parent==item and border.width==66 and border.height==138)
+            assert(border.parent==item and border.width==77 and border.height==148)
             assert(divider:IsShown() and not border.dividers[2]:IsShown())
             options.spacingControl.slider:SetValue(0); flush()
-            assert(rare.point[5]==0 and border.height==126)
+            assert(rare.point[5]==0 and border.height==136)
             app.db.masterOrientation='horizontal'; app:Refresh()
-            assert(border.width==126 and border.height==66 and border.point[4]==30)
-            assert(divider.point[3]=='LEFT' and divider.point[4]==63 and divider.width==3 and divider.height==52)
+            assert(border.width==137 and border.height==76 and border.point[4]==30)
+            assert(divider.point[3]=='CENTER' and divider.point[4]==0 and divider.width==3 and divider.height==52)
             item.inBar=false; rare:Hide(); ui.LayoutTargetButtons(app)
             assert(not border:IsShown())
             rare:Show(); ui.LayoutTargetButtons(app)
-            assert(border:IsShown() and border.parent==rare and border.width==66)
+            assert(border:IsShown() and border.parent==rare and border.width==77)
             assert(not divider:IsShown())
             options.borderToggle.scripts.OnClick(); flush()
+            assert(border.background:IsShown() and not border.borderVisible)
+            assert(border.background.backdrop.insets.left==4)
+            options.backgroundToggle.scripts.OnClick(); flush()
             assert(not border:IsShown())
         ''')
 
@@ -1371,14 +1474,14 @@ class QuestTargetsTests(unittest.TestCase):
             assert(NS.UI.settings.refreshButton == nil)
             assert(NS.UI.refreshButton == nil)
             assert(NS.UI.feedbackButton.text==NS.L('feedback'))
-            assert(NS.UI.settings.toggle.caption.text==NS.L('autoMark'))
+            assert(NS.UI.settings.feedbackControls[1].caption.text==NS.L('feedbackMaster'))
             assert(NS.UI.settings.hotkeysText.text==NS.L('hotkeys'))
             assert(not NS.UI.master.text)
             NS.app:Refresh()
             assert(NS.UI.filter.text==NS.L('all'))
             dropdownChoices[1].func()
             assert(NS.app.db.language=='enUS' and not reloaded)
-            assert(NS.UI.settings.toggle.caption.text=='Automatically mark targets')
+            assert(NS.UI.settings.feedbackControls[1].caption.text=='Master button')
             assert(NS.UI.feedbackButton.text=='Feedback')
             dropdownChoices[4].func()
             assert(NS.app.db.language=='frFR' and not NS.UI.master.text)
@@ -1655,7 +1758,7 @@ class QuestTargetsTests(unittest.TestCase):
                 entry.nameList[i] = name; entry.names[name] = true
             end
             local row = NS.UI.master
-            row.entry = entry
+            row.defaultEntry = entry
             local seen = {}
             local function validate(text)
                 assert(#text <= 255)
@@ -1791,11 +1894,12 @@ class QuestTargetsTests(unittest.TestCase):
             panel.icons[3].scripts.OnClick(); flush()
             assert(NS.app.db.markerIcon == 3)
             assert(QuestTargetsTarget1.attributes.macrotext1:find('!3',1,true))
-            panel.toggle.scripts.OnClick(); flush()
-            assert(not NS.app.db.autoMark)
+            panel.feedbackControls[6].selector.scripts.OnClick(); flush()
+            assert(NS.Core.TargetFeedbackMode(NS.app.db, 'questList')==1)
+            assert(NS.Core.TargetFeedbackMode(NS.app.db, 'master')==2)
             assert(not QuestTargetsTarget1.attributes.macrotext1:find('/tm',1,true))
             event('ADDON_LOADED','QuestTargets')
-            assert(not NS.app.db.autoMark and NS.app.db.markerIcon == 3)
+            assert(NS.Core.TargetFeedbackMode(NS.app.db, 'questList')==1 and NS.app.db.markerIcon==3)
             NS.app.db.markerIcon = 99
             event('ADDON_LOADED','QuestTargets')
             assert(NS.app.db.markerIcon == 8)

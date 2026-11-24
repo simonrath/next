@@ -2,6 +2,25 @@
 
 Cambios para jugadores, empezando por la versión más reciente. Las indicaciones de instalación históricas se aplican a la versión indicada.
 
+## 1.8.0 – 24 nov 2026
+
+### Grandes mejoras
+- **Búsqueda combinada** — El botón principal busca en el registro de misiones y en las fuentes activadas de RestedXP, Polestar, ItemTree y RareScanner. Cada clic fuera de combate prioriza los objetivos con coordenadas conocidas más cercanas, incluidos los PNJ de entrega. El botón azul solo busca objetivos de RestedXP.
+- **Buscar en todos los módulos** aparece debajo de **Mostrar botón principal** y está activada de forma predeterminada. Desactívala para que el botón principal solo busque objetivos del registro de misiones.
+- **Botón de RareScanner** — Actualiza el orden por distancia aunque haya un raro seleccionado y comprueba las placas cercanas legibles antes de la siguiente página de la macro. Incluso sin moverte, cada clic puede volver a buscar al raro más cercano si queda espacio para otro nombre en la macro.
+
+### Marcas de objetivo
+- **Marcado por botón:** En **Marcadores**, elige **Marca de banda** o **Sin marca** para cada botón de selección de objetivos. En WoW Forever y Retail también puedes elegir **Aviso**. Las opciones de WoW controlan si ves los avisos en el chat.
+
+¡Gracias a **Caedis** por sugerir los pings para los objetivos!
+
+### Opciones
+- Las opciones nativas se agrupan en **Quest Targets** y **Botones y barra**. Abre **Notas del parche** o **Comentarios** en **General**. Las opciones indentadas se habilitan cuando su función está disponible y activada.
+- Activa **Mostrar fondo de la barra** en **Aspecto y posición** para añadir un fondo oscuro de WoW detrás de la barra. El borde de bronce es un poco más grueso.
+
+### Problemas conocidos
+- **Problema conocido en el cliente alemán de WoW Forever** — Algunos PNJ tienen nombres distintos según su género. QuestieDB proporciona una variante por PNJ. Si falta la forma del juego, el botón principal puede omitir al PNJ al buscar por nombre, como ocurre con «Diebin der Wüstenläufer».
+
 ## 1.7.5 – 22 nov. 2026
 
 ### Polestar

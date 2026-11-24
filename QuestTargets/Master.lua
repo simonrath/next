@@ -23,29 +23,40 @@ function UI.StyleTargetButton(button, red, green, blue)
 end
 
 local function layoutBarDividers(border, count, vertical, spacing, size)
+    local pixel = PixelUtil and PixelUtil.GetPixelToUIUnitFactor
+        and PixelUtil.GetPixelToUIUnitFactor() / border:GetEffectiveScale() or 1
+    if pixel <= 0 or pixel == math.huge then pixel = 1 end
     if border.dividerCount == count and border.dividerVertical == vertical
-        and border.dividerSpacing == spacing and border.dividerSize == size then return end
+        and border.dividerSpacing == spacing and border.dividerSize == size
+        and border.dividerPixel == pixel then return end
     border.dividerCount, border.dividerVertical = count, vertical
-    border.dividerSpacing, border.dividerSize = spacing, size
-    local length = math.max(8, size - 8)
-    local width = math.max(3, math.min(6, spacing))
+    border.dividerSpacing, border.dividerSize, border.dividerPixel = spacing, size, pixel
+    local function snap(value)
+        local rounded = math.floor(math.abs(value) / pixel + 0.5) * pixel
+        return value < 0 and -rounded or rounded
+    end
+    local center = (count * size + (count - 1) * spacing) / 2
+    local length = snap(math.max(8, size - 8))
+    local width = snap(math.max(3, math.min(6, spacing)))
     for index = 1, count - 1 do
         local divider = border.dividers[index]
         if not divider then
             divider = border:CreateTexture(nil, "OVERLAY")
             divider:SetTexture("Interface\\AddOns\\QuestTargets\\Textures\\TargetBarDivider")
+            if divider.SetSnapToPixelGrid then divider:SetSnapToPixelGrid(false) end
+            if divider.SetTexelSnappingBias then divider:SetTexelSnappingBias(0) end
             border.dividers[index] = divider
         end
-        local position = 3 + index * (size + spacing) - spacing / 2
+        local position = snap(index * (size + spacing) - spacing / 2 - center)
         divider:ClearAllPoints()
         if vertical then
             divider:SetTexCoord(0, 1, 1, 1, 0, 0, 1, 0)
             divider:SetSize(length, width)
-            divider:SetPoint("CENTER", border, "TOP", 0, -position)
+            divider:SetPoint("CENTER", border, "CENTER", 0, -position)
         else
             divider:SetTexCoord(0, 1, 0, 1)
             divider:SetSize(width, length)
-            divider:SetPoint("CENTER", border, "LEFT", position, 0)
+            divider:SetPoint("CENTER", border, "CENTER", position, 0)
         end
         divider:Show()
     end
@@ -55,7 +66,8 @@ end
 local function updateBarDecoration(app, master, first, count, vertical, spacing)
     local border = master.barBorder
     local showBorder, showDividers = app.db.masterBorder, app.db.masterDividers and count > 1
-    if not first or not (showBorder or showDividers) then
+    local showBackground = app.db.masterBackground == true
+    if not first or not (showBorder or showDividers or showBackground) then
         if border and border:IsShown() then border:Hide() end
         return
     end
@@ -64,10 +76,27 @@ local function updateBarDecoration(app, master, first, count, vertical, spacing)
         border:EnableMouse(false)
         border:SetBackdrop({
             edgeFile = "Interface\\AddOns\\QuestTargets\\Textures\\TargetBarBorder",
-            edgeSize = 6,
+            edgeSize = 7,
         })
         border.dividers = {}
         master.barBorder = border
+    end
+    if showBackground and not border.background then
+        local background = CreateFrame("Frame", nil, border, "BackdropTemplate")
+        background:SetFrameStrata("LOW")
+        background:EnableMouse(false)
+        background:SetAllPoints(border)
+        background:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            tile = true,
+            tileSize = 32,
+            insets = {left = 4, right = 4, top = 4, bottom = 4},
+        })
+        background:SetBackdropColor(1, 1, 1, 0.85)
+        border.background = background
+    end
+    if border.background and border.background:IsShown() ~= showBackground then
+        border.background:SetShown(showBackground)
     end
     if border.borderVisible ~= showBorder then
         border:SetBackdropBorderColor(1, 1, 1, showBorder and 1 or 0)
@@ -80,7 +109,12 @@ local function updateBarDecoration(app, master, first, count, vertical, spacing)
         border:SetPoint("CENTER", first, "CENTER", x, y)
         border.barAnchor, border.barOffsetX, border.barOffsetY = first, x, y
     end
-    local width, height = master.barWidth + 6, master.barHeight + 6
+    local padding = showBorder and 12 or 6
+    local width = master.barWidth + padding
+    local height = master.barHeight + padding
+    if showBorder or showBackground then
+        width, height = width + 5, height + 4
+    end
     if border:GetWidth() ~= width or border:GetHeight() ~= height then border:SetSize(width, height) end
     layoutBarDividers(border, showDividers and count or 1, vertical, spacing, master:GetHeight())
     if not border:IsShown() then border:Show() end
@@ -258,26 +292,21 @@ function UI.RenderMaster(app)
                 Core.PrepareDeadTargetSound(self:GetAttribute("macrotext1"), app.db)
             end
             if mouseButton ~= "LeftButton" or down or InCombatLockdown() then return end
-            if NS.RestedXP.PreClick(app, self) then return end
-            Core.SetClickMacro(self, Core.ClickMacro(self.entry, {}, app.db, self), app.db)
+            NS.RestedXP.PreClick(app, self)
         end)
         frame:SetScript("PostClick", function(self, _, down)
             if down then return end
             Core.RecordClickResult()
-            if NS.RestedXP.PostClick(app) then return end
-            if not InCombatLockdown() then self:SetAttribute("macrotext1", (Core.EntryMacro(self.entry, app.db))) end
+            if not InCombatLockdown() then
+                self:SetAttribute("macrotext1", (Core.EntryMacro(self.entry, Core.TargetFeedbackSettings(app.db, "master"))))
+            end
         end)
         frame:SetScript("OnEnter", function(self)
             if not app.db.showTooltips then return end
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(L("active"))
-            if NS.RestedXP.active then
-                GameTooltip:AddLine(L(NS.RestedXP.provider == "polestar" and "polestarButton" or "restedXPButton"), 1, 0.82, 0, true)
-                GameTooltip:AddLine(self.entry and self.entry.name or L("restedXPNoTarget"), 1, 1, 1, true)
-            else
-                GameTooltip:AddLine(L("masterTip1"), 1, 1, 1, true)
-                GameTooltip:AddLine(L("masterTip3"), 0.75, 0.75, 0.75, true)
-            end
+            GameTooltip:SetText(L("masterDefault"))
+            GameTooltip:AddLine(L(app.db.masterAllModules == false and "masterQuestOnlyTip" or "masterTip1"), 1, 1, 1, true)
+            GameTooltip:AddLine(L("masterTip3"), 0.75, 0.75, 0.75, true)
             GameTooltip:AddLine(L(app.db.masterLocked and "masterLockTip" or "masterTip2"), 1, 0.82, 0, true)
             GameTooltip:Show()
         end)
@@ -320,7 +349,7 @@ function UI.RenderMaster(app)
     entry.name = entry.nameList[1]
     UI.master.defaultEntry = entry
     UI.master.entry = entry
-    UI.master:SetAttribute("macrotext1", (Core.EntryMacro(entry, app.db)))
+    UI.master:SetAttribute("macrotext1", (Core.EntryMacro(entry, Core.TargetFeedbackSettings(app.db, "master"))))
     UI.master:SetShown(not app.db.masterHidden)
     UI.LayoutTargetButtons(app)
     UI.RenderFocus(app)
@@ -343,12 +372,12 @@ function UI.RenderFocus(app)
                 Core.PrepareDeadTargetSound(self:GetAttribute("macrotext1"), app.db)
             end
             if mouseButton ~= "LeftButton" or down or InCombatLockdown() then return end
-            Core.SetClickMacro(self, Core.ClickMacro(self.entry, app.allEntries or {}, app.db, self), app.db)
+            Core.SetClickMacro(self, Core.ClickMacro(self.entry, app.allEntries or {}, Core.TargetFeedbackSettings(app.db, "focus"), self), app.db)
         end)
         frame:SetScript("PostClick", function(self, _, down)
             if down then return end
             Core.RecordClickResult()
-            if not InCombatLockdown() then self:SetAttribute("macrotext1", (Core.EntryMacro(self.entry, app.db))) end
+            if not InCombatLockdown() then self:SetAttribute("macrotext1", (Core.EntryMacro(self.entry, Core.TargetFeedbackSettings(app.db, "focus")))) end
         end)
     end
     local selected
@@ -356,7 +385,7 @@ function UI.RenderFocus(app)
         if quest.questID == app.db.focusQuestID then selected = quest; break end
     end
     UI.focusButton.entry = selected
-    UI.focusButton:SetAttribute("macrotext1", (selected and Core.EntryMacro(selected, app.db) or ""))
+    UI.focusButton:SetAttribute("macrotext1", (selected and Core.EntryMacro(selected, Core.TargetFeedbackSettings(app.db, "focus")) or ""))
 end
 
 function UI.CreateMinimap(app)

@@ -31,7 +31,7 @@ local function createButton(index)
             return
         end
         if mouseButton == "LeftButton" then
-            Core.SetClickMacro(self, Core.ClickMacro(self.entry, {self.entry}, NS.app.db, self), NS.app.db)
+            Core.SetClickMacro(self, Core.ClickMacro(self.entry, {self.entry}, Core.TargetFeedbackSettings(NS.app.db, "questie"), self), NS.app.db)
         end
     end)
     button:SetScript("PostClick", function(self, mouseButton, down)
@@ -42,7 +42,7 @@ local function createButton(index)
         end
         if mouseButton ~= "LeftButton" then return end
         Core.RecordClickResult()
-        self:SetAttribute("macrotext1", Core.EntryMacro(self.entry, NS.app.db))
+        self:SetAttribute("macrotext1", Core.EntryMacro(self.entry, Core.TargetFeedbackSettings(NS.app.db, "questie")))
     end)
     button:SetScript("OnEnter", function(self) UI.Tooltip(self) end)
     button:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -122,7 +122,7 @@ function Integration.Sync(app)
                     button.questID = entry.questID
                 end
                 button.entry = entry
-                button:SetAttribute("macrotext1", Core.EntryMacro(entry, app.db))
+                button:SetAttribute("macrotext1", Core.EntryMacro(entry, Core.TargetFeedbackSettings(app.db, "questie")))
                 button:Show()
                 button.focusMark:SetShown(entry.questID == app.db.focusQuestID)
             end

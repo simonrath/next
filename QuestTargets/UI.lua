@@ -372,6 +372,25 @@ local function checkbox(parent, caption, callback)
     return check
 end
 
+local feedbackButtons = {
+    {"master", "feedbackMaster"}, {"restedXP", "feedbackRestedXP"},
+    {"itemTree", "feedbackItemTree"}, {"rare", "feedbackRareScanner"},
+    {"focus", "feedbackFocus"}, {"questList", "window"},
+    {"questie", "feedbackQuestie"}, {"ellesmere", "feedbackEllesmere"},
+}
+
+local function feedbackChoices()
+    local choices = {L("feedbackNone"), L("feedbackRaidMarker")}
+    if NS.Core.PingAvailable() then choices[3] = L("feedbackPing") end
+    return choices
+end
+
+local function feedbackDescription()
+    local text = L("targetFeedbackLimitTip")
+    if NS.Core.PingAvailable() then text = text .. "\n\n" .. L("targetFeedbackChatTip") end
+    return text
+end
+
 function UI.Create(app)
     local frame = CreateFrame("Frame", "QuestTargetsFrame", UIParent, "DefaultPanelFlatTemplate")
     UI.frame = frame
@@ -470,7 +489,7 @@ function UI.Create(app)
                 NS.Core.PrepareDeadTargetSound(self:GetAttribute("macrotext1"), app.db)
             end
             if mouseButton ~= "LeftButton" or down or InCombatLockdown() then return end
-            NS.Core.SetClickMacro(self, NS.Core.ClickMacro(self.entry, app.entries, app.db, self), app.db)
+            NS.Core.SetClickMacro(self, NS.Core.ClickMacro(self.entry, app.entries, NS.Core.TargetFeedbackSettings(app.db, "questList"), self), app.db)
         end)
         row:SetScript("PostClick", function(self, mouseButton, down)
             if down then return end
@@ -485,7 +504,7 @@ function UI.Create(app)
             if mouseButton and mouseButton ~= "LeftButton" then return end
             if InCombatLockdown() then return end
             NS.Core.RecordClickResult()
-            self:SetAttribute("macrotext1", (NS.Core.EntryMacro(self.entry, app.db)))
+            self:SetAttribute("macrotext1", (NS.Core.EntryMacro(self.entry, NS.Core.TargetFeedbackSettings(app.db, "questList"))))
         end)
         -- The button owns the quest atlas in both native button states, so
         -- its pushed state also works for a secure click during combat.
@@ -731,7 +750,8 @@ function UI.LayoutSettings(app)
     local panel, master = UI.settings, UI.masterSettings
     panel.pages, panel.tabs, panel.groups = {}, {}, {}
     local keys = {"general", "targetMarkers", "buttons", "hotkeys"}
-    local heights = {500, 340, 1040, 310}
+    local feedbackSpace = #feedbackButtons * 32
+    local heights = {500, 308 + feedbackSpace, 1100, 310}
     panel.body = CreateFrame("Frame", nil, panel, "BackdropTemplate")
     panel.body:SetPoint("TOPLEFT", 8, -78)
     panel.body:SetPoint("BOTTOMRIGHT", -8, 8)
@@ -775,9 +795,9 @@ function UI.LayoutSettings(app)
     local display = settingsBox(general, "display", -32, 125)
     local window = settingsBox(general, "window", -191, 125)
     local language = settingsBox(general, "language", -350, 102)
-    local marking = settingsBox(markers, "targetMarkers", -32, 292)
+    local marking = settingsBox(markers, "targetMarkers", -32, 260 + feedbackSpace)
     local toggles = settingsBox(master, "buttons", -32, 334)
-    local bar = settingsBox(master, "targetBar", -390, 625)
+    local bar = settingsBox(master, "targetBar", -390, 685)
     local bindings = settingsBox(hotkeys, "hotkeys", -32, 271)
     panel.groups = {display, window, language, marking, toggles, bar, bindings}
     panel.displayText:Hide()
@@ -792,31 +812,34 @@ function UI.LayoutSettings(app)
     place(panel.questieOffsetControl, toggles, 22, -122)
     place(panel.ellesmereToggle, toggles, 18, -210)
     place(panel.ellesmereOffsetControl, toggles, 22, -240)
-    for i, control in ipairs({panel.masterToggle, panel.polestarToggle, panel.restedXPToggle, panel.itemTreeToggle,
+    for i, control in ipairs({panel.masterToggle, panel.masterModulesToggle, panel.polestarToggle, panel.restedXPToggle, panel.itemTreeToggle,
         panel.rareScannerToggle, panel.rareScannerZoneToggle}) do
-        place(control, bar, control == panel.polestarToggle and 38 or 18, -32 - (i-1)*30)
+        place(control, bar, (control == panel.polestarToggle or control == panel.masterModulesToggle) and 38 or 18, -32 - (i-1)*30)
     end
-    place(master.orientationLabel, bar, 22, -217)
-    place(master.orientationDropdown, bar, 176, -209)
-    place(master.spacingControl, bar, 22, -250)
-    master.spacingControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -250)
-    place(master.borderToggle, bar, 18, -419)
-    place(master.dividersToggle, bar, 18, -449)
-    place(master.lockToggle, bar, 18, -479)
+    place(master.orientationLabel, bar, 22, -247)
+    place(master.orientationDropdown, bar, 176, -239)
+    place(master.spacingControl, bar, 22, -280)
+    master.spacingControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -280)
+    place(master.backgroundToggle, bar, 18, -449)
+    place(master.borderToggle, bar, 18, -479)
+    place(master.dividersToggle, bar, 18, -509)
+    place(master.lockToggle, bar, 18, -539)
     place(panel.scaleControl, window, 22, -31)
     panel.scaleControl:SetPoint("TOPRIGHT", window, "TOPRIGHT", -22, -31)
     place(panel.languageDropdown, language, 2, -42)
-    place(panel.toggle, marking, 18, -35)
-    place(panel.soundToggle, marking, 18, -245)
-    place(panel.selection, marking, 18, -72)
-    for index, choice in ipairs(panel.icons) do
-        place(choice, marking, 20 + ((index - 1) % 4)*85, -103 - math.floor((index-1)/4)* 60)
+    for index, control in ipairs(panel.feedbackControls) do
+        place(control, marking, 18, -35 - (index - 1) * 32)
     end
-    place(master.modernScaleControl, bar, 22, -335)
-    master.modernScaleControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -335)
-    place(master.moveButton, bar, 18, -524)
-    place(master.moveHelp, bar, 18, -560)
-    master.moveHelp:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -18, -560)
+    place(panel.soundToggle, marking, 18, -213 - feedbackSpace)
+    place(panel.selection, marking, 18, -40 - feedbackSpace)
+    for index, choice in ipairs(panel.icons) do
+        place(choice, marking, 20 + ((index - 1) % 4)*85, -71 - feedbackSpace - math.floor((index-1)/4)* 60)
+    end
+    place(master.modernScaleControl, bar, 22, -365)
+    master.modernScaleControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -365)
+    place(master.moveButton, bar, 18, -584)
+    place(master.moveHelp, bar, 18, -620)
+    master.moveHelp:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -18, -620)
     panel.bindingHeaders = {}
     for slot = 1, 2 do
         local header = label(bindings, 0, 0, 160, "GameFontNormalSmall")
@@ -876,34 +899,6 @@ function UI.LayoutSettings(app)
     resize(panel)
     UI.UpdateMasterSettings(app)
     UI.SelectSettingsTab(1)
-end
-
-QuestTargetsMoveSettingMixin = {}
-
-function QuestTargetsMoveSettingMixin:OnLoad()
-    SettingsListElementMixin.OnLoad(self)
-    self.MoveButton = button(self, "", 150, function()
-        if self.data then self.data.callback() end
-    end)
-    self.MoveButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", -12, -4)
-    self.Help = label(self, 16, -32, 420)
-    self.Help:SetPoint("TOPRIGHT", self, "TOPRIGHT", -16, -32)
-    self.Help:SetHeight(48)
-end
-
-function QuestTargetsMoveSettingMixin:Init(initializer)
-    SettingsListElementMixin.Init(self, initializer)
-    self.Text:ClearAllPoints()
-    self.Text:SetPoint("TOPLEFT", self, "TOPLEFT", 16, -4)
-    self.Text:SetPoint("TOPRIGHT", self.MoveButton, "TOPLEFT", -8, 0)
-    self.Text:SetHeight(22)
-    self.Text:SetText(initializer.data.name)
-    self.MoveButton:SetText(initializer.data.buttonText)
-    self.Help:SetText(initializer.data.help)
-end
-
-function QuestTargetsMoveSettingMixin:Release()
-    SettingsListElementMixin.Release(self)
 end
 
 QuestTargetsBindingSettingMixin = {}
@@ -1019,6 +1014,7 @@ local function nativeSettings(app)
     else category, layout = Settings.RegisterVerticalLayoutCategory(L("title")) end
     local activeCategory, activeLayout = category, layout
     local buttonsPage, buttonsLayout, updateButtonsTitle
+    local descriptions, actions = {}, {}
     UI.nativeHeaders = {}
     UI.nativeButtons = {}
     local function section(key)
@@ -1033,13 +1029,32 @@ local function nativeSettings(app)
         return Settings.RegisterProxySetting(activeCategory, "QUESTTARGETS_" .. key,
             Settings.VarType[kind], L(key), default, get, set)
     end
-    local function localizedRow(initializer, key)
+    local function describe(description)
+        if not description then return end
+        if type(description) == "function" then return description() end
+        return L(description)
+    end
+    local function child(initializer, parent, predicate)
+        initializer:SetParentInitializer(parent)
+        -- The private Forever list owns both rows, but Blizzard's shared layout lookup cannot see them.
+        if privateList then initializer.IsParentInitializerInLayout = function() return true end end
+        initializer:AddModifyPredicate(predicate)
+    end
+    local function actionRow(key, buttonKey, callback, tipKey)
+        local initializer = CreateSettingsButtonInitializer(L(key), L(buttonKey), callback, L(tipKey), false)
+        activeLayout:AddInitializer(initializer)
+        actions[#actions + 1] = {initializer=initializer, key=key, buttonKey=buttonKey}
+        descriptions[initializer] = tipKey
+        return initializer
+    end
+    local function localizedRow(initializer, key, description)
         initializer.GetName = function() return L(key) end
+        descriptions[initializer] = description
         return initializer
     end
     local function checkboxSetting(key, default, get, set, descriptionKey)
         local value = setting(key, "Boolean", default, get, set)
-        local description = descriptionKey and L(descriptionKey)
+        local description = describe(descriptionKey)
         local initializer
         if privateList then
             initializer = Settings.CreateCheckboxInitializer(value, nil, description)
@@ -1047,9 +1062,9 @@ local function nativeSettings(app)
         else
             initializer = Settings.CreateCheckbox(activeCategory, value, description)
         end
-        return localizedRow(initializer, key)
+        return localizedRow(initializer, key, descriptionKey)
     end
-    local function sliderSetting(key, savedKey, minimum, maximum, step, pixels, defaultValue)
+    local function sliderSetting(key, savedKey, minimum, maximum, step, pixels, defaultValue, descriptionKey)
         local value = setting(key, "Number", defaultValue or (pixels and 35 or 1),
             function() return app.db[savedKey] end,
             function(nextValue)
@@ -1062,14 +1077,14 @@ local function nativeSettings(app)
                 or string.format("%d%%", math.floor(number * 100 + 0.5)) end)
         local initializer
         if privateList then
-            initializer = Settings.CreateSliderInitializer(value, options)
+            initializer = Settings.CreateSliderInitializer(value, options, describe(descriptionKey))
             activeLayout:AddInitializer(initializer)
         else
-            initializer = Settings.CreateSlider(activeCategory, value, options)
+            initializer = Settings.CreateSlider(activeCategory, value, options, describe(descriptionKey))
         end
-        return localizedRow(initializer, key)
+        return localizedRow(initializer, key, descriptionKey)
     end
-    local function dropdownSetting(key, default, get, set, choices)
+    local function dropdownSetting(key, default, get, set, choices, description)
         local value = setting(key, "Number", default, get, set)
         local function menuOptions()
             local options = Settings.CreateControlTextContainer()
@@ -1078,12 +1093,12 @@ local function nativeSettings(app)
         end
         local initializer
         if privateList then
-            initializer = Settings.CreateDropdownInitializer(value, menuOptions)
+            initializer = Settings.CreateDropdownInitializer(value, menuOptions, describe(description))
             activeLayout:AddInitializer(initializer)
         else
-            initializer = Settings.CreateDropdown(activeCategory, value, menuOptions)
+            initializer = Settings.CreateDropdown(activeCategory, value, menuOptions, describe(description))
         end
-        localizedRow(initializer, key)
+        localizedRow(initializer, key, description)
         return value, initializer
     end
     local function refresh()
@@ -1101,12 +1116,38 @@ local function nativeSettings(app)
         end
     end
 
-    section("display")
-    UI.nativePatchNotes = Settings.CreateElementInitializer("QuestTargetsMoveSettingTemplate", {
-        name = L("patchNotes"), buttonText = L("patchNotesOpen"), help = L("patchNotesHelp"),
-        callback = NS.PatchNotes.Open,
-    })
-    layout:AddInitializer(UI.nativePatchNotes)
+    section("general")
+    dropdownSetting("language", NS.Language(), NS.Language, function(value)
+        if InCombatLockdown() or value == NS.Language() then return end
+        app.db.language = NS.LANGUAGES[value]
+        UI.ApplyLanguage(app)
+        category:SetName(L("title"))
+        for initializer, description in pairs(descriptions) do
+            initializer.data.tooltip = describe(description)
+        end
+        for _, action in ipairs(actions) do
+            action.initializer.data.name = L(action.key)
+            action.initializer.data.buttonText = L(action.buttonKey)
+        end
+        for _, header in ipairs(UI.nativeHeaders) do header.initializer.data.name = L(header.key) end
+        for _, button in ipairs(UI.nativeButtons) do
+            button.initializer.data.name = L(button.key)
+            if button.descriptionKey then
+                button.initializer.data.tooltip = L(button.descriptionKey)
+            end
+        end
+        refresh()
+    end, function() return NS.LANGUAGE_NAMES end, "languageNote")
+
+    checkboxSetting("showMinimap", true, function() return not app.db.minimapHidden end,
+        function(value)
+            app.db.minimapHidden = not value
+            UI.SetMinimapShown(app, value)
+        end, "minimapTip")
+    UI.nativePatchNotes = actionRow("patchNotes", "patchNotesOpen", NS.PatchNotes.Open, "patchNotesHelp")
+    UI.nativeFeedback = actionRow("feedback", "feedbackOpen", UI.FeedbackLink, "feedbackTip")
+
+    section("questWindowSection")
     checkboxSetting("showMenu", true, function()
         if app.pendingVisibility ~= nil then return app.pendingVisibility end
         return not app.db.hidden
@@ -1114,145 +1155,32 @@ local function nativeSettings(app)
         local current = app.pendingVisibility
         if current == nil then current = not app.db.hidden end
         if current ~= value then app:Toggle() end
-    end)
-    section("window")
+    end, "showMenuTip")
     checkboxSetting("transparencyMode", false,
         function() return app.db.transparencyMode end,
         function(value)
             app.db.transparencyMode = value
             UI.UpdateTransparency(app)
-        end)
-    sliderSetting("windowSize", "menuScale", 0.5, 1.5, 0.05)
+        end, "transparentBackgroundTip")
+    sliderSetting("windowSize", "menuScale", 0.5, 1.5, 0.05, false, 1, "windowSizeTip")
 
     section("targetMarkers")
-    checkboxSetting("autoMark", true, function() return app.db.autoMark end,
-        function(value) app.db.autoMark = value; app:Schedule() end)
-    dropdownSetting("targetMarkers", 8, function() return app.db.markerIcon end,
+    for _, info in ipairs(feedbackButtons) do
+        local key, labelKey = info[1], info[2]
+        dropdownSetting(labelKey, key == "rare" and 1 or 2,
+            function() return NS.Core.TargetFeedbackMode(app.db, key) end,
+            function(value)
+                app.db.targetFeedback[key] = value
+                app:Schedule()
+            end, feedbackChoices, feedbackDescription)
+    end
+    dropdownSetting("preferredRaidIcon", 8, function() return app.db.markerIcon end,
         function(value) app.db.markerIcon = value; app:Schedule() end,
-        function() return {strsplit(",", L("markers"))} end)
+        function() return {strsplit(",", L("markers"))} end, "preferredRaidIconTip")
 
     checkboxSetting("muteDeadTargetSound", false, function() return app.db.muteDeadTargetSound end,
         function(value) app.db.muteDeadTargetSound = value end, "muteDeadTargetSoundTip")
 
-    if privateList then
-        activeCategory, activeLayout, buttonsPage, updateButtonsTitle = privatePage(category, "buttons")
-        buttonsLayout = activeLayout
-        UI.nativeButtonsCategory = activeCategory
-    elseif Settings.RegisterVerticalLayoutSubcategory then
-        activeCategory, activeLayout = Settings.RegisterVerticalLayoutSubcategory(category, L("buttons"))
-        UI.nativeButtonsCategory = activeCategory
-    end
-    section("buttons")
-    checkboxSetting("showTooltips", false, function() return app.db.showTooltips end,
-        function(value) app.db.showTooltips = value end)
-    checkboxSetting("showMinimap", true, function() return not app.db.minimapHidden end,
-        function(value)
-            app.db.minimapHidden = not value
-            UI.SetMinimapShown(app, value)
-        end)
-    local questieToggle = checkboxSetting("questieTrackerButtons", true,
-        function() return app.db.questieTrackerButtons end,
-        function(value)
-            if InCombatLockdown() or not addonLoaded("Questie") then return end
-            app.db.questieTrackerButtons = value
-            NS.QuestieTracker.Sync(app)
-        end)
-    questieToggle:AddModifyPredicate(function() return addonLoaded("Questie") end)
-    local questieOffset = sliderSetting("questieTrackerOffset", "questieTrackerOffset", -240, 240, 1, true)
-    questieOffset:SetParentInitializer(questieToggle)
-    if privateList then questieOffset.IsParentInitializerInLayout = function() return true end end
-    questieOffset:AddModifyPredicate(function()
-        return addonLoaded("Questie") and app.db.questieTrackerButtons
-    end)
-
-    local ellesmereToggle = checkboxSetting("ellesmereTrackerButtons", true,
-        function() return app.db.ellesmereTrackerButtons ~= false end,
-        function(value)
-            if InCombatLockdown() or not NS.EllesmereTracker.Available() then return end
-            app.db.ellesmereTrackerButtons = value
-            NS.EllesmereTracker.Sync(app)
-        end, "ellesmereTrackerTip")
-    ellesmereToggle:AddModifyPredicate(NS.EllesmereTracker.Available)
-
-    local ellesmereOffset = sliderSetting("ellesmereTrackerOffset", "ellesmereTrackerOffset", -240, 240, 1, true, 0)
-    ellesmereOffset:SetParentInitializer(ellesmereToggle)
-    if privateList then ellesmereOffset.IsParentInitializerInLayout = questieOffset.IsParentInitializerInLayout end
-    ellesmereOffset:AddModifyPredicate(function()
-        return NS.EllesmereTracker.Available() and app.db.ellesmereTrackerButtons ~= false
-    end)
-
-    section("targetBar")
-    local masterToggle = checkboxSetting("showMaster", true, function() return not app.db.masterHidden end,
-        function(value) app.db.masterHidden = not value; app:Schedule() end, "masterMoveTip")
-    local polestarToggle = checkboxSetting("polestarIntegration", false,
-        function() return app.db.polestarIntegration end,
-        function(value)
-            if InCombatLockdown() or not addonLoaded("Polestar") then return end
-            app.db.polestarIntegration = value
-            NS.RestedXP.Sync(app)
-        end)
-    polestarToggle:SetParentInitializer(masterToggle)
-    if privateList then polestarToggle.IsParentInitializerInLayout = questieOffset.IsParentInitializerInLayout end
-    polestarToggle:AddModifyPredicate(function() return addonLoaded("Polestar") end)
-
-    local restedXPToggle = checkboxSetting("restedXPIntegration", false,
-        function() return app.db.restedXPIntegration end,
-        function(value)
-            if InCombatLockdown() or not addonLoaded("RXPGuides") then return end
-            app.db.restedXPIntegration = value
-            NS.RestedXP.Sync(app)
-        end)
-    restedXPToggle:AddModifyPredicate(function() return addonLoaded("RXPGuides") end)
-
-    local itemTreeToggle = checkboxSetting("showItemTreeButton", false,
-        function() return app.db.itemTreeButton == true end,
-        function(value)
-            if InCombatLockdown() or not addonLoaded("ItemTree") then return end
-            app.db.itemTreeButton = value
-            NS.ItemTree.Sync(app)
-        end)
-    itemTreeToggle:AddModifyPredicate(function() return addonLoaded("ItemTree") end)
-    local rareScannerToggle = checkboxSetting("showRareScannerButton", true,
-        function() return app.db.rareScannerButton ~= false end,
-        function(value)
-            if InCombatLockdown() or not NS.RareScanner.MarkingAvailable() then return end
-            app.db.rareScannerButton = value
-            NS.RareScanner.SyncMark(app)
-        end, "rareScannerButtonTip")
-    rareScannerToggle:AddModifyPredicate(NS.RareScanner.MarkingAvailable)
-    local rareScannerZoneToggle = checkboxSetting("rareScannerZone", false,
-        function() return app.db.rareScannerZone == true end,
-        function(value)
-            if InCombatLockdown() or not NS.RareScanner.ZoneAvailable() then return end
-            app.db.rareScannerZone = value
-            NS.RareScanner.SyncMark(app)
-        end, "rareScannerZoneTip")
-    rareScannerZoneToggle:AddModifyPredicate(NS.RareScanner.ZoneAvailable)
-
-    dropdownSetting("masterOrientation", 1,
-        function() return app.db.masterOrientation == "vertical" and 2 or 1 end,
-        function(value)
-            app.db.masterOrientation = value == 2 and "vertical" or "horizontal"
-            app:Schedule()
-        end,
-        function() return {L("masterHorizontal"), L("masterVertical")} end)
-    sliderSetting("masterSpacing", "masterSpacing", 0, 32, 1, true, 4)
-    checkboxSetting("masterBorder", false, function() return app.db.masterBorder end,
-        function(value) app.db.masterBorder = value; app:Schedule() end)
-    checkboxSetting("masterDividers", false, function() return app.db.masterDividers end,
-        function(value) app.db.masterDividers = value; app:Schedule() end)
-    checkboxSetting("masterLocked", false, function() return app.db.masterLocked end,
-        function(value) UI.SetTargetBarLocked(app, value) end, "masterLockTip")
-
-    sliderSetting("buttonSize", "masterModernScale", 0.3, 2, 0.01)
-
-    UI.nativeMove = Settings.CreateElementInitializer("QuestTargetsMoveSettingTemplate", {
-        name = L("masterMove"), buttonText = L("masterMoveStart"), help = L("masterMoveHelp"),
-        callback = function() UI.BeginMasterMove(app) end,
-    })
-    activeLayout:AddInitializer(UI.nativeMove)
-
-    activeCategory, activeLayout = category, layout
     section("hotkeys")
     local function bindingRow(key, focused, descriptionKey)
         local command = bindingAction(focused)
@@ -1280,28 +1208,125 @@ local function nativeSettings(app)
         UI.nativeButtons[#UI.nativeButtons + 1] = {
             initializer=initializer, key=key, descriptionKey=descriptionKey}
     end
-    bindingRow("masterDefault", false)
+    bindingRow("masterDefault", false, "masterTip3")
     bindingRow("focusHotkey", true, "focusHotkeyTip")
-    bindingRow("itemTreeBinding", "itemTree")
-    bindingRow("rareScannerBinding", "rareScanner")
-    section("language")
-    dropdownSetting("language", NS.Language(), NS.Language, function(value)
-        if InCombatLockdown() or value == NS.Language() then return end
-        app.db.language = NS.LANGUAGES[value]
-        UI.ApplyLanguage(app)
-        category:SetName(L("title"))
-        for _, header in ipairs(UI.nativeHeaders) do header.initializer.data.name = L(header.key) end
-        for _, button in ipairs(UI.nativeButtons) do
-            button.initializer.data.name = L(button.key)
-            if button.descriptionKey then
-                button.initializer.data.tooltip = L(button.descriptionKey)
-            end
-        end
-        UI.nativePatchNotes.data.name = L("patchNotes")
-        UI.nativePatchNotes.data.buttonText = L("patchNotesOpen")
-        UI.nativePatchNotes.data.help = L("patchNotesHelp")
-        refresh()
-    end, function() return NS.LANGUAGE_NAMES end)
+    bindingRow("itemTreeBinding", "itemTree", "itemTreeBindingTip")
+    bindingRow("rareScannerBinding", "rareScanner", "rareScannerBindingTip")
+
+    if privateList then
+        activeCategory, activeLayout, buttonsPage, updateButtonsTitle = privatePage(category, "buttonsBar")
+        buttonsLayout = activeLayout
+        UI.nativeButtonsCategory = activeCategory
+    elseif Settings.RegisterVerticalLayoutSubcategory then
+        activeCategory, activeLayout = Settings.RegisterVerticalLayoutSubcategory(category, L("buttonsBar"))
+        UI.nativeButtonsCategory = activeCategory
+    end
+    section("barModulesSection")
+    local masterToggle = checkboxSetting("showMaster", true, function() return not app.db.masterHidden end,
+        function(value) app.db.masterHidden = not value; app:Schedule() end, "masterMoveTip")
+    local masterModulesToggle = checkboxSetting("masterAllModules", true,
+        function() return app.db.masterAllModules ~= false end,
+        function(value) app.db.masterAllModules = value; app:Schedule() end, "masterAllModulesTip")
+    child(masterModulesToggle, masterToggle, function() return not app.db.masterHidden end)
+    local polestarToggle = checkboxSetting("polestarIntegration", false,
+        function() return app.db.polestarIntegration end,
+        function(value)
+            if InCombatLockdown() or not addonLoaded("Polestar") then return end
+            app.db.polestarIntegration = value
+            NS.RestedXP.Sync(app)
+        end, "polestarIntegrationTip")
+    child(polestarToggle, masterToggle, function()
+        return not app.db.masterHidden and addonLoaded("Polestar")
+    end)
+
+    local restedXPToggle = checkboxSetting("restedXPIntegration", false,
+        function() return app.db.restedXPIntegration end,
+        function(value)
+            if InCombatLockdown() or not addonLoaded("RXPGuides") then return end
+            app.db.restedXPIntegration = value
+            NS.RestedXP.Sync(app)
+        end, "restedXPIntegrationTip")
+    restedXPToggle:AddModifyPredicate(function() return addonLoaded("RXPGuides") end)
+
+    local itemTreeToggle = checkboxSetting("showItemTreeButton", false,
+        function() return app.db.itemTreeButton == true end,
+        function(value)
+            if InCombatLockdown() or not addonLoaded("ItemTree") then return end
+            app.db.itemTreeButton = value
+            NS.ItemTree.Sync(app)
+        end, "itemTreeIntegrationTip")
+    itemTreeToggle:AddModifyPredicate(function() return addonLoaded("ItemTree") end)
+    local rareScannerToggle = checkboxSetting("showRareScannerButton", true,
+        function() return app.db.rareScannerButton ~= false end,
+        function(value)
+            if InCombatLockdown() or not NS.RareScanner.MarkingAvailable() then return end
+            app.db.rareScannerButton = value
+            NS.RareScanner.SyncMark(app)
+        end, "rareScannerButtonTip")
+    rareScannerToggle:AddModifyPredicate(NS.RareScanner.MarkingAvailable)
+    local rareScannerZoneToggle = checkboxSetting("rareScannerZone", false,
+        function() return app.db.rareScannerZone == true end,
+        function(value)
+            if InCombatLockdown() or not NS.RareScanner.ZoneAvailable() then return end
+            app.db.rareScannerZone = value
+            NS.RareScanner.SyncMark(app)
+        end, "rareScannerZoneTip")
+    child(rareScannerZoneToggle, rareScannerToggle, function()
+        return app.db.rareScannerButton ~= false and NS.RareScanner.ZoneAvailable()
+    end)
+
+    section("barAppearanceSection")
+    dropdownSetting("masterOrientation", 1,
+        function() return app.db.masterOrientation == "vertical" and 2 or 1 end,
+        function(value)
+            app.db.masterOrientation = value == 2 and "vertical" or "horizontal"
+            app:Schedule()
+        end,
+        function() return {L("masterHorizontal"), L("masterVertical")} end, "masterOrientationTip")
+    sliderSetting("buttonSize", "masterModernScale", 0.3, 2, 0.01, false, 1, "buttonSizeTip")
+    sliderSetting("masterSpacing", "masterSpacing", 0, 32, 1, true, 4, "masterSpacingTip")
+    checkboxSetting("masterBackground", false, function() return app.db.masterBackground end,
+        function(value) app.db.masterBackground = value; app:Schedule() end, "masterBackgroundTip")
+    checkboxSetting("masterBorder", false, function() return app.db.masterBorder end,
+        function(value) app.db.masterBorder = value; app:Schedule() end, "masterBorderTip")
+    checkboxSetting("masterDividers", false, function() return app.db.masterDividers end,
+        function(value) app.db.masterDividers = value; app:Schedule() end, "masterDividersTip")
+    checkboxSetting("masterLocked", false, function() return app.db.masterLocked end,
+        function(value) UI.SetTargetBarLocked(app, value) end, "masterLockTip")
+
+    UI.nativeMove = actionRow("masterMove", "masterMoveStart", function()
+        UI.BeginMasterMove(app)
+    end, "masterMoveHelp")
+
+    section("integrationSection")
+    checkboxSetting("showTooltips", false, function() return app.db.showTooltips end,
+        function(value) app.db.showTooltips = value end, "showTooltipsTip")
+    local questieToggle = checkboxSetting("questieTrackerButtons", true,
+        function() return app.db.questieTrackerButtons end,
+        function(value)
+            if InCombatLockdown() or not addonLoaded("Questie") then return end
+            app.db.questieTrackerButtons = value
+            NS.QuestieTracker.Sync(app)
+        end, "questieTrackerTip")
+    questieToggle:AddModifyPredicate(function() return addonLoaded("Questie") end)
+    local questieOffset = sliderSetting("questieTrackerOffset", "questieTrackerOffset", -240, 240, 1, true, 35, "trackerSpacingTip")
+    child(questieOffset, questieToggle, function()
+        return addonLoaded("Questie") and app.db.questieTrackerButtons
+    end)
+
+    local ellesmereToggle = checkboxSetting("ellesmereTrackerButtons", true,
+        function() return app.db.ellesmereTrackerButtons ~= false end,
+        function(value)
+            if InCombatLockdown() or not NS.EllesmereTracker.Available() then return end
+            app.db.ellesmereTrackerButtons = value
+            NS.EllesmereTracker.Sync(app)
+        end, "ellesmereTrackerTip")
+    ellesmereToggle:AddModifyPredicate(NS.EllesmereTracker.Available)
+
+    local ellesmereOffset = sliderSetting("ellesmereTrackerOffset", "ellesmereTrackerOffset", -240, 240, 1, true, 0, "trackerSpacingTip")
+    child(ellesmereOffset, ellesmereToggle, function()
+        return NS.EllesmereTracker.Available() and app.db.ellesmereTrackerButtons ~= false
+    end)
 
     Settings.RegisterAddOnCategory(category)
     UI.nativeCategory = category
@@ -1325,12 +1350,28 @@ function UI.RegisterSettings(app)
         panel.titleText:SetText(UI.OptionsTitle())
         panel.patchNotesButton = button(panel, L("patchNotes"), 142, NS.PatchNotes.Open)
         panel.patchNotesButton:SetPoint("TOPRIGHT", -20, -14)
-        panel.toggle = checkbox(panel, L("autoMark"), function()
-            app.db.autoMark = not app.db.autoMark
-            UI.UpdateSettings(app)
-            app:Schedule()
-        end)
-        panel.toggle:SetPoint("TOPLEFT", 20, -48)
+        panel.feedbackControls = {}
+        for _, info in ipairs(feedbackButtons) do
+            local key, labelKey = info[1], info[2]
+            local control = CreateFrame("Frame", nil, panel)
+            control:SetSize(350, 30)
+            control.caption = label(control, 0, -4, 184, "GameFontNormal")
+            control.selector = button(control, "", 164, function()
+                local mode = NS.Core.TargetFeedbackMode(app.db, key)
+                app.db.targetFeedback[key] = mode % #feedbackChoices() + 1
+                UI.UpdateSettings(app)
+                app:Schedule()
+            end)
+            control.selector:SetPoint("TOPLEFT", 186, 0)
+            control.selector:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L(labelKey))
+                GameTooltip:AddLine(feedbackDescription(), 1, 1, 1, true)
+                GameTooltip:Show()
+            end)
+            control.selector:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            panel.feedbackControls[#panel.feedbackControls + 1] = control
+        end
         panel.soundToggle = checkbox(panel, L("muteDeadTargetSound"), function()
             app.db.muteDeadTargetSound = not app.db.muteDeadTargetSound
             UI.UpdateSettings(app)
@@ -1380,6 +1421,19 @@ function UI.RegisterSettings(app)
         end)
         panel.masterToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
         panel.masterToggle:SetPoint("TOPLEFT", 20, -248)
+        panel.masterModulesToggle = checkbox(panel, L("masterAllModules"), function()
+            app.db.masterAllModules = app.db.masterAllModules == false
+            app:Schedule()
+            UI.UpdateSettings(app)
+        end)
+        panel.masterModulesToggle:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L("masterAllModules"))
+            GameTooltip:AddLine(L("masterAllModulesTip"), 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        panel.masterModulesToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
         panel.menuToggle = checkbox(panel, L("showMenu"), function()
             app:Toggle(); UI.UpdateSettings(app)
         end)
@@ -1557,6 +1611,11 @@ function UI.CreateMasterSettings(app, category)
         end
     end)
     panel.spacingControl = settingsSlider(panel, "QuestTargetsButtonSpacingSlider", "masterSpacing", 0, 32, 1, app)
+    panel.backgroundToggle = checkbox(panel, L("masterBackground"), function()
+        app.db.masterBackground = not app.db.masterBackground
+        UI.UpdateMasterSettings(app)
+        app:Schedule()
+    end)
     panel.borderToggle = checkbox(panel, L("masterBorder"), function()
         app.db.masterBorder = not app.db.masterBorder
         UI.UpdateMasterSettings(app)
@@ -1588,6 +1647,8 @@ function UI.UpdateMasterSettings(app)
     UIDropDownMenu_SetText(panel.orientationDropdown, L(vertical and "masterVertical" or "masterHorizontal"))
     panel.spacingControl.caption:SetText(L("masterSpacing") .. " (px)")
     panel.spacingControl:Refresh()
+    panel.backgroundToggle.caption:SetText(L("masterBackground"))
+    panel.backgroundToggle:SetChecked(app.db.masterBackground)
     panel.borderToggle.caption:SetText(L("masterBorder"))
     panel.borderToggle:SetChecked(app.db.masterBorder)
     panel.dividersToggle.caption:SetText(L("masterDividers"))
@@ -1600,10 +1661,17 @@ end
 
 function UI.UpdateSettings(app)
     if not UI.settings then return end
-    UI.settings.toggle:SetChecked(app.db.autoMark)
+    local modes = feedbackChoices()
+    for index, control in ipairs(UI.settings.feedbackControls) do
+        local info = feedbackButtons[index]
+        control.caption:SetText(L(info[2]))
+        control.selector:SetText(modes[NS.Core.TargetFeedbackMode(app.db, info[1])])
+    end
     UI.settings.soundToggle:SetChecked(app.db.muteDeadTargetSound)
     UI.settings.selection:SetText(string.format(L("marker"), UI.settings.names[app.db.markerIcon]))
     UI.settings.masterToggle:SetChecked(not app.db.masterHidden)
+    UI.settings.masterModulesToggle:SetChecked(app.db.masterAllModules ~= false)
+    UI.settings.masterModulesToggle:SetEnabled(not app.db.masterHidden)
     local menuShown = app.pendingVisibility
     if menuShown == nil then menuShown = not app.db.hidden end
     UI.settings.menuToggle:SetChecked(menuShown)
@@ -1681,7 +1749,7 @@ end
 
 function UI.ApplyLanguage(app)
     NS.UpdateBindingLabels()
-    if UI.nativeButtonsCategory then UI.nativeButtonsCategory:SetName(L("buttons")) end
+    if UI.nativeButtonsCategory then UI.nativeButtonsCategory:SetName(L("buttonsBar")) end
     -- Forever may not preserve newly written SavedVariables across /reload.
     -- Refresh existing native controls immediately instead of reloading the UI.
     if InCombatLockdown() then return end
@@ -1707,10 +1775,10 @@ function UI.ApplyLanguage(app)
             end
             panel:ResizeTabs()
         end
-        panel.toggle.caption:SetText(L("autoMark"))
         panel.soundToggle.caption:SetText(L("muteDeadTargetSound"))
         panel.displayText:SetText(L("display"))
         panel.masterToggle.caption:SetText(L("showMaster"))
+        panel.masterModulesToggle.caption:SetText(L("masterAllModules"))
         panel.menuToggle.caption:SetText(L("showMenu"))
         panel.transparencyToggle.caption:SetText(L("transparencyMode"))
         panel.tooltipToggle.caption:SetText(L("showTooltips"))
@@ -1737,11 +1805,6 @@ function UI.ApplyLanguage(app)
         UI.masterSettings.moveButton:SetText(L("masterMove"))
         UI.masterSettings.moveHelp:SetText(L("masterMoveHelp"))
         UI.UpdateMasterSettings(app)
-    end
-    if UI.nativeMove then
-        UI.nativeMove.data.name = L("masterMove")
-        UI.nativeMove.data.buttonText = L("masterMoveStart")
-        UI.nativeMove.data.help = L("masterMoveHelp")
     end
     UI.UpdateMasterMove(app)
     if UI.frame then app:Refresh() end
@@ -1896,7 +1959,7 @@ function UI.RenderRows(app)
         if row.fallbackQuestID ~= (entry and entry.questID) then row.fallbackIndex = nil end
         row.fallbackQuestID = entry and entry.questID
         if entry then
-            row:SetAttribute("macrotext1", (NS.Core.EntryMacro(entry, app.db)))
+            row:SetAttribute("macrotext1", (NS.Core.EntryMacro(entry, NS.Core.TargetFeedbackSettings(app.db, "questList"))))
             row.nameText:SetText(entry.title)
             row.nameText:SetTextColor(entry.name and 1 or 0.7, entry.name and 0.82 or 0.7, entry.name and 0 or 0.7)
             local atlas = entry.name and "UI-QuestPoi-QuestNumber-SuperTracked" or "UI-QuestPoi-QuestNumber"

@@ -56,8 +56,9 @@ class RareScannerTests(unittest.TestCase):
             local macro=button:GetAttribute('macrotext1')
             assert(macro:find('Z Near Rare',1,true)<macro:find('A Far Rare',1,true))
             button.scripts.PreClick(button,'LeftButton',false)
-            assert(button:GetAttribute('macrotext1'):find('/targetexact [noexists] B Unknown Rare',1,true)
-                < button:GetAttribute('macrotext1'):find('/targetexact [noexists] Z Near Rare',1,true))
+            local nextPage=button:GetAttribute('macrotext1')
+            assert(nextPage:find('/targetexact [noexists] Z Near Rare',1,true)
+                < nextPage:find('/targetexact [noexists] B Unknown Rare',1,true))
             playerX=.105
             button.scripts.PreClick(button,'LeftButton',false)
             assert(not button:GetAttribute('macrotext1'):find('B Unknown Rare',1,true),
@@ -85,6 +86,20 @@ class RareScannerTests(unittest.TestCase):
             playerX=.1
             tick()
             assert(button.markedNames[1]=='B Unknown Rare')
+            playerX=.78
+            units.target={name='A Far Rare'}
+            button.scripts.PreClick(button,'LeftButton',false)
+            assert(button.markedNames[1]=='B Unknown Rare', 'a selected rare must not freeze the coordinate order')
+            assert(button:GetAttribute('macrotext1')==nil, 'keep the selected rare')
+            units.target=nil
+            playerX=.1
+            NS.app.db.rareScannerZone=true
+            button.scripts.PreClick(button,'LeftButton',false)
+            plate('Z Near Rare','','')
+            button.scripts.PreClick(button,'LeftButton',false)
+            assert(button:GetAttribute('macrotext1'):find('/targetexact [nocombat] Z Near Rare',1,true),
+                'a readable nearby plate must bypass the already advanced page')
+
         ''')
 
     def test_opt_in_zone_search_uses_current_map_and_pages_all_zone_rares(self):
@@ -228,7 +243,7 @@ class RareScannerTests(unittest.TestCase):
             boot()
             local b=NS.RareScanner.markButton
             assert(b:IsShown() and b:GetAlpha()<1 and b.attributes.macrotext1==nil)
-            assert(NS.UI.settings.rareScannerToggle.caption:GetText()=='Show RareScanner Button')
+            assert(NS.UI.settings.rareScannerToggle.caption:GetText()=='Show RareScanner button')
             local panel=NS.UI.settings
             local command='CLICK QuestTargetsRareScannerMark:LeftButton'
             assert(GetBindingKey(command)==nil and b.clicks[1]=='AnyUp')

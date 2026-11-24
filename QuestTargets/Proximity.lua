@@ -12,7 +12,7 @@ local function reset(db)
     if P.provider == db and P.flavor == flavor and P.support == db.Support
         and P.converter == db.EraToForever then return end
     P.provider, P.flavor, P.support, P.converter = db, flavor, db.Support, db.EraToForever
-    P.spawns, P.names, P.points, P.distances, P.maps = {}, {}, {}, {}, nil
+    P.spawns, P.names, P.points, P.distances, P.maps, P.lookedUpNames = {}, {}, {}, {}, nil, nil
     P.revision = P.revision + 1
 end
 
@@ -185,13 +185,55 @@ local function distanceToPoints(points)
     return best
 end
 
-function P.Order(entry)
-    if not entry or not entry.nameList or entry.proximityRevision == P.revision then return end
-    local distances = {}
-    for _, name in ipairs(entry.nameList) do
-        distances[name] = distanceToPoints(entry.mapPoints and entry.mapPoints[name]) or P.Distance(name) or math.huge
+-- The first exact-name lookup can build QuestieDB's full NPC index. Warm
+-- current providers in batches so clicking a guide button does not do that work.
+local indexState = setmetatable({}, {__mode = "k"})
+function P.PrepareNameIndex(db)
+    if not db or type(db.Npc.IdsByName) ~= "function" then return end
+    local build = db.Npc.BuildNameIndexAsync
+    if type(build) ~= "function" or not C_Timer or not C_Timer.After then return true end
+    if not indexState[db] then
+        indexState[db] = "loading"
+        local worker = coroutine.create(build)
+        local function advance()
+            local ok = coroutine.resume(worker)
+            if not ok then indexState[db] = "failed"
+            elseif coroutine.status(worker) == "dead" then indexState[db] = "ready"
+            else C_Timer.After(0, advance) end
+        end
+        C_Timer.After(0, advance)
+    end
+    return indexState[db] == "ready"
+end
+
+function P.RegisterName(db, name)
+    if not P.PrepareNameIndex(db) then return end
+    reset(db)
+    if not P.lookedUpNames then P.lookedUpNames = {} end
+    if P.lookedUpNames[name] then return end
+    local ok, ids = pcall(db.Npc.IdsByName, name)
+    if not ok then return end
+    P.lookedUpNames[name] = true
+    if type(ids) ~= "table" then return end
+    for _, npcID in ipairs(ids) do P.Register(db, npcID, name) end
+end
+
+function P.EntryDistance(entry, name)
+    return distanceToPoints(entry.mapPoints and entry.mapPoints[name]) or P.Distance(name)
+end
+
+function P.Order(entry, force)
+    if not entry or not entry.nameList or (not force and entry.proximityRevision == P.revision) then return end
+    local distances, guideOrder = {}, {}
+    for index, name in ipairs(entry.nameList) do
+        guideOrder[name] = index
+        distances[name] = P.EntryDistance(entry, name) or math.huge
     end
     table.sort(entry.nameList, function(a, b)
+        if entry.distanceOrder then
+            if distances[a] ~= distances[b] then return distances[a] < distances[b] end
+            return guideOrder[a] < guideOrder[b]
+        end
         local af = entry.finisherNames and entry.finisherNames[a] == true or false
         local bf = entry.finisherNames and entry.finisherNames[b] == true or false
         if af ~= bf then return not af end
@@ -201,6 +243,7 @@ function P.Order(entry)
         if distances[a] ~= distances[b] then return distances[a] < distances[b] end
         return a < b
     end)
+    if entry.distanceOrder then entry.name = entry.nameList[1] end
     entry.proximityRevision = P.revision
     entry.proximityKey = table.concat(entry.nameList, "\n")
 end

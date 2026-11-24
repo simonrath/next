@@ -33,7 +33,7 @@ class ReacquireTests(unittest.TestCase):
         self.prepare()
         self.lua.execute('''
             for _,button in ipairs({NS.UI.master,NS.UI.rows[1]}) do
-                button.entry=searchEntry(); currentGUID=nil
+                button.entry=searchEntry(); button.defaultEntry=button.entry; currentGUID=nil
                 assert(clickSearch(button)) -- first click after reload
                 for i=1,5 do
                     currentGUID=nil; event('PLAYER_TARGET_CHANGED')
@@ -46,7 +46,7 @@ class ReacquireTests(unittest.TestCase):
         self.prepare()
         self.lua.execute('''
             local button=NS.UI.master
-            button.entry=searchEntry(); currentGUID=nil
+            button.entry=searchEntry(); button.defaultEntry=button.entry; currentGUID=nil
             assert(clickSearch(button,true))
             assert(button.fallbackIndex>1)
             local entry=button.entry
@@ -60,7 +60,7 @@ class ReacquireTests(unittest.TestCase):
         self.prepare()
         self.lua.execute('''
             local button=NS.UI.master
-            button.entry=searchEntry(); currentGUID=nil
+            button.entry=searchEntry(); button.defaultEntry=button.entry; currentGUID=nil
             units.distant.name='Questgegner Nummer 5'
             assert(not clickSearch(button)); event('PLAYER_TARGET_CHANGED')
             assert(not clickSearch(button)); event('PLAYER_TARGET_CHANGED')
@@ -82,7 +82,7 @@ class ReacquireTests(unittest.TestCase):
                 {name='Questgegner Nummer 1',player=true},
                 {name='Questgegner Nummer 5'},
             }) do
-                button.entry=searchEntry(); button.fallbackIndex=nil; currentGUID=nil
+                button.defaultEntry=searchEntry(); button.fallbackIndex=nil; currentGUID=nil
                 assert(clickSearch(button,true))
                 units.other=bad; currentGUID='other'; event('PLAYER_TARGET_CHANGED')
                 currentGUID=nil
@@ -98,6 +98,7 @@ class ReacquireTests(unittest.TestCase):
             button.entry={name=mob,refs={},names={[mob]=true,[npc]=true},
                 nameList={mob,npc},mobCount=1,finisherNames={[npc]=true}}
             units.distant.name=npc; units.distant.friendly=true; currentGUID=nil
+            button.defaultEntry=button.entry
             assert(not clickSearch(button)) -- long mob and NPC need separate attempts
             assert(clickSearch(button))
             currentGUID=nil; event('PLAYER_TARGET_CHANGED')

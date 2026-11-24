@@ -91,9 +91,9 @@ function app:Refresh(forceResolution)
     UI.SyncFocusBinding(self)
     NS.QuestieTracker.Sync(self)
     NS.EllesmereTracker.Sync(self)
-    NS.RestedXP.Sync(self)
     NS.ItemTree.Sync(self)
     NS.RareScanner.SyncMark(self)
+    NS.RestedXP.Sync(self)
     if self.pendingVisibility ~= nil then
         UI.frame:SetShown(self.pendingVisibility)
         self.db.hidden = not self.pendingVisibility
@@ -150,9 +150,9 @@ function app:Poll()
     self.renderedProximityRevision = revision
     NS.QuestieTracker.Sync(self)
     NS.EllesmereTracker.Sync(self)
-    NS.RestedXP.Sync(self)
     NS.ItemTree.Sync(self)
     NS.RareScanner.SyncMark(self)
+    NS.RestedXP.Sync(self)
 end
 
 function app:Help()
@@ -205,6 +205,7 @@ events:SetScript("OnEvent", function(_, event, loadedName)
         local spacing = app.db.masterSpacing
         app.db.masterSpacing = type(spacing) == "number" and spacing == spacing
             and math.max(0, math.min(32, math.floor(spacing + 0.5))) or 4
+        app.db.masterBackground = app.db.masterBackground == true
         app.db.masterBorder = app.db.masterBorder == true
         app.db.masterLocked = app.db.masterLocked == true
         if type(app.db.collapsedQuestZones) ~= "table" then app.db.collapsedQuestZones = {} end
@@ -250,6 +251,9 @@ events:SetScript("OnEvent", function(_, event, loadedName)
         local scale = app.db.menuScale
         app.db.menuScale = type(scale) == "number" and scale == scale and math.max(0.5, math.min(1.5, scale)) or 1
         app.db.autoMark = app.db.autoMark ~= false
+        app.db.autoPing = NS.Core.PingAvailable() and app.db.autoPing == true or false
+        if app.db.autoPing then app.db.autoMark = false end
+        if type(app.db.targetFeedback) ~= "table" then app.db.targetFeedback = {} end
         local icon = app.db.markerIcon
         if type(icon) ~= "number" or icon < 1 or icon > 8 or icon % 1 ~= 0 then app.db.markerIcon = 8 end
         NS.UpdateBindingLabels()

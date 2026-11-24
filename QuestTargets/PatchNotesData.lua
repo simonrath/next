@@ -2,6 +2,24 @@
 local _, NS = ...
 NS.PatchNotesData = {
     deDE = {
+        { version = "1.8.0", date = "24.11.2026", sections = {
+                { title = "Massive Verbesserungen", items = {
+                    "**Gemeinsame Zielsuche** – Der Masterbutton durchsucht Questlog, RestedXP, Polestar, ItemTree und RareScanner gemeinsam, sofern die jeweilige Integration aktiv ist. Bei jedem Klick außerhalb des Kampfes kommen Ziele mit näheren bekannten Koordinaten zuerst, auch Abgabe-NPCs. Der blaue Button sucht nur RestedXP-Guideziele.",
+                    "**Alle Module durchsuchen** ist direkt unter **Masterbutton anzeigen** zu finden und standardmäßig aktiv. Schalte die Option aus, um mit dem Masterbutton nur Ziele aus dem Questlog zu suchen.",
+                    "**RareScanner-Button** – Aktualisiert die Entfernungsreihenfolge auch bei bereits anvisiertem Rare und prüft lesbare nahe Namensplaketten vor der nächsten Makroseite. Auch im Stand wird der nächste Rare bei jedem Klick erneut geprüft, sofern neben ihm noch ein weiterer Name ins Makro passt.",
+                }},
+                { title = "Zielmarker", items = {
+                    "**Markierung pro Button:** Wähle unter **Zielmarkierung** für jeden Zielbutton zwischen **Schlachtzugszeichen** und **Keine Markierung**. In WoW Forever und Retail steht auch **Ping** zur Auswahl. Ob du Pings im Chat siehst, stellst du in den WoW-Optionen ein.",
+                    paragraph = "Danke an **Caedis** für die Idee, gefundene Ziele zu pingen!",
+                }},
+                { title = "Optionen", items = {
+                    "Die nativen Optionen sind jetzt in **Quest Targets** und **Buttons & Leiste** gegliedert. **Patchnotes** und **Feedback** stehen unter **Allgemein**. Abhängige Optionen sind eingerückt und lassen sich einstellen, wenn die zugehörige Funktion verfügbar und aktiviert ist.",
+                    "Mit **Leistenhintergrund anzeigen** unter **Aussehen & Position** kannst du einen dunklen WoW-Hintergrund für die Buttonleiste einschalten. Der Bronzerahmen ist etwas dicker.",
+                }},
+                { title = "Bekannte Probleme", items = {
+                    "**Bekanntes Problem im deutschen Forever-Client** – Manche NPCs haben je nach Geschlecht unterschiedliche Namen. QuestieDB liefert pro NPC nur eine Namensform. Fehlt die im Spiel angezeigte Form, kann der Masterbutton den NPC bei der Namenssuche überspringen, etwa „Diebin der Wüstenläufer“.",
+                }},
+            }},
         { version = "1.7.5", date = "22.11.2026", sections = {
                 { title = "Polestar", items = {
                     "**Polestar-Guideziele:** In WoW Forever kannst du mit installiertem Polestar unter **Buttons → Zielleiste → Polestar-Guideziele verwenden** die standardmäßig ausgeschaltete Option aktivieren. Der Masterbutton sucht benannte offene Ziele des angezeigten Guide-Schritts; ohne Ziele übernimmt die Questsuche. Änderungen werden nach dem Kampf angewendet. Ist auch RestedXP aktiv und verfügbar, hat es Vorrang.",
@@ -252,6 +270,24 @@ NS.PatchNotesData = {
             }},
     },
     enUS = {
+        { version = "1.8.0", date = "Nov 24, 2026", sections = {
+                { title = "Massive Improvements", items = {
+                    "**Combined targeting** — The master button searches the quest log and enabled RestedXP, Polestar, ItemTree and RareScanner sources together. Each click out of combat prioritizes targets with nearer known coordinates, including turn-in NPCs. The blue button searches only RestedXP guide targets.",
+                    "**Search all modules** appears under **Show master button** and is on by default. Turn it off to limit the master button to quest log targets.",
+                    "**RareScanner button** — Updates distance order even with a rare selected and checks nearby readable nameplates before the next macro page. Even while standing still, each click can retry the nearest rare when there is room for another name in the macro.",
+                }},
+                { title = "Target markers", items = {
+                    "**Marking per button:** Under **Target markers**, choose **Raid marker** or **No marking** for each targeting button. On WoW Forever and Retail, you can also choose **Ping**. WoW’s ping settings control whether you see pings in chat.",
+                    paragraph = "Thanks to **Caedis** for suggesting target pings!",
+                }},
+                { title = "Options", items = {
+                    "Native options are now grouped under **Quest Targets** and **Buttons & Bar**. Open **Patch Notes** or **Feedback** under **General**. Indented options become available when their parent feature is enabled and available.",
+                    "Enable **Show bar background** under **Appearance & Position** to add a dark WoW background behind the targeting bar. The bronze border is slightly thicker.",
+                }},
+                { title = "Known Issues", items = {
+                    "**Known issue on the German WoW Forever client** — Some NPCs have different names depending on their gender. QuestieDB supplies one name per NPC. If the in-game variant is missing, the master button may skip that NPC in name searches, as with “Diebin der Wüstenläufer”.",
+                }},
+            }},
         { version = "1.7.5", date = "Nov 22, 2026", sections = {
                 { title = "Polestar", items = {
                     "**Polestar guide targets:** On WoW Forever, with Polestar installed, enable the normally disabled **Buttons → Targeting bar → Follow Polestar guide targets** option. The master button searches named open goals in the displayed guide step; without targets it falls back to quest search. Changes apply after combat. If RestedXP is also enabled and available, it takes precedence.",
@@ -502,6 +538,24 @@ NS.PatchNotesData = {
             }},
     },
     esES = {
+        { version = "1.8.0", date = "24 nov 2026", sections = {
+                { title = "Grandes mejoras", items = {
+                    "**Búsqueda combinada** — El botón principal busca en el registro de misiones y en las fuentes activadas de RestedXP, Polestar, ItemTree y RareScanner. Cada clic fuera de combate prioriza los objetivos con coordenadas conocidas más cercanas, incluidos los PNJ de entrega. El botón azul solo busca objetivos de RestedXP.",
+                    "**Buscar en todos los módulos** aparece debajo de **Mostrar botón principal** y está activada de forma predeterminada. Desactívala para que el botón principal solo busque objetivos del registro de misiones.",
+                    "**Botón de RareScanner** — Actualiza el orden por distancia aunque haya un raro seleccionado y comprueba las placas cercanas legibles antes de la siguiente página de la macro. Incluso sin moverte, cada clic puede volver a buscar al raro más cercano si queda espacio para otro nombre en la macro.",
+                }},
+                { title = "Marcas de objetivo", items = {
+                    "**Marcado por botón:** En **Marcadores**, elige **Marca de banda** o **Sin marca** para cada botón de selección de objetivos. En WoW Forever y Retail también puedes elegir **Aviso**. Las opciones de WoW controlan si ves los avisos en el chat.",
+                    paragraph = "¡Gracias a **Caedis** por sugerir los pings para los objetivos!",
+                }},
+                { title = "Opciones", items = {
+                    "Las opciones nativas se agrupan en **Quest Targets** y **Botones y barra**. Abre **Notas del parche** o **Comentarios** en **General**. Las opciones indentadas se habilitan cuando su función está disponible y activada.",
+                    "Activa **Mostrar fondo de la barra** en **Aspecto y posición** para añadir un fondo oscuro de WoW detrás de la barra. El borde de bronce es un poco más grueso.",
+                }},
+                { title = "Problemas conocidos", items = {
+                    "**Problema conocido en el cliente alemán de WoW Forever** — Algunos PNJ tienen nombres distintos según su género. QuestieDB proporciona una variante por PNJ. Si falta la forma del juego, el botón principal puede omitir al PNJ al buscar por nombre, como ocurre con «Diebin der Wüstenläufer».",
+                }},
+            }},
         { version = "1.7.5", date = "22 nov. 2026", sections = {
                 { title = "Polestar", items = {
                     "**Objetivos de Polestar:** En WoW Forever, con Polestar instalado, activa **Botones → Barra de objetivos → Seguir objetivos de Polestar**, desactivado por defecto. El botón maestro busca objetivos abiertos con nombre del paso mostrado; si no hay ninguno, busca objetivos de misión. Los cambios se aplican después del combate. Si RestedXP también está activado y disponible, tiene prioridad.",
@@ -752,6 +806,24 @@ NS.PatchNotesData = {
             }},
     },
     frFR = {
+        { version = "1.8.0", date = "24 nov. 2026", sections = {
+                { title = "Améliorations majeures", items = {
+                    "**Recherche combinée** — Le bouton principal recherche dans le journal de quêtes et les sources activées RestedXP, Polestar, ItemTree et RareScanner. Chaque clic hors combat donne la priorité aux cibles proches aux coordonnées connues, y compris les PNJ de remise de quête. Le bouton bleu recherche uniquement les objectifs de RestedXP.",
+                    "**Rechercher dans tous les modules** est activé par défaut sous **Afficher le bouton principal**. Désactivez cette option pour limiter le bouton principal aux cibles du journal de quêtes.",
+                    "**Bouton RareScanner** — Actualise l’ordre par distance même lorsqu’un rare est ciblé et vérifie les plaques de nom proches et lisibles avant de poursuivre la recherche par macro. Même immobile, chaque clic peut rechercher de nouveau le rare le plus proche si la macro peut aussi contenir un autre nom.",
+                }},
+                { title = "Marqueurs de cible", items = {
+                    "**Marquage par bouton :** Sous **Marquage**, choisissez **Marqueur de raid** ou **Aucun marquage** pour chaque bouton de ciblage. Dans WoW Forever et Retail, **Signal** est aussi disponible. Les options de WoW déterminent si les signaux apparaissent dans votre discussion.",
+                    paragraph = "Merci à **Caedis** pour l’idée des pings sur les cibles !",
+                }},
+                { title = "Options", items = {
+                    "Les options natives sont regroupées sous **Quest Targets** et **Boutons et barre**. Ouvrez les **Notes de mise à jour** ou les **Avis** sous **Général**. Les options en retrait sont accessibles lorsque la fonction associée est disponible et activée.",
+                    "Activez **Afficher le fond de la barre** sous **Apparence et position** pour afficher un fond sombre de WoW derrière la barre. Le cadre en bronze est légèrement plus épais.",
+                }},
+                { title = "Problèmes connus", items = {
+                    "**Problème connu sur le client allemand de WoW Forever** — Certains PNJ portent un nom différent selon leur genre. QuestieDB fournit une seule forme par PNJ. Si la forme affichée en jeu manque, le bouton principal peut ignorer le PNJ lors d'une recherche par nom, comme pour « Diebin der Wüstenläufer ».",
+                }},
+            }},
         { version = "1.7.5", date = "22 nov. 2026", sections = {
                 { title = "Polestar", items = {
                     "**Cibles Polestar :** Sur WoW Forever, avec Polestar installé, activez **Boutons → Barre de ciblage → Suivre les cibles Polestar**, désactivé par défaut. Le bouton principal recherche les objectifs ouverts nommés de l’étape affichée ; à défaut, elle recherche les objectifs de quête. Les changements s’appliquent après le combat. Si RestedXP est aussi activé et disponible, il est prioritaire.",
@@ -1002,6 +1074,24 @@ NS.PatchNotesData = {
             }},
     },
     trTR = {
+        { version = "1.8.0", date = "24 Kas 2026", sections = {
+                { title = "Büyük iyileştirmeler", items = {
+                    "**Birleşik hedef araması** — Ana düğme görev günlüğünü ve açık RestedXP, Polestar, ItemTree ve RareScanner kaynaklarını birlikte arar. Savaş dışında her tıklama, görev teslim NPC’leri dahil koordinatları bilinen yakın hedeflere öncelik verir. Mavi düğme yalnızca RestedXP rehber hedeflerini arar.",
+                    "**Tüm modülleri ara** seçeneği **Ana düğmeyi göster** altında varsayılan olarak açıktır. Ana düğmeyi görev günlüğü hedefleriyle sınırlamak için kapatın.",
+                    "**RareScanner düğmesi** — Bir nadir hedefliyken de mesafe sırasını günceller ve sonraki makro sayfasından önce yakındaki okunabilir isim plakalarını kontrol eder. Hareketsizken bile makroya bir ad daha sığıyorsa her tıklama en yakın nadir hedefi yeniden dener.",
+                }},
+                { title = "Hedef işaretleri", items = {
+                    "**Düğme başına işaretleme:** **Hedef işaretleri** altında her hedefleme düğmesi için **Baskın işareti** veya **İşaretleme yok** seçeneğini belirle. WoW Forever ve Retail’de **Sinyal** de seçilebilir. Sinyallerin sohbetinde görünmesini WoW ayarlarından kontrol edebilirsin.",
+                    paragraph = "Hedeflere ping atma fikri için **Caedis**’e teşekkürler!",
+                }},
+                { title = "Seçenekler", items = {
+                    "Yerleşik ayarlar **Quest Targets** ve **Düğmeler ve çubuk** altında gruplandı. **Yama Notları** ve **Geri bildirim** artık **Genel** altında. Girintili ayarlar, bağlı oldukları özellik kullanılabilir ve açık olduğunda etkinleşir.",
+                    "Çubuğun arkasına koyu bir WoW arka planı eklemek için **Görünüm ve Konum** altında **Çubuk arka planını göster** seçeneğini açın. Bronz çerçeve biraz daha kalın.",
+                }},
+                { title = "Bilinen sorunlar", items = {
+                    "**Almanca WoW Forever istemcisinde bilinen sorun** — Bazı NPC'lerin adı cinsiyete göre değişir. QuestieDB her NPC için tek bir ad biçimi sunar. Oyunda görünen ad eksikse ana düğme, “Diebin der Wüstenläufer” örneğinde olduğu gibi, ada göre aramada NPC'yi atlayabilir.",
+                }},
+            }},
         { version = "1.7.5", date = "22 Kas 2026", sections = {
                 { title = "Polestar", items = {
                     "**Polestar rehber hedefleri:** WoW Forever'da Polestar yüklüyken varsayılan olarak kapalı **Düğmeler → Hedef çubuğu → Polestar hedeflerini izle** seçeneğini açın. Ana düğme, görüntülenen rehber adımındaki adlı açık hedefleri arar; hedef yoksa görev aramasına döner. Değişiklikler çatışmadan sonra uygulanır. RestedXP de açık ve kullanılabilir olduğunda önceliklidir.",
@@ -1252,6 +1342,24 @@ NS.PatchNotesData = {
             }},
     },
     zhCN = {
+        { version = "1.8.0", date = "2026 年 11 月 24 日", sections = {
+                { title = "重大改进", items = {
+                    "**合并目标搜索** — 主按钮同时搜索任务日志及已启用的 RestedXP、Polestar、ItemTree 和 RareScanner 来源。脱战后每次点击都会优先搜索坐标已知的附近目标，包括交任务的 NPC。蓝色按钮仅搜索 RestedXP 指南目标。",
+                    "**搜索所有模块** 位于 **显示主按钮** 下方，默认启用。关闭后主按钮仅搜索任务日志目标。",
+                    "**RareScanner 按钮** — 已选中稀有怪时也会更新距离排序，并在尝试下一组宏目标前检查附近可读取的姓名板。 即使站着不动，只要宏还能容纳另一个名字，每次点击也能重试最近的稀有怪。",
+                }},
+                { title = "目标标记", items = {
+                    "**按按钮设置标记方式：** 在**目标标记**中，为每个目标按钮选择**团队标记**或**不标记**。WoW Forever 和正式服还可以选择**信号**。是否在聊天中显示信号由魔兽世界选项控制。",
+                    paragraph = "感谢 **Caedis** 提出为目标添加信号提示的建议！",
+                }},
+                { title = "选项", items = {
+                    "原生选项现在分为 **Quest Targets** 和**按钮与按钮栏**。可在**常规**中打开**更新说明**或**反馈**。缩进的选项在上级功能可用且启用后才能调整。",
+                    "在**外观与位置**中启用**显示栏背景**，可在目标栏后显示魔兽世界的深色背景。 青铜边框略微加粗。",
+                }},
+                { title = "已知问题", items = {
+                    "**WoW Forever 德语客户端的已知问题**：部分 NPC 的名称会因性别而异。QuestieDB 每个 NPC 只提供一种名称。如果缺少游戏中显示的名称，主按钮按名称搜索时可能会跳过该 NPC，例如“Diebin der Wüstenläufer”。",
+                }},
+            }},
         { version = "1.7.5", date = "2026年11月22日", sections = {
                 { title = "Polestar", items = {
                     "**Polestar 指南目标：** 在 WoW Forever 中安装 Polestar 后，可在**按钮 → 目标按钮栏 → 跟随 Polestar 指南目标**启用默认关闭的选项。主按钮会搜索当前显示步骤中有名称的未完成目标；没有目标时会回退到任务搜索。战斗中的更改会在战斗结束后应用。如果同时启用且可使用 RestedXP，则优先使用 RestedXP。",

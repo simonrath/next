@@ -26,7 +26,7 @@ class PlateNameTests(unittest.TestCase):
             plate('Waldwolf','','').guid='A'
             plate('Anderer Wolf','','').guid='B'
             local row=NS.UI.master
-            row.entry={name='Waldwolf',names={Waldwolf=true,['Anderer Wolf']=true},
+            row.defaultEntry={name='Waldwolf',names={Waldwolf=true,['Anderer Wolf']=true},
                 nameList={'Waldwolf','Anderer Wolf'},refs={}}
             currentGUID='A'
             row.scripts.PreClick(row,'LeftButton',false)

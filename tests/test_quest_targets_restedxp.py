@@ -6,7 +6,7 @@ import test_quest_targets as addon
 class RestedXPTests(unittest.TestCase):
     setUp = addon.QuestTargetsTests.setUp
 
-    def test_native_fallback_cursor_survives_shrinking_quest_target_list(self):
+    def test_combined_search_cursor_survives_shrinking_quest_target_list(self):
         for use_master in (True, False):
             for remaining in (11, 1, 0):
                 with self.subTest(master=use_master, remaining=remaining):
@@ -34,11 +34,9 @@ class RestedXPTests(unittest.TestCase):
                         QuestTargetsDB={restedXPIntegration=true,autoMark=false}
                         boot()
                         assert(#NS.UI.master.defaultEntry.nameList==12)
-                        local signature=NS.RestedXP.signature
-                        NS.RestedXP.nativeCursor=12
+                        NS.UI.master.fallbackIndex=12
                         for i=12,fallbackTestRemaining+1,-1 do table.remove(quests,i) end
                         NS.app:Refresh()
-                        assert(NS.RestedXP.signature==signature)
                         assert(#NS.UI.master.defaultEntry.nameList==fallbackTestRemaining)
                         local button=fallbackTestMaster and NS.UI.master or NS.RestedXP.button
                         button.scripts.PreClick(button,'LeftButton',false)
@@ -48,11 +46,9 @@ class RestedXPTests(unittest.TestCase):
                         assert(not macro:find('Native Mob 12',1,true))
                         if not fallbackTestMaster then
                             assert(not macro:find('Native Mob',1,true))
-                            assert(NS.RestedXP.nativeCursor==12)
                         elseif fallbackTestRemaining>0 then
                             assert(macro:find('/targetexact [noexists] Native Mob 01',1,true))
-                            assert(NS.RestedXP.nativeCursor>=1
-                                and NS.RestedXP.nativeCursor<=fallbackTestRemaining)
+                            assert(button.fallbackIndex>=1 and button.fallbackIndex<=#button.entry.nameList)
                         else
                             assert(not macro:find('Native Mob',1,true))
                         end
@@ -103,13 +99,13 @@ class RestedXPTests(unittest.TestCase):
             else return standardLibStub(name) end end
             QuestTargetsDB={restedXPIntegration=true}
             boot()
-            assert(table.concat(NS.RestedXP.targets,'|')=='Alter Klippeneber|Gryth Thurden')
-            assert(not NS.RestedXP.allEntry.names['Stale Boar'])
-            assert(NS.RestedXP.allEntry.finisherNames['Gryth Thurden'])
-            assert(not NS.RestedXP.allEntry.finisherNames['Alter Klippeneber'])
+            assert(table.concat(NS.RestedXP.button.entry.nameList,'|')=='Alter Klippeneber|Gryth Thurden')
+            assert(not NS.UI.master.entry.names['Stale Boar'])
+            assert(NS.UI.master.entry.finisherNames['Gryth Thurden'])
+            assert(not NS.UI.master.entry.finisherNames['Alter Klippeneber'])
             friendly={}; mobs={}; scans={}
             NS.RestedXP.Sync(NS.app)
-            assert(#NS.RestedXP.targets==0)
+            assert(NS.RestedXP.button.entry==nil)
             assert(NS.UI.master.entry==NS.UI.master.defaultEntry)
         ''')
 
@@ -136,12 +132,12 @@ class RestedXPTests(unittest.TestCase):
             assert(NS.RestedXP.button.entry.name=='Monty')
             NS.UI.master.scripts.PreClick(NS.UI.master,'LeftButton',false)
             NS.UI.master.scripts.PostClick(NS.UI.master,'LeftButton',false)
-            assert(NS.UI.master.entry.name=='Waldwolf')
+            assert(NS.UI.master.entry.names.Monty and NS.UI.master.entry.names.Waldwolf)
             accept.completed=true
             rxp.RXPFrame.activeSteps[1].active=false
             NS.RestedXP.Sync(NS.app)
             assert(NS.UI.master.entry.name=='Waldwolf')
-            assert(#NS.RestedXP.targets==1)
+            assert(#NS.RestedXP.button.entry.nameList==1)
         ''')
 
     def test_active_flight_path_step_targets_explicit_npc(self):
@@ -161,7 +157,7 @@ class RestedXPTests(unittest.TestCase):
             else return standardLibStub(name) end end
             QuestTargetsDB={restedXPIntegration=true}
             boot()
-            assert(#NS.RestedXP.targets==1)
+            assert(#NS.RestedXP.button.entry.nameList==1)
             assert(NS.UI.master.entry.name=='Gryth Thurden')
             assert(NS.UI.master.entry.finisherNames['Gryth Thurden'])
             assert(NS.UI.master.attributes.macrotext1:find('/targetexact [noexists] Gryth Thurden',1,true))
@@ -216,10 +212,9 @@ class RestedXPTests(unittest.TestCase):
             units.target={name='Alter Klippeneber',guid='Boar'}
             currentGUID='Boar'
             button.scripts.PostClick(button,'LeftButton',false)
-            assert(button.entry.name=='Rudra Amberstill')
+            assert(button.entry.names['Rudra Amberstill'])
             flush()
             assert(not button.attributes.macrotext1:find('/targetexact',1,true))
-            assert(not NS.UI.master.attributes.macrotext1:find('/cleartarget',1,true))
             button.scripts.PreClick(button,'LeftButton',false)
             local macro=button.attributes.macrotext1
             assert(not macro:find('/targetexact',1,true))
@@ -245,10 +240,9 @@ class RestedXPTests(unittest.TestCase):
             else return standardLibStub(name) end end
             QuestTargetsDB={restedXPIntegration=true}
             boot()
-            NS.RestedXP.fallbackOnce=true
             NS.RestedXP.Sync(NS.app)
             local button=NS.UI.master
-            assert(button.entry==NS.UI.master.defaultEntry)
+            assert(button.entry.names.Waldwolf)
             assert(NS.RestedXP.button.entry.name=='Alter Klippeneber')
             units.target={name='Alter Klippeneber',guid='Boar'}
             currentGUID='Boar'
@@ -314,7 +308,7 @@ class RestedXPTests(unittest.TestCase):
             assert(item and item.inBar and item.point[2]==button)
             assert(item.attributes.macrotext1:find('Imported-only mob',1,true))
             NS.UI.master.scripts.PreClick(NS.UI.master,'LeftButton',false)
-            assert(not NS.UI.master.attributes.macrotext1:find('Imported-only mob',1,true))
+            assert(NS.UI.master.entry.names['Imported-only mob'])
             button.scripts.PreClick(button,'LeftButton',false)
             assert(not button.attributes.macrotext1:find('Imported-only mob',1,true))
             assert(item:GetNormalTexture():GetTexture()==compass)
@@ -332,13 +326,13 @@ class RestedXPTests(unittest.TestCase):
             assert(button.attributes.macrotext1:find('Nicht im Questlog',1,true))
             button.scripts.PreClick(button,'LeftButton',false)
             button.scripts.PostClick(button,'LeftButton',false)
-            assert(NS.UI.master.entry.name=='Nicht im Questlog')
-            assert(button.entry.name=='Waldwolf')
-            assert(NS.UI.master.attributes.macrotext1:find('Nicht im Questlog',1,true))
+            assert(button.entry.names.Waldwolf)
             NS.UI.master.scripts.PreClick(NS.UI.master,'LeftButton',false)
+            assert(NS.UI.master.entry.names['Nicht im Questlog'])
+            assert(NS.UI.master.entry.names['Imported-only mob'])
             NS.UI.master.scripts.PostClick(NS.UI.master,'LeftButton',false)
-            assert(NS.UI.master.entry.name=='Waldwolf')
-            assert(button.entry.name=='Waldwolf')
+            assert(NS.UI.master.entry.names.Waldwolf)
+            assert(button.entry.names.Waldwolf)
             combat=true
             rxp.RXPFrame.activeSteps={{active=true,elements={{mobs={12}}}}}
             NS.RestedXP.Sync(NS.app)
@@ -388,7 +382,7 @@ class RestedXPTests(unittest.TestCase):
             assert(not NS.RestedXP.button.entry and not NS.RestedXP.button.attributes.macrotext1)
         ''')
 
-    def test_failed_guide_target_uses_native_search_on_next_click(self):
+    def test_master_searches_quest_log_and_guide_in_same_click(self):
         self.lua.execute('''
             local frame=CreateFrame('Frame','RXPTargetFrame',UIParent)
             local rxp={RXPFrame={activeSteps={
@@ -408,7 +402,6 @@ class RestedXPTests(unittest.TestCase):
             assert(not blue.attributes.macrotext1:find('Waldwolf',1,true))
             blue.scripts.PostClick(blue,'LeftButton',false)
             flush()
-            assert(not NS.RestedXP.fallbackOnce)
             local button=NS.UI.master
             button.scripts.PreClick(button,'LeftButton',false)
             local macro=button.attributes.macrotext1
@@ -416,8 +409,7 @@ class RestedXPTests(unittest.TestCase):
             assert(macro:find('/targetexact [noexists] Waldwolf',1,true))
             button.scripts.PostClick(button,'LeftButton',false)
             flush()
-            assert(button.entry==NS.UI.master.defaultEntry)
-            assert(NS.UI.master.entry==NS.UI.master.defaultEntry)
+            assert(button.entry.names['Distant Guide NPC'] and button.entry.names.Waldwolf)
             button.scripts.PreClick(button,'LeftButton',false)
             assert(button.attributes.macrotext1:find('Waldwolf',1,true))
             button.scripts.PostClick(button,'LeftButton',false)
@@ -444,8 +436,7 @@ class RestedXPTests(unittest.TestCase):
             currentGUID='GuideNPC'
             button.scripts.PostClick(button,'LeftButton',false)
             flush()
-            assert(button.entry.name=='Rudra Amberstill')
-            assert(not NS.RestedXP.fallbackOnce)
+            assert(button.entry.names['Rudra Amberstill'])
         ''')
 
     def test_explicit_turn_in_npc_follows_active_guide_step(self):

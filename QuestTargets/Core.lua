@@ -143,17 +143,47 @@ function Core.Macro(name, settings, allowFriendly)
     -- Let the client's targeting rules choose the match. No scan, attack, or cast.
     -- Discard a dead match; this cannot search past a corpse or cycle same-name mobs.
     local text = "/stopmacro [combat,exists,harm,nodead]\n/cleartarget\n/targetexact " .. name .. "\n/cleartarget [dead]"
-    if #text > Core.MACRO_BYTES then
+    local clearsBeforeSearch = #text <= Core.MACRO_BYTES
+    if not clearsBeforeSearch then
         -- An unusually long name gets a complete command of its own. Preserve
         -- the previous target on a miss instead of clearing it beforehand.
         text = "/stopmacro [combat,harm,nodead]\n/targetexact " .. name .. "\n/cleartarget [dead]"
     end
-    local marker = allowFriendly and "" or Core.MarkerMacro(settings)
+    local ping = Core.PingEnabled(settings)
+    local marker = ping and clearsBeforeSearch and Core.MarkerMacro(settings, false, allowFriendly)
+        or not ping and not allowFriendly and Core.MarkerMacro(settings) or ""
     if #text + #marker <= Core.MACRO_BYTES then text = text .. marker end
     return text
 end
 
+function Core.PingAvailable()
+    return C_Ping and type(C_Ping.SendMacroPing) == "function"
+end
+
+function Core.PingEnabled(settings)
+    return settings and settings.autoPing and Core.PingAvailable()
+end
+
+function Core.TargetFeedbackMode(settings, button)
+    local mode = settings.targetFeedback and settings.targetFeedback[button]
+    if mode == 1 or mode == 2 then return mode end
+    if mode == 3 then return Core.PingAvailable() and 3 or 1 end
+    if button == "rare" then return 1 end
+    if Core.PingEnabled(settings) then return 3 end
+    return settings.autoMark and 2 or 1
+end
+
+function Core.TargetFeedbackSettings(settings, button)
+    local mode = Core.TargetFeedbackMode(settings, button)
+    return {autoMark = mode == 2, autoPing = mode == 3, markerIcon = settings.markerIcon}
+end
+
 function Core.MarkerMacro(settings, outsideCombat, allowFriendly)
+    if Core.PingEnabled(settings) then
+        -- Blizzard's native slash command runs inside the player's secure click.
+        return "\n/ping [@target," .. (outsideCombat and "nocombat," or "")
+            .. "exists," .. (allowFriendly and "" or "harm,") .. "nodead]"
+    end
     if not settings or not settings.autoMark then return "" end
     local icon = settings.markerIcon
     if type(icon) ~= "number" or icon < 1 or icon > 8 or icon % 1 ~= 0 then return "" end
@@ -167,7 +197,10 @@ end
 function Core.NextUnit(entry, entries)
     if InCombatLockdown() or not entry or not entry.name or not C_NamePlate
         or not C_NamePlate.GetNamePlates then return end
-    local keys, names, candidates, seen = {}, {}, {}, {}
+    local keys, names, candidates, seen, rank = {}, {}, {}, {}, {}
+    if entry.distanceOrder then
+        for index, name in ipairs(entry.nameList) do rank[name] = index end
+    end
     for _, ref in ipairs(entry.refs) do keys[ref.key] = true end
     for name in pairs(entry.names or {}) do names[name] = true end
     for _, candidate in ipairs(entry.names and {} or entries) do
@@ -192,12 +225,13 @@ function Core.NextUnit(entry, entries)
                 if name and names[name] and (hostile or questNPC) and not seen[identity] then
                     seen[identity] = true
                     candidates[#candidates + 1] = {unit = unit, guid = readable(guid) and guid or nil,
-                        friendly = not hostile}
+                        friendly = not hostile, rank = rank[name]}
                 end
             end
         end
     end
     table.sort(candidates, function(a, b)
+        if a.rank and b.rank and a.rank ~= b.rank then return a.rank < b.rank end
         if a.friendly ~= b.friendly then return not a.friendly end
         return tonumber(a.unit:match('%d+$')) < tonumber(b.unit:match('%d+$'))
     end)
@@ -214,18 +248,23 @@ function Core.NextUnit(entry, entries)
     return candidates[1] and candidates[1].unit, candidates[1] and candidates[1].friendly
 end
 
-function Core.ClickMacro(entry, entries, settings, state, preserveEntry)
+function Core.ClickMacro(entry, entries, settings, state, preserveEntry, positionSampled)
     Core.ConfirmSearchResult()
     Core.pendingSearch = nil -- a new hardware click supersedes the previous attempt
     Core.lastCycle = nil
     Core.lastClick = {path = "Keine Mobnamen", combat = InCombatLockdown()}
     if not entry or not entry.name then return end
     local proximity = NS.Proximity
-    if proximity and not Core.lastClick.combat then proximity.Sample() end
+    if proximity and not Core.lastClick.combat and not positionSampled then proximity.Sample() end
     -- Prefer a concrete visible quest unit on the first click. If no valid
     -- nameplate token exists, fall back to name search for distant targets.
     local validCurrent = Core.ValidCurrentTarget(entry)
     local unit, friendly = Core.NextUnit(entry, entries)
+    -- A visible but farther guide target must not jump the coordinate order
+    -- when acquiring a target. Let the ordered macro also try names off-plate.
+    if entry.distanceOrder and not validCurrent and unit and Core.SafeName(UnitName(unit)) ~= entry.name then
+        unit, friendly = nil, nil
+    end
     Core.lastClick.validCurrent = validCurrent
     Core.lastClick.unit = unit
     Core.lastClick.path = unit and "Namensplaketten-Wechsel" or (validCurrent and "Ziel behalten" or "Namenssuche")
@@ -286,8 +325,16 @@ function Core.ClickMacro(entry, entries, settings, state, preserveEntry)
     Core.lastClick.path = "Namenssuche aus Namensplakette"
     Core.lastClick.name = name
     -- Do not clear an existing valid target if the visible unit disappears.
-    return "/targetexact [nocombat] " .. name
-        .. (friendly and "" or Core.MarkerMacro(settings, true))
+    local ping = Core.PingEnabled(settings)
+    if ping then
+        local clear = (validCurrent or (preserveEntry and Core.ValidCurrentTarget(preserveEntry)))
+            and "" or "/cleartarget [nocombat]\n"
+        local macro = clear .. "/targetexact [nocombat] " .. name
+        local marker = Core.MarkerMacro(settings, true, friendly)
+        if #macro + #marker <= Core.MACRO_BYTES then return macro .. marker end
+        return macro
+    end
+    return "/targetexact [nocombat] " .. name .. (friendly and "" or Core.MarkerMacro(settings, true))
 end
 
 function Core.ValidCurrentTarget(entry, allowFriendly)
@@ -347,13 +394,13 @@ function Core.EntryMacro(entry, settings, startIndex, finisherIndex)
     -- any living hostile target rather than risk losing an already valid one.
     local commands = "/stopmacro [combat,exists,harm,nodead]\n/cleartarget"
     local allowFriendly = entry.finisherNames and next(entry.finisherNames) ~= nil
-    local tail = Core.MarkerMacro(settings)
+    local tail = Core.MarkerMacro(settings, false, allowFriendly and Core.PingEnabled(settings))
     -- Leave no dead match blocking subsequent alternatives. Keep within the
     -- secure macro text budget; the visible-unit cycle still includes all names.
     if NS.Proximity then NS.Proximity.Order(entry) end
     local count = #entry.nameList
     if count == 0 then return end
-    if allowFriendly then
+    if allowFriendly and not entry.distanceOrder then
         local mobCount = entry.mobCount or 0
         local finisherCount = count - mobCount
         local firstFinisher = type(finisherIndex) == "number"
@@ -399,15 +446,29 @@ function Core.EntryMacro(entry, settings, startIndex, finisherIndex)
         return commands .. tail, mobIndex, nextFinisher
     end
     local index = type(startIndex) == "number" and ((startIndex - 1) % count + 1) or 1
-    for offset = 1, count do
-        local name = entry.nameList[index]
-        local line = "\n/targetexact [noexists] " .. name .. "\n/cleartarget [dead]"
-        if #commands + #line + #tail > Core.MACRO_BYTES then
-            if offset == 1 then return Core.Macro(name, settings,
-                entry.finisherNames and entry.finisherNames[name] == true), index % count + 1 end
-            break
+    local function targetLine(name)
+        return "\n/targetexact [noexists] " .. name .. "\n/cleartarget [dead]"
+    end
+    local retryClosest = false
+    if entry.retryClosest and index ~= 1 then
+        local closest = targetLine(entry.nameList[1])
+        -- Keep at least one slot for the next candidate, even with long names.
+        if #commands + #closest + #targetLine(entry.nameList[index]) + #tail <= Core.MACRO_BYTES then
+            commands = commands .. closest
+            retryClosest = true
         end
-        commands = commands .. line
+    end
+    for offset = 1, count do
+        if not retryClosest or index ~= 1 then
+            local name = entry.nameList[index]
+            local line = targetLine(name)
+            if #commands + #line + #tail > Core.MACRO_BYTES then
+                if offset == 1 then return Core.Macro(name, settings,
+                    entry.finisherNames and entry.finisherNames[name] == true), index % count + 1 end
+                break
+            end
+            commands = commands .. line
+        end
         index = index % count + 1
     end
     return commands .. tail, index

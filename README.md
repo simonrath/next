@@ -37,18 +37,18 @@ refreshes and reloads. In the addon's own Hotkeys section, assigning an occupied
 keyboard/controller key requires confirmation before replacing its old action.
 
 - One target button per quest and a master button for active objectives.
-- Prioritizes quest mobs, then NPCs for quests ready to turn in.
+- The master button combines quest mobs, ready turn-ins and targets from enabled modules. Targets with nearer known coordinates come first.
 - Name targeting and nearby nameplate detection.
 - Configurable target markers, hotkeys, and tooltips.
 - Compact native addon settings in every supported client, with a minimap button and a resizable, movable compass button bar.
 - Quest-specific target buttons appear automatically beside quest rows in Questie's tracker when Questie is installed and enabled.
 - Right-click a quest icon in either quest list to focus that quest. The always-visible focus highlight is shared between both lists; a separate configurable hotkey targets only the focused quest while the master button keeps its normal behavior.
-- **RestedXP:** Enable **Show RestedXP button** under **Buttons → Targeting bar**. The blue compass looks for targets in your active guide step, including mobs, quest NPCs and flight masters. The main compass also prioritizes the guide step and falls back to regular quest objectives when the step has no target.
-- **RareScanner on WoW Forever:** Click a rare icon on the world map to mark it, then use the purple compass or its hotkeys to search marked rares. Enable **Search all rares in the zone** under **Buttons → Targeting bar** to include unmarked rares and known dungeon rares. Click a rare icon on the minimap to look for that rare directly.
-- **Polestar on WoW Forever:** Enable **Follow Polestar guide targets** under **Buttons → Targeting bar** to use the main compass for named, open goals in the displayed Polestar step. Normal quest targeting remains the fallback; secure updates wait until combat ends. RestedXP takes precedence when both integrations are enabled and available. Polestar's own controls are unchanged.
+- **RestedXP:** Enable **Show RestedXP button** under **Buttons & Bar > Targeting Bar: Modules**. The blue compass looks for targets in your active guide step, including mobs, quest NPCs and flight masters. The master button includes these guide targets alongside targets from its other sources.
+- **RareScanner on WoW Forever:** Click a rare icon on the world map to mark it, then use the purple compass or its hotkeys to search marked rares. Enable **Scan all rares in zone** under **Buttons & Bar > Targeting Bar: Modules** to include unmarked rares and known dungeon rares. Click a rare icon on the minimap to look for that rare directly.
+- **Polestar on WoW Forever:** Enable **Follow Polestar guide targets** under **Buttons & Bar > Targeting Bar: Modules** to use the main compass for named, open goals in the displayed Polestar step. You can enable both guide integrations at the same time. Secure updates wait until combat ends.
 - Optional transparency mode immediately leaves only the quest list visible. Its toggle icon hides two seconds after the cursor leaves the window and reappears when the cursor moves anywhere over it. A 90% transparent draggable strip is shown only while the cursor is over the window.
 - The compact quest window has adjacent Settings and Feedback buttons; quest data also refreshes automatically or with `/qt refresh`.
-- Under **Buttons → Targeting bar**, choose the visible compasses, adjust size, layout and spacing, and toggle the bronze border and dividers independently.
+- Under **Buttons & Bar**, choose the visible compasses in **Targeting Bar: Modules**. Adjust orientation, scale, spacing, the bronze border and dividers in **Targeting Bar: Appearance & Position**.
 - English, German, Spanish, French, Turkish, and Simplified Chinese.
 - In-game feedback button with a copyable link and a QR code for
   [the public feedback form](https://feedback.jacknine.org/). Scan the code with
@@ -66,7 +66,7 @@ when the first slot is cleared, the remaining binding moves into it. The control
 and native gamepad input must be enabled (`/console GamePadEnable 1` on clients
 that support it). Escape cancels assignment; Delete or Backspace clears the selected slot.
 Clients without the gamepad frame API retain keyboard binding support.
-To position the bar, open **Buttons → Targeting bar → Move button bar**.
+To position the bar, open **Buttons & Bar > Targeting Bar: Appearance & Position > Move bar**.
 Outside combat, drag the handle with the left mouse button; the native move cursor
 shows where you can drag. Choose **Done** to save, **Cancel** or Escape to restore
 the previous position, or **Reset position** to preview the default position.

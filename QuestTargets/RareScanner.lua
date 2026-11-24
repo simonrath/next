@@ -141,7 +141,7 @@ local function markedEntry(app)
     end
     if type(saved.maps) ~= "table" then saved.maps = {} end
     local cachedNames = global.rare_names and global.rare_names[locale]
-    local entry = {nameList = {}, names = {}, mapPoints = {}}
+    local entry = {nameList = {}, names = {}, refs = {}, mapPoints = {}}
     local mapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
     for id in pairs(saved.names) do
         if not overlays or not overlays[id] then saved.names[id], saved.maps[id] = nil, nil end
@@ -179,8 +179,6 @@ local function markedEntry(app)
     entry.name = entry.nameList[1]
     if entry.name then return entry end
 end
-
-local rareSearchOptions = {autoMark = false}
 
 -- WoW instance map IDs to RareScanner's synthetic dungeon maps.
 -- Some wings share an instance map ID and have separate RareScanner entries.
@@ -248,7 +246,7 @@ end
 local function collectZoneRares(mapID, instanceID)
     local db = scannerDB()
     local sightings = db and db.global and db.global.rares_found
-    local entry = {nameList = {}, names = {}, mapPoints = {}, sightings = sightings or {},
+    local entry = {nameList = {}, names = {}, refs = {}, mapPoints = {}, sightings = sightings or {},
         scope = instanceID and ("dungeon:" .. instanceID) or mapID}
     local seen = {}
     local function read(id)
@@ -302,27 +300,53 @@ local function searchEntry(app)
     if entry and entry.name then return entry end
 end
 
-local function prepareMarkMacro(target, entry, clicked)
+function Integration.SearchEntry(app)
+    if app.db.rareScannerButton ~= false and Integration.MarkingAvailable() then
+        return searchEntry(app)
+    end
+end
+
+local function prepareMarkMacro(target, entry, clicked, db)
     if InCombatLockdown() then return end
+    local settings = NS.Core.TargetFeedbackSettings(db, "rare")
     local macro, nextIndex
-    if clicked and entry and NS.Core.ValidCurrentTarget(entry, true) then
-        macro = nil
-    elseif entry and #entry.nameList > 1 then
-        local proximity = NS.Proximity
-        proximity.Order(entry)
+    local proximity, core = NS.Proximity, NS.Core
+    if entry then
+        entry.distanceOrder = true
+        proximity.Order(entry, clicked)
+        entry.retryClosest = proximity.EntryDistance(entry, entry.name) ~= nil
+    end
+    local keepTarget = clicked and entry and core.ValidCurrentTarget(entry, true)
+    local visible = clicked and entry and not keepTarget and core.NextUnit(entry, {})
+    if visible then
+        local name = core.SafeName(UnitName(visible))
+        if name then
+            local candidate = {name=name, nameList={name}, names={[name]=true}, refs={}}
+            macro = core.ClickMacro(candidate, {}, settings, nil, nil, true)
+            target.markIndex = nil
+        end
+    end
+    -- The closest readable candidate takes precedence over a fallback page.
+    if keepTarget then
+        local feedback = NS.Core.MarkerMacro(settings, true)
+        macro = feedback ~= "" and feedback or nil
+    elseif not macro and entry and #entry.nameList > 1 then
         if target.markKey ~= entry.proximityKey or target.markScope ~= entry.scope
             or (target.markIndex and proximity.MovedFrom(target.markPosition)) then
             target.markIndex = nil
         end
         target.markKey, target.markScope = entry.proximityKey, entry.scope
-        macro, nextIndex = NS.Core.EntryMacro(entry, rareSearchOptions, target.markIndex)
+        macro, nextIndex = NS.Core.EntryMacro(entry, settings, target.markIndex)
         if clicked then
             if not target.markIndex then target.markPosition = proximity.position end
             target.markIndex = nextIndex
         end
-    else
+    elseif not macro then
         target.markKey, target.markScope, target.markIndex, target.markPosition = nil, nil, nil, nil
-        macro = entry and "/targetexact " .. entry.name or nil
+        if entry then
+            macro = (settings.autoMark or settings.autoPing) and NS.Core.Macro(entry.name, settings)
+                or "/targetexact " .. entry.name
+        end
     end
     if target:GetAttribute("macrotext1") ~= macro then target:SetAttribute("macrotext1", macro) end
     target.markedNames = entry and entry.nameList or nil
@@ -352,12 +376,13 @@ local function createMarkButton(app)
     target:SetScript("PreClick", function(self, mouseButton, down)
         if mouseButton == "LeftButton" and not down and not InCombatLockdown() then
             NS.Proximity.Sample()
-            prepareMarkMacro(self, app.db.rareScannerButton ~= false and searchEntry(app) or nil, true)
+            prepareMarkMacro(self, app.db.rareScannerButton ~= false and searchEntry(app) or nil, true, app.db)
         end
     end)
     target:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(NS.L("rareScannerButton"))
+        GameTooltip:AddLine(NS.L("rareScannerBindingTip"), 1, 1, 1, true)
         local zone = app.db.rareScannerZone == true
         if zone then GameTooltip:AddLine(NS.L("rareScannerZone"), 0.82, 0.82, 0.82, true) end
         for _, name in ipairs(self.markedNames or {}) do GameTooltip:AddLine(name, 1, 1, 1, true) end
@@ -379,7 +404,7 @@ function Integration.SyncMark(app)
     if not target and show then target = createMarkButton(app) end
     if not target then return end
     if not show then zoneCache = nil end
-    prepareMarkMacro(target, show and searchEntry(app) or nil)
+    prepareMarkMacro(target, show and searchEntry(app) or nil, false, app.db)
     if target:IsShown() ~= show then target:SetShown(show) end
     NS.UI.LayoutTargetButtons(app)
 end

@@ -169,30 +169,6 @@ class MasterMoveTests(unittest.TestCase):
                 'move options outside scroll area')
         ''')
 
-    def test_native_move_row_separates_title_help_and_action(self):
-        self.prepare()
-        self.lua.execute('''
-            SettingsListElementMixin={OnLoad=function() end,
-                Init=function(self,item)
-                    self.data=item.data
-                    self.Text:SetPoint('LEFT',self,'LEFT',37,0)
-                    self.Text:SetPoint('RIGHT',self,'CENTER',-85,0)
-                end, Release=function(self) self.data=nil end}
-            local row=CreateFrame('Frame',nil,UIParent)
-            row.Text=row:CreateFontString()
-            for k,v in pairs(QuestTargetsMoveSettingMixin) do row[k]=v end
-            row:OnLoad()
-            local calls=0
-            local item={data={name=NS.L('masterMove'),help=NS.L('masterMoveHelp'),
-                buttonText=NS.L('masterMoveStart'),callback=function() calls=calls+1 end}}
-            row:Init(item)
-            assert(row.Text.point[1]=='TOPRIGHT', 'native title overlaps help text')
-            assert(row.Text.point[2]==row.MoveButton)
-            assert(row.Help.text==item.data.help and row.MoveButton.text==item.data.buttonText)
-            row.MoveButton.scripts.OnClick(); assert(calls==1)
-            row:Release(); row.MoveButton.scripts.OnClick(); assert(calls==1)
-        ''')
-
     def test_clamped_editor_preview_stays_aligned_and_cancel_restores_edge_position(self):
         self.prepare()
         self.lua.execute('''

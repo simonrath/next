@@ -4,6 +4,25 @@ Spielerchronik ab der ersten belegten Veröffentlichung. Die neueste Version ste
 
 [English](docs/changelog/enUS.md) · [Español](docs/changelog/esES.md) · [Français](docs/changelog/frFR.md) · [Türkçe](docs/changelog/trTR.md) · [简体中文](docs/changelog/zhCN.md)
 
+## 1.8.0 – 24.11.2026
+
+### Massive Verbesserungen
+- **Gemeinsame Zielsuche** – Der Masterbutton durchsucht Questlog, RestedXP, Polestar, ItemTree und RareScanner gemeinsam, sofern die jeweilige Integration aktiv ist. Bei jedem Klick außerhalb des Kampfes kommen Ziele mit näheren bekannten Koordinaten zuerst, auch Abgabe-NPCs. Der blaue Button sucht nur RestedXP-Guideziele.
+- **Alle Module durchsuchen** ist direkt unter **Masterbutton anzeigen** zu finden und standardmäßig aktiv. Schalte die Option aus, um mit dem Masterbutton nur Ziele aus dem Questlog zu suchen.
+- **RareScanner-Button** – Aktualisiert die Entfernungsreihenfolge auch bei bereits anvisiertem Rare und prüft lesbare nahe Namensplaketten vor der nächsten Makroseite. Auch im Stand wird der nächste Rare bei jedem Klick erneut geprüft, sofern neben ihm noch ein weiterer Name ins Makro passt.
+
+### Zielmarker
+- **Markierung pro Button:** Wähle unter **Zielmarkierung** für jeden Zielbutton zwischen **Schlachtzugszeichen** und **Keine Markierung**. In WoW Forever und Retail steht auch **Ping** zur Auswahl. Ob du Pings im Chat siehst, stellst du in den WoW-Optionen ein.
+
+Danke an **Caedis** für die Idee, gefundene Ziele zu pingen!
+
+### Optionen
+- Die nativen Optionen sind jetzt in **Quest Targets** und **Buttons & Leiste** gegliedert. **Patchnotes** und **Feedback** stehen unter **Allgemein**. Abhängige Optionen sind eingerückt und lassen sich einstellen, wenn die zugehörige Funktion verfügbar und aktiviert ist.
+- Mit **Leistenhintergrund anzeigen** unter **Aussehen & Position** kannst du einen dunklen WoW-Hintergrund für die Buttonleiste einschalten. Der Bronzerahmen ist etwas dicker.
+
+### Bekannte Probleme
+- **Bekanntes Problem im deutschen Forever-Client** – Manche NPCs haben je nach Geschlecht unterschiedliche Namen. QuestieDB liefert pro NPC nur eine Namensform. Fehlt die im Spiel angezeigte Form, kann der Masterbutton den NPC bei der Namenssuche überspringen, etwa „Diebin der Wüstenläufer“.
+
 ## 1.7.5 – 22.11.2026
 
 ### Polestar

@@ -39,12 +39,12 @@ class PolestarTests(unittest.TestCase):
                 }} end}}
             QuestTargetsDB={polestarIntegration=true,autoMark=false}
             boot()
-            assert(table.concat(NS.RestedXP.targets,'|')=='Grell|Grellkin')
+            assert(NS.UI.master.entry.names.Grell and NS.UI.master.entry.names.Grellkin)
             local button=NS.UI.master
             button.scripts.PreClick(button,'LeftButton',false)
             assert(button.attributes.macrotext1:find('Grell',1,true))
             button.scripts.PostClick(button,'LeftButton',false)
-            assert(button.entry.name=='Grellkin')
+            assert(button.entry.names.Grellkin)
             button.scripts.PreClick(button,'LeftButton',false)
             assert(button.attributes.macrotext1:find('Grellkin',1,true))
         ''')
@@ -57,10 +57,10 @@ class PolestarTests(unittest.TestCase):
                 GetStepView=function() return {goals=goals} end}}
             QuestTargetsDB={polestarIntegration=true,autoMark=false}
             boot()
-            assert(NS.RestedXP.allEntry.finisherNames['Friendly Trader'])
-            assert(NS.RestedXP.allEntry.finisherNames['Other Trader'])
+            assert(NS.UI.master.entry.finisherNames['Friendly Trader'])
+            assert(NS.UI.master.entry.finisherNames['Other Trader'])
             units.target={name='Friendly Trader',friendly=true}
-            assert(NS.Core.ValidCurrentTarget(NS.RestedXP.allEntry))
+            assert(NS.Core.ValidCurrentTarget(NS.UI.master.entry))
             local button=NS.UI.master
             button.scripts.PreClick(button,'LeftButton',false)
             assert(not button.attributes.macrotext1:find('/cleartarget',1,true))
@@ -69,8 +69,8 @@ class PolestarTests(unittest.TestCase):
             assert(not button.attributes.macrotext1:find('/cleartarget',1,true))
             goals[1].source.enemy=true
             NS.RestedXP.Sync(NS.app)
-            assert(not NS.RestedXP.allEntry.finisherNames['Friendly Trader'])
-            assert(not NS.Core.ValidCurrentTarget(NS.RestedXP.allEntry))
+            assert(not NS.UI.master.entry.finisherNames['Friendly Trader'])
+            assert(not NS.Core.ValidCurrentTarget(NS.UI.master.entry))
         ''')
 
     def test_friendly_collect_source_overrides_matching_native_name_only(self):
@@ -82,15 +82,15 @@ class PolestarTests(unittest.TestCase):
             QuestTargetsDB={polestarIntegration=true,autoMark=false}
             boot()
             assert(NS.UI.master.defaultEntry.names['Waldwolf'])
-            assert(NS.RestedXP.allEntry.finisherNames['Waldwolf'])
+            assert(NS.UI.master.entry.finisherNames['Waldwolf'])
             units.target={name='Other Trader',friendly=true}
-            assert(NS.Core.ValidCurrentTarget(NS.RestedXP.allEntry))
+            assert(NS.Core.ValidCurrentTarget(NS.UI.master.entry))
             NS.UI.master.scripts.PreClick(NS.UI.master,'LeftButton',false)
             assert(not NS.UI.master.attributes.macrotext1:find('/cleartarget',1,true))
             goals[1].npcName='Different Mob'
             NS.RestedXP.Sync(NS.app)
-            assert(not NS.RestedXP.allEntry.finisherNames['Different Mob'])
-            assert(NS.RestedXP.allEntry.finisherNames['Other Trader'])
+            assert(not NS.UI.master.entry.finisherNames['Different Mob'])
+            assert(NS.UI.master.entry.finisherNames['Other Trader'])
         ''')
 
     def test_master_follows_open_polestar_goals_and_returns_to_native(self):
@@ -109,8 +109,8 @@ class PolestarTests(unittest.TestCase):
             NS.UI.master.scripts.PreClick(NS.UI.master,'LeftButton',false)
             assert(NS.UI.master.attributes.macrotext1:find('Timber Wolf',1,true))
             NS.UI.master.scripts.PostClick(NS.UI.master,'LeftButton',false)
-            assert(NS.UI.master.entry.name=='Marshal McBride')
-            assert(not NS.RestedXP.allEntry.names['Old Wolf'])
+            assert(NS.UI.master.entry.names['Marshal McBride'])
+            assert(not NS.UI.master.entry.names['Old Wolf'])
             goals={}
             NS.app:Poll()
             assert(NS.UI.master.entry==NS.UI.master.defaultEntry)
@@ -146,7 +146,7 @@ class PolestarTests(unittest.TestCase):
                 GetGuide=function() return {steps={{goals={{npc=1}}}}} end}}
             QuestTargetsDB={polestarIntegration=true}
             boot()
-            assert(not NS.RestedXP.allEntry.names['Wrong NPC'])
+            assert(not NS.UI.master.entry.names['Wrong NPC'])
             assert(NS.UI.master.entry.name=='Correct NPC')
         ''')
 
@@ -161,11 +161,11 @@ class PolestarTests(unittest.TestCase):
                 }} end}}
             QuestTargetsDB={polestarIntegration=true}
             boot()
-            assert(#NS.RestedXP.targets==0)
+            assert(NS.UI.master.entry==NS.UI.master.defaultEntry)
             assert(NS.UI.master.entry==NS.UI.master.defaultEntry)
         ''')
 
-    def test_restedxp_precedence_and_handoff_to_polestar(self):
+    def test_master_combines_both_guides_and_keeps_blue_restedxp_only(self):
         self.lua.execute('''
             Polestar={Engine={GetStepIndex=function() return 1 end,
                 GetStepView=function() return {goals={{t='kill',status='active',subject='Polestar Wolf'}}} end}}
@@ -177,11 +177,12 @@ class PolestarTests(unittest.TestCase):
             else return oldLibStub(name) end end
             QuestTargetsDB={polestarIntegration=true,restedXPIntegration=true}
             boot()
-            assert(NS.RestedXP.provider=='restedxp')
-            assert(NS.UI.master.entry.name=='RXP Bear')
+            assert(NS.UI.master.entry.names['RXP Bear'] and NS.UI.master.entry.names['Polestar Wolf'])
+            assert(NS.RestedXP.button.entry.names['RXP Bear'])
+            assert(not NS.RestedXP.button.entry.names['Polestar Wolf'])
             NS.app.db.restedXPIntegration=false
             NS.RestedXP.Sync(NS.app)
-            assert(NS.RestedXP.provider=='polestar')
+            assert(not NS.UI.master.entry.names['RXP Bear'])
             assert(NS.UI.master.entry.name=='Polestar Wolf')
             assert(not NS.RestedXP.button:IsShown())
             NS.app.db.polestarIntegration=false

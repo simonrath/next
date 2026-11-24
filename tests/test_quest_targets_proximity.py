@@ -31,6 +31,103 @@ class ProximityTests(unittest.TestCase):
             end
         ''')
 
+
+    def test_guide_buttons_rank_stoley_ahead_of_mobs_and_resample_on_click(self):
+        for provider in ('restedxp', 'polestar'):
+            with self.subTest(provider=provider):
+                self.setUp()
+                self.spatial()
+                self.lua.globals().testProvider = provider
+                self.lua.execute("""
+                    records.Npc[7881]={name='Stoley',spawns={[215]={{52,50}}}}
+                    records.Npc[5616]={name='Dieb der Wüstenläufer',spawns={[215]={{80,50}}}}
+                    LibQuestieDB.Npc.IdsByName=function(name)
+                        if name=='Stoley' then return {7881} end
+                        if name=='Dieb der Wüstenläufer' then return {5616} end
+                    end
+                    local rxp={RXPFrame={activeSteps={}},GetCreatureName=function(id) return id end,
+                        targeting={GetCurrentTargets=function()
+                            return {'Stoley'},{'Dieb der Wüstenläufer'},{}
+                        end}}
+                    local lib=LibStub
+                    LibStub=function(name) if name=='AceAddon-3.0' then
+                        return {GetAddon=function() return rxp end}
+                    else return lib(name) end end
+                    Polestar={Engine={GetStepIndex=function() return 1 end,GetStepView=function()
+                        return {goals={
+                            {t='kill',status='active',npc=5616,npcName='Dieb der Wüstenläufer'},
+                            {t='turnin',status='pending',npc=7881,npcName='Stoley'},
+                        }}
+                    end}}
+                    QuestTargetsDB={restedXPIntegration=testProvider=='restedxp',
+                        polestarIntegration=testProvider=='polestar'}
+                    quests={}
+                    boot()
+                    for _,button in ipairs({NS.UI.master,NS.RestedXP.button}) do
+                        px=0.5
+                        button.scripts.PreClick(button,'LeftButton',false)
+                        local text=button.attributes.macrotext1
+                        local stoley=text:find('/targetexact [noexists] Stoley',1,true)
+                        local thief=text:find('/targetexact [noexists] Dieb der Wüstenläufer',1,true)
+                        assert(stoley and thief and stoley < thief, 'Stoley must be tried first')
+                        assert(button.entry.nameList[1]=='Stoley')
+                        px=0.81
+                        button.scripts.PreClick(button,'LeftButton',false)
+                        assert(button.entry.nameList[1]=='Dieb der Wüstenläufer')
+                        assert(#button.attributes.macrotext1 <= NS.Core.MACRO_BYTES)
+                    end
+                """)
+
+    def test_master_merges_enabled_guide_item_and_rare_sources(self):
+        self.spatial()
+        self.lua.execute('''
+            records.Npc[7881]={name='Stoley',spawns={[215]={{52,50}}}}
+            LibQuestieDB.Npc.IdsByName=function(name)
+                if name=='Stoley' then return {7881} end
+            end
+            local rxp={RXPFrame={activeSteps={}},GetCreatureName=function(id) return id end,
+                targeting={GetCurrentTargets=function() return {'Stoley'},{},{} end}}
+            local lib=LibStub
+            LibStub=function(name) if name=='AceAddon-3.0' then
+                return {GetAddon=function() return rxp end}
+            else return lib(name) end end
+            Polestar={Engine={GetStepIndex=function() return 1 end,GetStepView=function()
+                return {goals={{t='kill',status='active',npcName='Guide Mob'}}}
+            end}}
+            QuestTargetsDB={restedXPIntegration=true,polestarIntegration=true}
+            boot()
+            NS.ItemTree.SearchEntry=function()
+                return {nameList={'Item Mob','Stoley'}}
+            end
+            NS.RareScanner.SearchEntry=function()
+                return {nameList={'Local Rare'},mapPoints={['Local Rare']={{continent=1,x=501,y=500}}}}
+            end
+            local master=NS.UI.master
+            master.scripts.PreClick(master,'LeftButton',false)
+            local entry=master.entry
+            for _,name in ipairs({'Stoley','Guide Mob','Item Mob','Local Rare','Waldwolf'}) do
+                assert(entry.names[name], name)
+            end
+            assert(entry.nameList[1]=='Local Rare' and entry.nameList[2]=='Waldwolf' and entry.nameList[3]=='Stoley')
+            local stoley=0
+            for _,name in ipairs(entry.nameList) do if name=='Stoley' then stoley=stoley+1 end end
+            assert(stoley==1 and entry.finisherNames.Stoley)
+            local blue=NS.RestedXP.button
+            blue.scripts.PreClick(blue,'LeftButton',false)
+            assert(#blue.entry.nameList==1 and blue.entry.name=='Stoley')
+            NS.app.db.masterAllModules=false
+            master.scripts.PreClick(master,'LeftButton',false)
+            assert(master.entry.names.Waldwolf and not master.entry.names.Stoley)
+            assert(not master.entry.names['Guide Mob'] and not master.entry.names['Local Rare'])
+            assert(not master.entry.names['Item Mob'])
+            blue.scripts.PreClick(blue,'LeftButton',false)
+            assert(blue.entry.names.Stoley)
+            NS.app.db.masterAllModules=true
+            master.scripts.PreClick(master,'LeftButton',false)
+            assert(master.entry.names.Stoley and master.entry.names['Local Rare'])
+
+        ''')
+
     def test_serialized_maps_are_parsed_without_executing_lua(self):
         self.spatial()
         self.lua.execute("""

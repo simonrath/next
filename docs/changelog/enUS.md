@@ -2,6 +2,25 @@
 
 Player-facing changes, newest version first. Historical installation notes apply to the version listed.
 
+## 1.8.0 – Nov 24, 2026
+
+### Massive Improvements
+- **Combined targeting** — The master button searches the quest log and enabled RestedXP, Polestar, ItemTree and RareScanner sources together. Each click out of combat prioritizes targets with nearer known coordinates, including turn-in NPCs. The blue button searches only RestedXP guide targets.
+- **Search all modules** appears under **Show master button** and is on by default. Turn it off to limit the master button to quest log targets.
+- **RareScanner button** — Updates distance order even with a rare selected and checks nearby readable nameplates before the next macro page. Even while standing still, each click can retry the nearest rare when there is room for another name in the macro.
+
+### Target markers
+- **Marking per button:** Under **Target markers**, choose **Raid marker** or **No marking** for each targeting button. On WoW Forever and Retail, you can also choose **Ping**. WoW’s ping settings control whether you see pings in chat.
+
+Thanks to **Caedis** for suggesting target pings!
+
+### Options
+- Native options are now grouped under **Quest Targets** and **Buttons & Bar**. Open **Patch Notes** or **Feedback** under **General**. Indented options become available when their parent feature is enabled and available.
+- Enable **Show bar background** under **Appearance & Position** to add a dark WoW background behind the targeting bar. The bronze border is slightly thicker.
+
+### Known Issues
+- **Known issue on the German WoW Forever client** — Some NPCs have different names depending on their gender. QuestieDB supplies one name per NPC. If the in-game variant is missing, the master button may skip that NPC in name searches, as with “Diebin der Wüstenläufer”.
+
 ## 1.7.5 – Nov 22, 2026
 
 ### Polestar

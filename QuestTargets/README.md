@@ -21,7 +21,7 @@ Ein normaler Linksklick auf ein Rare-Symbol auf der **Weltkarte** aktiviert
 RareScanners farbige Spawn-Markierung. Der violette **RareScanner Button** in
 der Zielleiste sucht alle aktiv markierten Rares. Bei langen Listen prüfen
 weitere Klicks die übrigen Namen. Ohne Ziel ist er grau und der Tooltip
-erklärt, wie man einen Rare markiert. Unter **Buttons → Show RareScanner Button**
+erklärt, wie man einen Rare markiert. Unter **Buttons & Leiste > Zielleiste: Module > RareScanner-Button anzeigen**
 lässt sich der Kompass ausblenden.
 
 
@@ -94,26 +94,15 @@ Herkunft und Prüfsummen früherer kombinierter Pakete stehen im
   passenden Questzeile ein eigener Zielbutton. Er verwendet dieselben
   Questziele wie der Button im Quest-Targets-Fenster. Questie selbst bleibt
   unverändert; ohne Questie werden keine zusätzlichen Buttons angezeigt.
-- Optional „RestedXP-Guideziele nutzen und Zielbutton anzeigen“ unter
-  Allgemein: Der Masterbutton berücksichtigt die von RestedXP aktuell geführten
-  Mob- und NPC-Ziele; bei älteren RestedXP-Versionen ohne Ziellisten-Schnittstelle
-  liest er ausdrücklich genannte Ziele aktiver Guide-Schritte. Diese Ziele dürfen
-  auch außerhalb einer offenen
-  Quest gehören (etwa Sammelmobs, Annahme-NPCs oder Flugmeister). Ein weiterer Button
-  erscheint am RestedXP-Zielmenü, sofern dieses angezeigt wird. Beide Buttons
-  wechseln bei wiederholtem Klick zu einem sichtbaren passenden Ziel. Gibt
-  RestedXP kein Ziel vor, übernimmt sofort die native Questsuche. Nach einer
-  erfolglosen Guideziel-Suche versucht das Makro nach Möglichkeit bereits ein
-  natives Questziel; andernfalls übernimmt der nächste Klick die native Suche.
-  Ohne RestedXP bleibt der normale Masterbutton aktiv. Im Kampf bleibt das
-  zuletzt vorbereitete Ziel aktiv, bis geschützte Aktionen wieder geändert
-  werden dürfen. Ein bereits gültiges Ziel bleibt ausgewählt, solange kein
-  anderes passendes Ziel sichtbar ist.
-- Optional „Polestar-Guideziele verwenden“ unter Buttons → Zielleiste: Der Hauptbutton
-  berücksichtigt benannte offene Ziele des angezeigten Polestar-Schritts. Ohne
-  passendes Ziel übernimmt die normale Questsuche; Änderungen im Kampf werden
-  danach nachgeholt. Sind beide Guide-Integrationen aktiv und RestedXP geladen,
-  hat RestedXP Vorrang. Polestars eigene Bedienelemente bleiben unverändert.
+- Unter **Buttons & Leiste > Zielleiste: Module** kannst du den blauen
+  **RestedXP-Button** anzeigen und optional **Polestar-Guideziele verwenden**.
+  Der blaue Button sucht nur aktive RestedXP-Ziele. Der Masterbutton übernimmt
+  Ziele aus beiden Guides gleichzeitig, wenn beide Integrationen aktiv sind.
+- Der Masterbutton kombiniert das Questlog mit den aktivierten Quellen.
+  Dazu gehören auch importierte ItemTree-Mobs und die RareScanner-Ziele.
+  Außerhalb des Kampfes sortiert jeder Klick nach den nächstgelegenen bekannten
+  Spawnpunkten oder Guide-Koordinaten. Ziele ohne bekannte Position bleiben
+  verfügbar. Im Kampf gilt das zuletzt vorbereitete Makro.
 
 Die kleinen Questbuttons zeigen beim Drücken eine native Klickanimation.
 Jede Quest erscheint einmal mit ihrem Fortschritt. Alle bekannten Mobarten
@@ -134,7 +123,7 @@ Die RestedXP-Option ist ausgegraut, solange das Addon nicht geladen ist.
 Der Masterbutton unterstützt eine Tastenzuweisung einschließlich Kombinationen
 wie STRG+F. Im Eingabefeld löscht Entf oder Backspace eine bestehende Belegung;
 Escape bricht die Eingabe ab. Der Masterbutton ist ein Quest-Kompass. Unter
-**Buttons → Zielleiste** stellst du ein, welche Buttons sichtbar sind, wie
+**Buttons & Leiste** stellst du ein, welche Buttons sichtbar sind, wie
 groß sie sind und wo die Leiste steht. Bronzerahmen und Trennlinien lassen
 sich unabhängig voneinander ein- und ausschalten.
 

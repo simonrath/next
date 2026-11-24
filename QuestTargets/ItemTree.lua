@@ -20,7 +20,8 @@ local function isGeneratedMacro(index, body)
     if not body or (accountSlots and index <= accountSlots) then return false end
     -- A character macro can survive the loss of its saved ownership record.
     -- Accept only complete bodies produced by one of our previous layouts.
-    local marker = body:match("\n/tm %[exists,harm,nodead%] ![1-8]$") or ""
+    local marker = body:match("\n/tm %[exists,harm,nodead%] ![1-8]$")
+        or body:match("\n/ping %[@target,exists,harm,nodead%]$") or ""
     local suffix = CLEAR_INVALID .. marker
     if body:sub(-#suffix) ~= suffix then return false end
 
@@ -41,15 +42,16 @@ end
 local function buildMacro(names, settings)
     local lines = ""
     local entry = { names = {} }
+    local marker = NS.Core.MarkerMacro(NS.Core.TargetFeedbackSettings(settings, "itemTree"))
     for _, name in ipairs(names) do
         local line = TARGET_LINE .. name
-        if #SEARCH + #lines + #line + #CLEAR_INVALID + MARKER_BYTES > NS.Core.MACRO_BYTES then break end
+        if #SEARCH + #lines + #line + #CLEAR_INVALID + math.max(MARKER_BYTES, #marker) > NS.Core.MACRO_BYTES then break end
         lines = lines .. line
         entry.names[name] = true
     end
     if lines == "" then return end
     local prefix = NS.Core.ValidCurrentTarget(entry) and KEEP_TARGET or SEARCH
-    return prefix .. lines .. CLEAR_INVALID .. NS.Core.MarkerMacro(settings)
+    return prefix .. lines .. CLEAR_INVALID .. marker
 end
 
 local function sourceRows()
@@ -147,7 +149,7 @@ local function createTarget(app)
             NS.Core.PrepareDeadTargetSound(self:GetAttribute("macrotext1"), app.db)
         end
         if mouseButton ~= "LeftButton" or down or InCombatLockdown() or not self.entry then return end
-        NS.Core.SetClickMacro(self, NS.Core.ClickMacro(self.entry, {}, app.db, self), app.db)
+        NS.Core.SetClickMacro(self, NS.Core.ClickMacro(self.entry, {}, NS.Core.TargetFeedbackSettings(app.db, "itemTree"), self), app.db)
     end)
     target:SetScript("PostClick", function(self, mouseButton, down)
         if mouseButton ~= "LeftButton" or down or InCombatLockdown() or not self.entry then return end
@@ -158,6 +160,7 @@ local function createTarget(app)
         if not app.db.showTooltips then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(NS.L("itemTreeBinding"))
+        GameTooltip:AddLine(NS.L("itemTreeBindingTip"), 1, 1, 1, true)
         if not self.entry and not self:GetAttribute("macro1") then
             GameTooltip:AddLine(NS.L("itemTreeImport"), 1, 1, 1, true)
         end
@@ -176,10 +179,17 @@ function Integration.SyncMacro(app)
         if index > 0 and normalizeMacro(GetMacroBody(index)) == body then
             if EditMacro then
                 local names = {}
-                for line in body:gmatch("[^\n]+") do
-                    if line:sub(1, #TARGET_LINE - 1) == TARGET_LINE:sub(2) then
-                        local name = NS.Core.SafeName(line:sub(#TARGET_LINE))
+                if type(app.db.itemTreeTargets) == "table" then
+                    for _, mob in ipairs(app.db.itemTreeTargets) do
+                        local name = type(mob) == "table" and NS.Core.SafeName(mob.name)
                         if name then names[#names + 1] = name end
+                    end
+                else
+                    for line in body:gmatch("[^\n]+") do
+                        if line:sub(1, #TARGET_LINE - 1) == TARGET_LINE:sub(2) then
+                            local name = NS.Core.SafeName(line:sub(#TARGET_LINE))
+                            if name then names[#names + 1] = name end
+                        end
                     end
                 end
                 local updated = buildMacro(names, app.db)
@@ -248,9 +258,15 @@ local function syncTarget(app)
         target.fallbackIndex, target.fallbackFinisherIndex, target.proximityKey = nil, nil, nil
         target:SetAttribute("macro1", nil)
     end
-    local macro = NS.Core.EntryMacro(target.entry, app.db)
+    local macro = NS.Core.EntryMacro(target.entry, NS.Core.TargetFeedbackSettings(app.db, "itemTree"))
     target.restingMacro = macro
     if target:GetAttribute("macrotext1") ~= macro then target:SetAttribute("macrotext1", macro) end
+end
+
+function Integration.SearchEntry(app)
+    if app.db.itemTreeButton and ItemTree and ItemTree.UI and Integration.target then
+        return Integration.target.entry
+    end
 end
 
 function Integration.Sync(app)
