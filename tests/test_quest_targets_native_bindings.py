@@ -11,10 +11,10 @@ class NativeBindingsTests(unittest.TestCase):
         self.assertEqual([item.attrib['name'] for item in actions],
                          ['CLICK QuestTargetsMaster:LeftButton', 'CLICK QuestTargetsFocused:LeftButton',
                           'CLICK QuestTargetsItemTree:LeftButton', 'CLICK QuestTargetsRareScannerMark:LeftButton'])
-        self.assertTrue(all(item.attrib['category'] == 'Quest Targets' for item in actions))
+        self.assertTrue(all(item.attrib['category'] == 'Next' for item in actions))
         self.assertIn('Bindings.xml', (addon.ROOT/'tools/package_quest_targets.ps1').read_text())
         self.lua.execute('''boot()
-            assert(BINDING_HEADER_QUESTTARGETS=='Quest Targets')
+            assert(BINDING_HEADER_QUESTTARGETS=='Next')
             assert(_G['BINDING_NAME_CLICK QuestTargetsMaster:LeftButton']==NS.L('masterDefault'))
             assert(_G['BINDING_NAME_CLICK QuestTargetsFocused:LeftButton']==NS.L('focusHotkey'))
             assert(_G['BINDING_NAME_CLICK QuestTargetsRareScannerMark:LeftButton']==NS.L('rareScannerBinding'))

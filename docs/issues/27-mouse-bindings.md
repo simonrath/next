@@ -2,7 +2,7 @@
 
 The binding capture enabled keyboard and gamepad events but never registered
 extra mouse clicks or converted their names into WoW binding tokens. This
-prevented assigning them through both native and fallback Quest Targets settings.
+prevented assigning them through both native and fallback Next settings.
 The stored action itself already uses SetBindingClick and supports mouse keys.
 
 During capture, settings controls now register AnyUp, convert MiddleButton and
@@ -28,7 +28,7 @@ References: XERJ lookup for `GetConvertedKeyOrButton beginBindingCapture` was
 unavailable because XERJ is not installed. Fallback inspection used local rg and
 Blizzard's [CustomBindingButtonMixin](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_SharedXML/CustomBindingButtonMixin.lua)
 and [BindingUtil](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_SharedXML/BindingUtil.lua).
-The implementation uses the existing Quest Targets capture lifecycle and does
+The implementation uses the existing Next capture lifecycle and does
 not copy either mixin.
 
 Tests cover middle/extra buttons in both slots of all three actions, modifiers,

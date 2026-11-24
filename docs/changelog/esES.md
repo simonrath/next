@@ -1,6 +1,11 @@
-# Quest Targets – Notas del parche
+# Next – Notas del parche
 
 Cambios para jugadores, empezando por la versión más reciente. Las indicaciones de instalación históricas se aplican a la versión indicada.
+
+## 1.8.1 – 24 nov 2026
+
+### Nombre del addon
+- **Next** es el nombre del addon a partir de la versión 1.8.1. Al actualizar, se conservan tus ajustes y atajos de teclado.
 
 ## 1.8.0 – 24 nov 2026
 

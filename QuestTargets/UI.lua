@@ -181,7 +181,7 @@ local function requestBindingSlot(button, app, focused, binding, slot, refresh)
             local currentFirst, currentSecond = GetBindingKey(data.command)
             if InCombatLockdown() or GetBindingAction(data.binding) ~= data.oldAction
                 or currentFirst ~= data.first or currentSecond ~= data.second then
-                print("|cffffd100Quest Targets:|r " .. L("bindingConflictChanged"))
+                print("|cffffd100" .. L("title") .. ":|r " .. L("bindingConflictChanged"))
             else
                 setBindingSlot(data.app, data.focused, data.binding, data.slot)
             end
@@ -1568,11 +1568,11 @@ function UI.RegisterSettings(app)
         UI.CreateMasterSettings(app, panel)
         UI.LayoutSettings(app)
         if Settings and Settings.RegisterCanvasLayoutCategory then
-            local category = Settings.RegisterCanvasLayoutCategory(panel, "Quest Targets")
+            local category = Settings.RegisterCanvasLayoutCategory(panel, L("title"))
             Settings.RegisterAddOnCategory(category)
             UI.settingsCategoryID = category:GetID()
         elseif InterfaceOptions_AddCategory then
-            panel.name = "Quest Targets"
+            panel.name = L("title")
             InterfaceOptions_AddCategory(panel)
         end
     end
@@ -1920,7 +1920,7 @@ local function questListRows(quests, entries, collapsed)
 end
 
 function UI.Render(app)
-    assert(not InCombatLockdown(), "Quest Targets: protected update during combat")
+    assert(not InCombatLockdown(), "Next: protected update during combat")
     local scale = math.min(1, UIParent:GetHeight() / 410) * app.db.menuScale
     if UI.frame:GetScale() ~= scale then UI.frame:SetScale(scale) end
     local entries = NS.Core.QuestEntriesFor(app, false)
@@ -1945,7 +1945,7 @@ function UI.ScrollQuests(app, delta)
 end
 
 function UI.RenderRows(app)
-    assert(not InCombatLockdown(), "Quest Targets: protected scroll during combat")
+    assert(not InCombatLockdown(), "Next: protected scroll during combat")
     local entries = app.questListRows or {}
     for index, row in ipairs(UI.rows) do
         local item = index <= UI.PAGE_SIZE and entries[(app.scrollOffset or 0) + index] or nil

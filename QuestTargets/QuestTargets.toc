@@ -1,5 +1,5 @@
 ## Interface: 11509, 20506, 50504, 16001, 120105
-## Title: Quest Targets
+## Title: Next
 ## Category: Quests
 ## Category-deDE: Quests
 ## Category-esES: Misiones
@@ -14,7 +14,7 @@
 ## IconTexture: Interface\AddOns\QuestTargets\Textures\QuestCompassUp
 ## Notes: Anklickbare Ziele für offene Quests.
 ## Author: jackNine
-## Version: 1.8.0
+## Version: 1.8.1
 ## OptionalDeps: QuestieDB, Questie, RXPGuides, Polestar, ItemTree, EllesmereUIQuestTracker, RareScanner
 ## SavedVariablesPerCharacter: QuestTargetsDB
 ## SavedVariables: QuestTargetsNewsDB

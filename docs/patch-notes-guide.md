@@ -1,4 +1,4 @@
-# Patchnotes für Quest Targets
+# Patchnotes für Next
 
 Prüfe bei jeder Änderung, was WoW-Spieler davon sehen, anders bedienen oder
 beim Update beachten müssen. Ergänze oder überarbeite den Eintrag der Zielversion
@@ -119,7 +119,7 @@ prüfst du beim Schreiben.
 ## Grundlagen
 
 - [Keep a Changelog](https://keepachangelog.com/en/2.0.0/) für eine nach Version
-  geordnete Auswahl relevanter Änderungen. Quest Targets verwendet das eigene
+  geordnete Auswahl relevanter Änderungen. Next verwendet das eigene
   deutsche Format, das der Ingame-Generator liest.
 - [Blizzards WoW-Patchnotes für 12.1.5](https://worldofwarcraft.blizzard.com/en-us/news/24304162/)
   als Beispiel für konkrete Bedienhinweise und nachvollziehbare Fehlerkorrekturen.

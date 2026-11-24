@@ -50,6 +50,9 @@ function Add-FileEntry($archive, [string]$sourcePath, [string]$entryName) {
     try { $source.CopyTo($target) } finally { $target.Dispose(); $source.Dispose() }
 }
 
+# Releases before the rename keep their historical archive names.
+$taskArchivePrefix = if ([version]($taskVersion.Split('-')[0]) -ge [version]'1.8.1') { 'Next' } else { 'QuestTargets' }
+
 # Legacy flavor switches remain accepted; every client uses the same archive.
 $taskFlavors = @('All')
 foreach ($taskFlavor in $taskFlavors) {
@@ -57,7 +60,7 @@ foreach ($taskFlavor in $taskFlavors) {
     foreach ($taskFile in $taskFiles) {
         if (-not (Test-Path -LiteralPath (Join-Path $taskAddon $taskFile))) { throw "Missing source: $taskFile" }
     }
-    $taskZip = Join-Path $taskDist "QuestTargets-$taskVersion.zip"
+    $taskZip = Join-Path $taskDist "$taskArchivePrefix-$taskVersion.zip"
     # Never replace an existing release or preview, including concurrent builds.
     $stream = [IO.File]::Open($taskZip, [IO.FileMode]::CreateNew)
     $archive = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)

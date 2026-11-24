@@ -1,6 +1,11 @@
-# Quest Targets – Notes de mise à jour
+# Next – Notes de mise à jour
 
 Changements pour les joueurs, de la version la plus récente à la plus ancienne. Les indications d’installation historiques s’appliquent à la version indiquée.
+
+## 1.8.1 – 24 nov. 2026
+
+### Nom de l’addon
+- **Next** est le nom de l’addon à partir de la version 1.8.1. Vos réglages et raccourcis sont conservés lors de la mise à jour.
 
 ## 1.8.0 – 24 nov. 2026
 

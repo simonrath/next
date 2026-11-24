@@ -2,6 +2,11 @@
 local _, NS = ...
 NS.PatchNotesData = {
     deDE = {
+        { version = "1.8.1", date = "24.11.2026", sections = {
+                { title = "Addon-Name", items = {
+                    "**Next** ist ab Version 1.8.1 der Name des Addons. Deine Einstellungen und Tastenkürzel werden beim Update übernommen.",
+                }},
+            }},
         { version = "1.8.0", date = "24.11.2026", sections = {
                 { title = "Massive Verbesserungen", items = {
                     "**Gemeinsame Zielsuche** – Der Masterbutton durchsucht Questlog, RestedXP, Polestar, ItemTree und RareScanner gemeinsam, sofern die jeweilige Integration aktiv ist. Bei jedem Klick außerhalb des Kampfes kommen Ziele mit näheren bekannten Koordinaten zuerst, auch Abgabe-NPCs. Der blaue Button sucht nur RestedXP-Guideziele.",
@@ -270,6 +275,11 @@ NS.PatchNotesData = {
             }},
     },
     enUS = {
+        { version = "1.8.1", date = "Nov 24, 2026", sections = {
+                { title = "Addon name", items = {
+                    "**Next** is the addon's name starting with version 1.8.1. Your settings and keybinds carry over when you update.",
+                }},
+            }},
         { version = "1.8.0", date = "Nov 24, 2026", sections = {
                 { title = "Massive Improvements", items = {
                     "**Combined targeting** — The master button searches the quest log and enabled RestedXP, Polestar, ItemTree and RareScanner sources together. Each click out of combat prioritizes targets with nearer known coordinates, including turn-in NPCs. The blue button searches only RestedXP guide targets.",
@@ -538,6 +548,11 @@ NS.PatchNotesData = {
             }},
     },
     esES = {
+        { version = "1.8.1", date = "24 nov 2026", sections = {
+                { title = "Nombre del addon", items = {
+                    "**Next** es el nombre del addon a partir de la versión 1.8.1. Al actualizar, se conservan tus ajustes y atajos de teclado.",
+                }},
+            }},
         { version = "1.8.0", date = "24 nov 2026", sections = {
                 { title = "Grandes mejoras", items = {
                     "**Búsqueda combinada** — El botón principal busca en el registro de misiones y en las fuentes activadas de RestedXP, Polestar, ItemTree y RareScanner. Cada clic fuera de combate prioriza los objetivos con coordenadas conocidas más cercanas, incluidos los PNJ de entrega. El botón azul solo busca objetivos de RestedXP.",
@@ -806,6 +821,11 @@ NS.PatchNotesData = {
             }},
     },
     frFR = {
+        { version = "1.8.1", date = "24 nov. 2026", sections = {
+                { title = "Nom de l’addon", items = {
+                    "**Next** est le nom de l’addon à partir de la version 1.8.1. Vos réglages et raccourcis sont conservés lors de la mise à jour.",
+                }},
+            }},
         { version = "1.8.0", date = "24 nov. 2026", sections = {
                 { title = "Améliorations majeures", items = {
                     "**Recherche combinée** — Le bouton principal recherche dans le journal de quêtes et les sources activées RestedXP, Polestar, ItemTree et RareScanner. Chaque clic hors combat donne la priorité aux cibles proches aux coordonnées connues, y compris les PNJ de remise de quête. Le bouton bleu recherche uniquement les objectifs de RestedXP.",
@@ -1074,6 +1094,11 @@ NS.PatchNotesData = {
             }},
     },
     trTR = {
+        { version = "1.8.1", date = "24 Kas 2026", sections = {
+                { title = "Eklenti adı", items = {
+                    "**Next**, 1.8.1 sürümünden itibaren eklentinin adıdır. Güncelleme sırasında ayarların ve tuş atamaların korunur.",
+                }},
+            }},
         { version = "1.8.0", date = "24 Kas 2026", sections = {
                 { title = "Büyük iyileştirmeler", items = {
                     "**Birleşik hedef araması** — Ana düğme görev günlüğünü ve açık RestedXP, Polestar, ItemTree ve RareScanner kaynaklarını birlikte arar. Savaş dışında her tıklama, görev teslim NPC’leri dahil koordinatları bilinen yakın hedeflere öncelik verir. Mavi düğme yalnızca RestedXP rehber hedeflerini arar.",
@@ -1342,6 +1367,11 @@ NS.PatchNotesData = {
             }},
     },
     zhCN = {
+        { version = "1.8.1", date = "2026 年 11 月 24 日", sections = {
+                { title = "插件名称", items = {
+                    "从 1.8.1 版起，插件更名为 **Next**。更新时会保留你的设置和按键绑定。",
+                }},
+            }},
         { version = "1.8.0", date = "2026 年 11 月 24 日", sections = {
                 { title = "重大改进", items = {
                     "**合并目标搜索** — 主按钮同时搜索任务日志及已启用的 RestedXP、Polestar、ItemTree 和 RareScanner 来源。脱战后每次点击都会优先搜索坐标已知的附近目标，包括交任务的 NPC。蓝色按钮仅搜索 RestedXP 指南目标。",

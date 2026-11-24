@@ -1,6 +1,11 @@
-# Quest Targets – Patch Notes
+# Next – Patch Notes
 
 Player-facing changes, newest version first. Historical installation notes apply to the version listed.
+
+## 1.8.1 – Nov 24, 2026
+
+### Addon name
+- **Next** is the addon's name starting with version 1.8.1. Your settings and keybinds carry over when you update.
 
 ## 1.8.0 – Nov 24, 2026
 

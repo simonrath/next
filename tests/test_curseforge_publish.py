@@ -117,17 +117,16 @@ class CurseForgeTests(unittest.TestCase):
     def test_unified_release_uploads_once_with_every_game_version(self):
         from types import SimpleNamespace
         release = {'isDraft': False, 'isPrerelease': False, 'assets':
-                   [{'name': 'QuestTargets-1.4.1.zip'}, {'name': 'SHA256SUMS.txt'}]}
+                   [{'name': 'Next-1.8.1.zip'}, {'name': 'SHA256SUMS.txt'}]}
         def fake_gh(*args, **kwargs):
             if args[:2] == ('release', 'view'):
                 return SimpleNamespace(stdout=json.dumps(release))
             if args[:2] == ('release', 'download'):
                 folder = Path(args[args.index('--dir')+1])
-                path = self.make_archive(folder)
-                path.unlink()
+                path = folder / 'Next-1.8.1.zip'
                 with zipfile.ZipFile(path, 'w') as archive:
                     archive.writestr('QuestTargets/QuestTargets.toc',
-                        '## Version: 1.4.1\n## Interface: 11509, 20506, 50504, 16001, 120105\n')
+                        '## Version: 1.8.1\n## Interface: 11509, 20506, 50504, 16001, 120105\n')
                     archive.writestr('QuestTargets/Bindings.xml', '<Bindings/>')
                 (folder/'SHA256SUMS.txt').write_text(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name+'\n')
                 return SimpleNamespace(stdout='')
@@ -149,13 +148,13 @@ class CurseForgeTests(unittest.TestCase):
              patch.object(cf, 'reserve_upload', return_value=True) as reserve, \
              patch.dict(os.environ, {'CURSEFORGE_ENABLED': 'true', 'CF_API_TOKEN': 'test-token',
                                      'GITHUB_REPOSITORY': 'simonrath/questtargets'}), \
-             patch.object(cf.sys, 'argv', ['publisher', '--tag', 'v1.4.1', '--publish']):
+             patch.object(cf.sys, 'argv', ['publisher', '--tag', 'v1.8.1', '--publish']):
             cf.main()
-            reserve.assert_called_once_with('simonrath/questtargets', 'v1.4.1', 'All', 'a'*40)
+            reserve.assert_called_once_with('simonrath/questtargets', 'v1.8.1', 'All', 'a'*40)
         self.assertEqual(len(uploads), 1)
         metadata = json.loads(uploads[0].split(b'\r\n\r\n')[1].split(b'\r\n--')[0])
         self.assertEqual(set(metadata['gameVersions']), {1, 2, 3, 4, 5})
-        self.assertEqual(metadata['displayName'], 'Quest Targets 1.4.1')
+        self.assertEqual(metadata['displayName'], 'Next 1.8.1')
 
     def test_missing_one_supported_interface_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

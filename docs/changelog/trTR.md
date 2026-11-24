@@ -1,6 +1,11 @@
-# Quest Targets – Yama Notları
+# Next – Yama Notları
 
 Oyuncuları ilgilendiren değişiklikler en yeni sürümden başlayarak sıralanır. Eski kurulum notları yalnızca belirtilen sürüm için geçerlidir.
+
+## 1.8.1 – 24 Kas 2026
+
+### Eklenti adı
+- **Next**, 1.8.1 sürümünden itibaren eklentinin adıdır. Güncelleme sırasında ayarların ve tuş atamaların korunur.
 
 ## 1.8.0 – 24 Kas 2026
 

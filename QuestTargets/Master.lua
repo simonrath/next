@@ -392,13 +392,13 @@ function UI.CreateMinimap(app)
     if UI.minimap or not Minimap then return end
     local icon = LibStub("LibDBIcon-1.0")
     local broker = LibStub("LibDataBroker-1.1"):NewDataObject("QuestTargets", {
-        type = "launcher", icon = COMPASS_UP,
+        type = "launcher", label = L("title"), icon = COMPASS_UP,
         OnClick = function(_, mouseButton)
             if mouseButton == "RightButton" then UI.Settings(app) else app:Toggle() end
         end,
         OnTooltipShow = function(tooltip)
             if not app.db.showTooltips then return end
-            tooltip:SetText("Quest Targets")
+            tooltip:SetText(L("title"))
             tooltip:AddLine(L("minimapTip"), 1, 1, 1)
         end,
     })

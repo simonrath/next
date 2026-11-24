@@ -1,6 +1,6 @@
-# Quest Targets — 1.5.1
+# Next
 
-Addon für **WoW Classic Era 1.15.9 (Interface 11509)**, **Burning Crusade Classic 2.5.6 (20506)**, **Mists of Pandaria Classic 5.5.4 (50504)**, **WoW Forever 1.60.1, Build 70707 (16001)** und **Retail 12.1.5 (120105)**. Quest Targets bietet einen
+Addon für **WoW Classic Era 1.15.9 (Interface 11509)**, **Burning Crusade Classic 2.5.6 (20506)**, **Mists of Pandaria Classic 5.5.4 (50504)**, **WoW Forever 1.60.1, Build 70707 (16001)** und **Retail 12.1.5 (120105)**. Next bietet einen
 Button pro Quest sowie einen Masterbutton zum Anvisieren passender Questmobs
 und Abgabe-NPCs.
 
@@ -26,7 +26,7 @@ lässt sich der Kompass ausblenden.
 
 
 
-Das gemeinsame Paket `QuestTargets-<Version>.zip` funktioniert auf Classic, TBC,
+Das gemeinsame Paket `Next-<Version>.zip` funktioniert auf Classic, TBC,
 Mists, Forever und Retail. Es enthält ausschließlich `QuestTargets/`. Zum Aktualisieren das Spiel
 schließen und `Interface/AddOns/QuestTargets` durch den Ordner aus dem ZIP ersetzen.
 
@@ -34,7 +34,7 @@ Für Classic Era, Burning Crusade, Mists und Forever muss das passende
 **QuestieDB** separat von [CurseForge](https://www.curseforge.com/wow/addons/questiedb)
 oder den [offiziellen Releases](https://github.com/Questie/QuestieDB/releases/)
 installiert und aktiviert werden. Eine vorhandene QuestieDB-Installation beim
-Quest-Targets-Update behalten und unabhängig aktualisieren. QuestieDB liefert nur
+Update von Next behalten und unabhängig aktualisieren. QuestieDB liefert nur
 Daten; für den Questie-Tracker muss auch `Questie/` installiert und aktiviert sein.
 
 Das Retail-Paket enthält nur `QuestTargets/` und benötigt kein QuestieDB.
@@ -44,7 +44,7 @@ Abgabe-NPCs ohne Namen im Questtext fehlen auf Retail die QuestieDB-Daten;
 solche Ziele werden nicht geraten. Im Kampf können geschützte Questdaten
 unlesbar sein, bis der Client sie wieder freigibt.
 
-Der bisherige, datenbankfreie Build `QuestTargets-<Version>.zip` bleibt für
+Der bisherige, datenbankfreie Build `Next-<Version>.zip` bleibt für
 öffentliche Verteilung erhalten. Dafür kann
 [QuestieDB](https://github.com/Questie/QuestieDB/releases/) separat installiert
 werden: `QuestieDB-Forever.zip` für Forever, `QuestieDB-Vanilla.zip` für
@@ -92,7 +92,7 @@ Herkunft und Prüfsummen früherer kombinierter Pakete stehen im
   Einstellungen. Mit der linken Maustaste am Minikartenrand verschieben.
 - Wenn Questie mit aktivem Tracker installiert ist, steht links neben jeder
   passenden Questzeile ein eigener Zielbutton. Er verwendet dieselben
-  Questziele wie der Button im Quest-Targets-Fenster. Questie selbst bleibt
+  Questziele wie der Button im Questfenster von Next. Questie selbst bleibt
   unverändert; ohne Questie werden keine zusätzlichen Buttons angezeigt.
 - Unter **Buttons & Leiste > Zielleiste: Module** kannst du den blauen
   **RestedXP-Button** anzeigen und optional **Polestar-Guideziele verwenden**.

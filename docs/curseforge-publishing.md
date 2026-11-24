@@ -1,6 +1,6 @@
 # GitHub-Releases automatisch auf CurseForge veröffentlichen
 
-Vorbereitet für [Quest Targets auf CurseForge](https://www.curseforge.com/wow/addons/questtargets),
+Vorbereitet für [Next auf CurseForge](https://www.curseforge.com/wow/addons/questtargets),
 Projekt-ID **1709717**, und GitHub-Repository `simonrath/questtargets`.
 Ab Version 1.5.0 wird ein gemeinsames Paket für alle fünf Clients veröffentlicht.
 
@@ -52,16 +52,16 @@ damit zwei unabhängige Abläufe keine doppelten Dateien erzeugen.
 
 ## Was beim nächsten Release automatisch passiert
 
-Ein veröffentlichter **stabiler** GitHub-Release wie `v1.5.0` startet den Workflow.
+Ein veröffentlichter **stabiler** GitHub-Release wie `v1.8.1` startet den Workflow.
 Entwürfe und Pre-Releases werden nicht auf CurseForge veröffentlicht.
 
 Der Workflow lädt diese Dateien aus genau diesem GitHub-Release herunter:
 
-- `QuestTargets-1.5.0.zip`
+- `Next-1.8.1.zip`
 - `SHA256SUMS.txt`
 
 Er baut das Paket nicht neu. Vor dem Upload prüft er SHA-256, ZIP-Pfade,
-TOC-Version und alle fünf Interface-Pins. Das Paket enthält nur Quest Targets.
+TOC-Version und alle fünf Interface-Pins. Das Paket enthält nur Next.
 QuestieDB wird für Nicht-Retail-Clients separat installiert.
 
 Die unterstützte Spielversion jedes Flavors stammt aus `tools/client-versions.json`.
@@ -80,7 +80,7 @@ und in der Zusammenfassung des Laufs.
 ## Spieler-Patchnotes
 
 Für jeden Release gehört eine englische Datei
-`docs/curseforge/<version>.md` dazu, zum Beispiel `docs/curseforge/1.5.0.md`.
+`docs/curseforge/<version>.md` dazu, zum Beispiel `docs/curseforge/1.8.1.md`.
 Die Anweisung für künftige Release-Arbeiten steht bereits in `AGENTS.md`:
 Bei der Release-Vorbereitung werden diese Notizen aus den tatsächlich geänderten
 Funktionen formuliert. Die Veröffentlichung übernimmt sie automatisch unverändert.
@@ -94,10 +94,9 @@ GitHub-generierte Commit-Patchnotes werden nicht ersatzweise veröffentlicht.
 Beispiel:
 
 ```markdown
-# Quest Targets 1.5.0
+# Next 1.8.1
 
-- Assign controller buttons to your targeting actions.
-- Fixed an issue that prevented settings from appearing after login.
+- **Next** is the addon's name starting with version 1.8.1. Your settings and keybinds carry over when you update.
 ```
 
 ## Bestehenden Release nachträglich übertragen

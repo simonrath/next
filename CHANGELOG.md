@@ -1,8 +1,13 @@
-# Quest Targets – Patchnotes
+# Next – Patchnotes
 
 Spielerchronik ab der ersten belegten Veröffentlichung. Die neueste Version steht oben. Historische Angaben zu Downloads und QuestieDB gelten jeweils für die genannte Version.
 
 [English](docs/changelog/enUS.md) · [Español](docs/changelog/esES.md) · [Français](docs/changelog/frFR.md) · [Türkçe](docs/changelog/trTR.md) · [简体中文](docs/changelog/zhCN.md)
+
+## 1.8.1 – 24.11.2026
+
+### Addon-Name
+- **Next** ist ab Version 1.8.1 der Name des Addons. Deine Einstellungen und Tastenkürzel werden beim Update übernommen.
 
 ## 1.8.0 – 24.11.2026
 

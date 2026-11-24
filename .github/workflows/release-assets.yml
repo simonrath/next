@@ -52,10 +52,10 @@ jobs:
           from pathlib import Path
           import sys
           sys.path.insert(0, 'tools')
-          from publish_curseforge import FLAVORS, verify_asset
+          from publish_curseforge import FLAVORS, archive_name, verify_asset
           version = os.environ['RELEASE_TAG'][1:]
           pins = json.loads(Path('tools/client-versions.json').read_text())['flavors']
-          files = [Path('dist') / f'QuestTargets-{version}.zip']
+          files = [Path('dist') / archive_name(version)]
           checksums = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
           verify_asset(files[0], version, checksums, [pins[flavor]['interface'] for flavor in FLAVORS])
           Path('dist/SHA256SUMS.txt').write_text(''.join(f'{checksums[p.name]}  {p.name}\n' for p in files))

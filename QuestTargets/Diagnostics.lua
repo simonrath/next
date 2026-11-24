@@ -129,7 +129,7 @@ function D.Print(app)
     local events = type(saved) == "table" and saved.events
     local latest = type(events) == "table" and events[#events]
     if not latest then return end
-    print("Quest Targets taint capture: " .. latest.func)
+    print(NS.L("title") .. " taint capture: " .. latest.func)
     if latest then
         local count = 0
         for key, owner in pairs(latest.fields or {}) do

@@ -1,12 +1,19 @@
-# Quest Targets
+# Next
 
 Quest-targeting addon for **WoW Classic Era 1.15.9 (Interface 11509)**, **Burning Crusade Classic 2.5.6 (20506)**, **Mists of Pandaria Classic 5.5.4 (50504)**, **WoW Forever 1.60.1 (16001)**, and **Retail 12.1.5 (120105)**.
+
+- **Next quest target.**
+- **Next RestedXP guide target.**
+- **Next mob to farm with ItemTree.**
+- **Next rare in range with RareScanner.**
+
+**Your next target, one button away.**
 
 **[Download the latest release](https://github.com/simonrath/questtargets/releases/latest)**
 
 ## Installation
 
-Download `QuestTargets-<version>.zip` for any supported client: Retail, Classic,
+Starting with 1.8.1, download `Next-<version>.zip` for any supported client: Retail, Classic,
 TBC, Mists, or Forever. The same ZIP works on all five and contains only `QuestTargets/`. Close WoW and replace
 `Interface/AddOns/QuestTargets` with the folder from the ZIP.
 
@@ -14,7 +21,7 @@ For Classic Era, Burning Crusade Classic, Mists of Pandaria Classic, and Forever
 install and enable **QuestieDB** separately from
 [CurseForge](https://www.curseforge.com/wow/addons/questiedb) or the
 [official QuestieDB releases](https://github.com/Questie/QuestieDB/releases/).
-Choose the version for your client. QuestieDB is no longer included in Quest Targets.
+Choose the version for your client. QuestieDB is no longer included in Next.
 If QuestieDB is already installed, keep it and update it separately.
 QuestieDB supplies data only; keep the full Questie addon enabled to use its tracker.
 
@@ -26,11 +33,11 @@ without names in the quest text are not inferred on Retail.
 
 The [patch notes](CHANGELOG.md) follow the selected addon's language and open
 once on the first login with a new version. Open them again under
-**Options → AddOns → Quest Targets → Patch Notes**.
+**Options → AddOns → Next → Patch Notes**.
 
 Release maintainers: [Set up automatic CurseForge publishing](docs/curseforge-publishing.md).
 
-Quest Targets also appears under **Options → Keybindings → Quest Targets**.
+Next also appears under **Options → Keybindings → Next**.
 The master, focused quest, ItemTree and RareScanner actions support two binding slots each.
 Native changes, including clearing a focused-quest binding, are kept across
 refreshes and reloads. In the addon's own Hotkeys section, assigning an occupied
@@ -75,7 +82,7 @@ If combat starts during editing, editing ends and the last released position is
 saved after combat. The positioning controls are available even with tooltips off.
 Targeting is subject to the client's protected-action and combat restrictions.
 Under **Target markers**, **Mute dead-target clearing sound** optionally suppresses
-the deselection sound for 100 ms when a Quest Targets button or hotkey replaces
+the deselection sound for 100 ms when a Next button or hotkey replaces
 a dead NPC. It is off by default and adds no macro bytes. Selection sounds and
 living-target changes stay audible; another playback of the same deselection
 sound during the short window is also muted. Standalone action-bar macros are
@@ -92,7 +99,7 @@ is separate from the English CurseForge notes for a specific release.
 
 The patch notes use the scrollable version-card pattern from
 [FlareUI's What's New panel](https://github.com/malkkav/FlareUI/blob/main/Settings/Panel.lua).
-The Quest Targets entry in Options uses the existing action-row pattern
+The Next entry in Options uses the existing action-row pattern
 from `QuestTargetsMoveSettingMixin` in `QuestTargets/UI.lua`.
 The window uses Blizzard templates, following the existing
 `DefaultPanelFlatTemplate` and NineSlice setup in `UI.Create`.
@@ -101,7 +108,7 @@ Install Python dependencies with `python -m pip install -r tests/requirements.tx
 Run `python -m unittest discover -s tests -p "test_quest_targets*.py"`.
 Database integration tests use the pinned QuestieDB v1.0.9 Vanilla archive in
 the system temporary directory at
-`quest-targets-questiedb-v1.0.9/QuestieDB-Vanilla.zip`. Package tests verify that every flavor contains Quest Targets only;
+`quest-targets-questiedb-v1.0.9/QuestieDB-Vanilla.zip`. Package tests verify that every flavor contains Next only;
 building packages requires no QuestieDB download or provider cache.
 
 Build the universal release package with PowerShell:
@@ -110,7 +117,7 @@ Build the universal release package with PowerShell:
 ./tools/package_quest_targets.ps1
 ```
 
-The result is `dist/QuestTargets-<version>.zip`, shared by all five clients.
+The result is `dist/Next-<version>.zip`, shared by all five clients.
 It contains runtime Lua, XML, TOC, and texture files only. Tests, documentation,
 and QuestieDB are excluded. Legacy `-Flavor`, `-AddonOnly`, and `-CurseForge`
 arguments remain accepted and produce the same universal archive.
@@ -122,7 +129,7 @@ Build a test package with a unique version and filename:
 ```
 
 The ZIP name and its embedded TOC version include a UTC timestamp, such as
-`QuestTargets-1.6.1-preview.20261115-120000-123Z.zip`. This makes installed test
+`Next-1.8.1-preview.20261124-120000-123Z.zip`. This makes installed test
 builds distinguishable in the options heading. The source TOC is preserved.
 Existing archives are never overwritten. Use `-OutputDirectory <folder>` for
 another destination. Package tests build in temporary directories so they
@@ -130,11 +137,11 @@ cannot replace downloaded release files.
 
 ## License
 
-[GNU GENERAL PUBLIC LICENSE](LICENSE) for Quest Targets only.
+[GNU GENERAL PUBLIC LICENSE](LICENSE) for Next only.
 
 ### QuestieDB attribution
 
-Quest Targets accesses the separately installed QuestieDB addon through its public
+Next accesses the separately installed QuestieDB addon through its public
 API. QuestieDB code and data belong to the [QuestieDB team and its contributors](https://github.com/Questie/QuestieDB).
-Quest Targets 1.4.2 and later do not redistribute QuestieDB. See the
+QuestieDB has been a separate download since version 1.4.2. See the
 [QuestieDB notice](QuestTargets/QUESTIEDB-NOTICE.md) for earlier package provenance.

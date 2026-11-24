@@ -19,7 +19,7 @@ minimapAngle-Werte in Radiant sowie minimapHidden werden beim ersten Umstieg
 übernommen. Optionen verwenden die Library-Methoden und speichern minimap.hide.
 Der Titel der Optionen liest Version aus den installierten Addon-Metadaten;
 er enthält daher auch den Preview-Zusatz des Testpakets.
-Die Kategorie und ihr Sidebar-Name bleiben dabei „Quest Targets“. Da Blizzard
+Die Kategorie und ihr Sidebar-Name bleiben dabei „Next“. Da Blizzard
 denselben Kategorienamen für Liste und Überschrift benutzt, setzt ein
 hooksecurefunc-Posthook auf DisplayCategory ausschließlich den sichtbaren
 Header-Text unserer ausgewählten Kategorie. Fremde Kategorien werden nicht

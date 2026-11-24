@@ -14,7 +14,7 @@ the current build first becomes tainted.
 
 The native action handler calls `flyout:Hide()` before `UseAction()`. Thus both
 reported function names can be downstream symptoms of a contaminated ActionBar
-execution path. They do not establish that Quest Targets directly hides the
+execution path. They do not establish that Next directly hides the
 flyout; the addon contains no such call or ActionBar hook.
 
 The old log also records slash-command registration being read by Blizzard's
@@ -33,7 +33,7 @@ identify the source nor prove the whole Settings system is untainted.
 
 ## Registration path found in the Forever UI source
 
-Quest Targets passed `function() return L(key) end` as the name to
+Next passed `function() return L(key) end` as the name to
 `Settings.RegisterProxySetting`. The Forever 1.60.1.70124 UI source supplied
 by the WoW MCP shows this sequence:
 
@@ -76,7 +76,7 @@ the game's taint engine and must not be presented as in-game confirmation.
 ## Evidence capture added
 
 `Diagnostics.lua` observes `ADDON_ACTION_BLOCKED` and `ADDON_ACTION_FORBIDDEN`
-for Quest Targets. It records the function, bounded stack, integration state,
+for Next. It records the function, bounded stack, integration state,
 and insecure field owners for the native ActionBar/flyout path. A read-only
 two-second sampler preserves the first observed contaminated fields in the
 current session. The last five failure reports persist in the existing

@@ -1,11 +1,11 @@
 # QuestieDB provider and historical provenance
 
-Quest Targets 1.4.2 and later contain no QuestieDB code or data. Install QuestieDB
+Since version 1.4.2, this addon has shipped without QuestieDB code or data. Install QuestieDB
 separately for non-Retail clients. The following provenance describes the combined
 packages shipped before 1.4.2 and the pinned integration-test fixtures.
 
 The Classic, TBC, Mists, and Forever combined builds before 1.4.2 included the official QuestieDB v1.0.9
-flavor archive, without changing any QuestieDB file. Quest Targets is a separate
+flavor archive, without changing any QuestieDB file. Next is a separate
 addon; the QuestieDB code and data belong to QuestieDB and its contributors.
 
 - Project: https://github.com/Questie/QuestieDB
@@ -21,7 +21,7 @@ addon; the QuestieDB code and data belong to QuestieDB and its contributors.
   the included QuestieDB TOC files.
 
 The official Forever archive contains both `QuestieDB_Forever.toc` and
-`QuestieDB_Camelot.toc`; both were retained byte for byte. Quest Targets did not adapt the provider for Forever.
+`QuestieDB_Camelot.toc`; both were retained byte for byte. Next did not adapt the provider for Forever.
 
 Licensing check for v1.0.9 (2026-10-28): the release-tag repository and all
 four pinned flavor archives now include `LICENSE.md`. This file describes
@@ -30,7 +30,7 @@ content, and retains an "all rights reserved" fallback for content not otherwise
 covered. It does not establish blanket GPLv3 coverage for every historic
 contribution. The combined packages retain the upstream license file unchanged;
 this notice does not grant additional redistribution rights. The minimal
-Quest Targets package remains available without QuestieDB, which can be
+Next package remains available without QuestieDB, which can be
 installed separately from its official release.
 
 To update a combined installation, close the game and remove the old

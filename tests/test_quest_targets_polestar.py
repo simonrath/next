@@ -1,4 +1,4 @@
-"""Polestar guide integration exercises Quest Targets' real secure master path."""
+"""Polestar guide integration exercises Next's real secure master path."""
 import unittest
 import test_quest_targets as addon
 

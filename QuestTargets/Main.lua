@@ -5,7 +5,7 @@ local app = {scrollOffset = 0, entries = {}, metadata = {unresolved = 0, objecti
 NS.app = app
 
 local function message(text)
-    print("|cffffd100Quest Targets:|r " .. text)
+    print("|cffffd100" .. NS.L("title") .. ":|r " .. text)
 end
 
 local QUESTIEDB_URL = "https://github.com/Questie/QuestieDB/releases/"

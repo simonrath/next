@@ -61,8 +61,17 @@ def read_checksums(path):
     return result
 
 
+def release_name(version):
+    base_version = tuple(map(int, version.split('-', 1)[0].split('.')))
+    return 'Next' if base_version >= (1, 8, 1) else 'Quest Targets'
+
+
+def archive_name(version):
+    return f"{release_name(version).replace(' ', '')}-{version}.zip"
+
+
 def verify_asset(path, version, checksums, interfaces):
-    expected_name = f'QuestTargets-{version}.zip'
+    expected_name = archive_name(version)
     if path.name != expected_name or checksums.get(path.name) != hashlib.sha256(path.read_bytes()).hexdigest():
         raise PublishError(f'Archive name/checksum mismatch: {path.name}')
     try:
@@ -181,7 +190,7 @@ def main():
             raise PublishError('Set CF_API_TOKEN to a CurseForge Upload API token, or use --offline-versions for a dry run.')
         rows = cf_json('/game/versions', token)
     versions = resolve_versions(rows, pins, flavors)
-    filenames = [f'QuestTargets-{version}.zip']
+    filenames = [archive_name(version)]
     # Some release tools publish before attaching assets. Read-only waiting is safe.
     for attempt in range(13):
         assets = {asset['name']: asset for asset in release['assets']}
@@ -204,7 +213,7 @@ def main():
         digest = assets[filename].get('digest')
         if digest and digest != 'sha256:' + checksums[filename]:
             raise PublishError('GitHub asset digest differs from SHA256SUMS.txt.')
-        metadata = {'displayName': f'Quest Targets {version}',
+        metadata = {'displayName': f'{release_name(version)} {version}',
                     'changelog': notes, 'changelogType': 'markdown',
                     'gameVersions': list(dict.fromkeys(versions.values())), 'releaseType': 'release'}
         plans = [{'flavor': 'All', 'path': path, 'metadata': metadata}]

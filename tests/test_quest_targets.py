@@ -694,15 +694,15 @@ class QuestTargetsTests(unittest.TestCase):
             assert(NS.UI.settings==nil and NS.UI.nativeCategory==nativeCategory)
             C_AddOns.GetAddOnMetadata=function() return '1.5.1-preview' end
             SettingsPanel:DisplayCategory(nativeCategory)
-            assert(nativeCategory.name=='Quest Targets', 'Version leaked into sidebar')
+            assert(nativeCategory.name=='Next', 'Version leaked into sidebar')
             if settingsTestInterface==16001 then
                 assert(SettingsPanel.DisplayCategory==nativeDisplayCategory, 'Hooked shared Forever Settings panel')
-                assert(headerTitle.text=='Quest Targets', 'Native heading should originate from Blizzard')
+                assert(headerTitle.text=='Next', 'Native heading should originate from Blizzard')
                 nativeCategory.page.scripts.OnShow()
-                assert(nativeCategory.page.Header.Title.text=='Quest Targets 1.5.1-preview')
+                assert(nativeCategory.page.Header.Title.text=='Next 1.5.1-preview')
                 assert(nativeCategory.page.rows==layout.initializers)
             else
-                assert(headerTitle.text=='Quest Targets 1.5.1-preview', 'Missing heading version')
+                assert(headerTitle.text=='Next 1.5.1-preview', 'Missing heading version')
             end
             SettingsPanel:DisplayCategory({name='Other addon'})
             assert(headerTitle.text=='Other addon', 'Changed another addon heading')
@@ -999,7 +999,7 @@ class QuestTargetsTests(unittest.TestCase):
             nativeSettings.QUESTTARGETS_preferredRaidIcon.SetValue(4)
             assert(NS.app.db.markerIcon==4)
             nativeSettings.QUESTTARGETS_language.SetValue(2)
-            assert(NS.app.db.language=='deDE' and nativeCategory.name=='Quest Targets')
+            assert(NS.app.db.language=='deDE' and nativeCategory.name=='Next')
             assert(focusButton.data.tooltip==NS.L('focusHotkeyTip'))
             assert(moveRow.data.name==NS.L('masterMove') and moveRow.data.tooltip==NS.L('masterMoveHelp'))
             assert(layout.initializers[1].data.name==NS.L('general'))
@@ -1340,7 +1340,7 @@ class QuestTargetsTests(unittest.TestCase):
             C_AddOns={GetAddOnMetadata=function(name,key)
                 assert(name=='QuestTargets' and key=='Version'); return '1.5.1-preview' end}
             boot()
-            assert(NS.UI.OptionsTitle()=='Quest Targets 1.5.1-preview')
+            assert(NS.UI.OptionsTitle()=='Next 1.5.1-preview')
             assert(NS.UI.settings.titleText.text==NS.UI.OptionsTitle())
         """)
 

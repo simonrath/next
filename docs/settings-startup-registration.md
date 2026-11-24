@@ -1,7 +1,7 @@
 # Optionskategorie beim Login registrieren
 
 Ursache: `UI.Settings` registrierte die Kategorie und öffnete sie im selben
-Aufruf. Ohne Aufruf des Minimap-/Menü-Shortcuts fehlte Quest Targets daher in
+Aufruf. Ohne Aufruf des Minimap-/Menü-Shortcuts fehlte Next daher in
 Blizzards Addon-Optionen.
 
 `UI.RegisterSettings` übernimmt jetzt ausschließlich die Registrierung.
