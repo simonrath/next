@@ -733,7 +733,7 @@ class QuestTargetsTests(unittest.TestCase):
                 'feedbackMaster','feedbackRestedXP','feedbackItemTree','feedbackRareScanner','feedbackFocus',
                 'window','feedbackQuestie','feedbackEllesmere','preferredRaidIcon','muteDeadTargetSound',
                 'hotkeys','masterDefault','focusHotkey','itemTreeBinding','rareScannerBinding'})
-            verifyPage(buttonsLayout, {'barModulesSection','showMaster','masterAllModules','polestarIntegration','restedXPIntegration',
+            verifyPage(buttonsLayout, {'barModulesSection','showMaster','masterAllModules','polestarIntegration','followTheArrowIntegration','restedXPIntegration',
                 'showItemTreeButton','showRareScannerButton','rareScannerZone','barAppearanceSection',
                 'masterOrientation','buttonSize','masterSpacing','masterBackground','masterBorder','masterDividers',
                 'masterLocked','masterMove','integrationSection','showTooltips',
@@ -745,7 +745,7 @@ class QuestTargetsTests(unittest.TestCase):
             for _,item in ipairs(buttonsLayout.initializers) do
                 if item.data.setting then controls[item.data.setting.variable:gsub('^QUESTTARGETS_','')]=item end
             end
-            for child,parent in pairs({masterAllModules='showMaster',polestarIntegration='showMaster',rareScannerZone='showRareScannerButton',
+            for child,parent in pairs({masterAllModules='showMaster',polestarIntegration='showMaster',followTheArrowIntegration='showMaster',rareScannerZone='showRareScannerButton',
                 questieTrackerOffset='questieTrackerButtons',ellesmereTrackerOffset='ellesmereTrackerButtons'}) do
                 assert(controls[child].parentInitializer==controls[parent] and controls[child].predicate, child)
             end
@@ -756,6 +756,7 @@ class QuestTargetsTests(unittest.TestCase):
             moduleSetting.SetValue(true)
             assert(NS.app.db.masterAllModules==true)
             assert(not controls.polestarIntegration.predicate())
+            assert(not controls.followTheArrowIntegration.predicate())
             assert(not controls.rareScannerZone.predicate())
             local zoneAvailable=NS.RareScanner.ZoneAvailable
             NS.RareScanner.ZoneAvailable=function() return true end
@@ -2025,17 +2026,34 @@ class QuestTargetsTests(unittest.TestCase):
             NS.app:Refresh(); assert(#NS.app.entries == 0)
         ''')
 
-    def test_tracked_filter_reports_failure_from_master_quest_read(self):
+    def test_tracked_filter_reads_each_quest_once_for_both_views(self):
         self.lua.execute('''QuestTargetsDB = {watchedOnly=true}; boot()
-            local read, calls = NS.Core.ReadQuests, 0
-            NS.Core.ReadQuests = function(watchedOnly)
-                calls = calls + 1
-                if calls == 2 then return {}, 'full quest read failed' end
-                return read(watchedOnly)
+            local objectives = C_QuestLog.GetQuestObjectives
+            local reads = {}
+            C_QuestLog.GetQuestObjectives = function(id)
+                reads[id] = (reads[id] or 0) + 1
+                return objectives(id)
             end
             NS.app:Refresh()
-            assert(calls == 2)
-            assert(NS.app.error == 'full quest read failed')
+            assert(reads[1] == 1 and reads[2] == 1, 'both views should reuse the same objective read')
+            assert(#NS.app.quests == 1 and NS.app.quests[1] == NS.app.allQuests[1])
+            assert(#NS.app.allQuests == 2 and not NS.app.error)
+        ''')
+
+    def test_tracked_filter_preserves_shared_log_errors_and_master_fallback(self):
+        self.lua.execute('''QuestTargetsDB = {watchedOnly=true}; boot()
+            local count = C_QuestLog.GetNumQuestLogEntries
+            C_QuestLog.GetNumQuestLogEntries = function() return nil end
+            NS.app:Refresh()
+            assert(NS.app.error == NS.L('logPending'))
+            assert(#NS.app.quests == 0 and #NS.app.allQuests == 0)
+            C_QuestLog.GetNumQuestLogEntries = count
+            tick()
+            assert(not NS.app.error and #NS.app.quests == 1 and #NS.app.allQuests == 2)
+            C_QuestLog.GetQuestWatchType = nil
+            NS.app:Refresh()
+            assert(NS.app.error == NS.L('filterMissing'))
+            assert(#NS.app.quests == 0 and #NS.app.allQuests == 2)
         ''')
 
     def test_quest_update_bursts_are_coalesced(self):
@@ -2108,6 +2126,76 @@ class QuestTargetsTests(unittest.TestCase):
             p.data=saved; tick()
             assert(NS.app.metadata.unresolved == 0 and #NS.app.entries == 1)
             assert(#NS.app.entries[1].refs == 2)
+        ''')
+
+    def test_nameplate_event_burst_scans_once_and_leaves_quest_log_untouched(self):
+        self.lua.execute('''boot()
+            local count, scan = C_QuestLog.GetNumQuestLogEntries, NS.Scanner.Scan
+            local reads, scans = 0, 0
+            C_QuestLog.GetNumQuestLogEntries = function()
+                reads = reads + 1
+                return count()
+            end
+            NS.Scanner.Scan = function(...)
+                scans = scans + 1
+                return scan(...)
+            end
+            plate('Young Wolf','Warme Felle','1/4 Wolfsfell')
+            event('NAME_PLATE_UNIT_ADDED','nameplate1')
+            event('NAME_PLATE_UNIT_REMOVED','nameplate2')
+            assert(#timers == 1)
+            flush()
+            assert(scans == 1 and reads == 0, 'plate-only changes should avoid reading the quest log')
+            assert(QuestTargetsDB.autoTargets.entries['2:1'].names['Young Wolf'])
+            assert(NS.app.metadata.unresolved == 0)
+
+            event('NAME_PLATE_UNIT_ADDED','nameplate3')
+            quests[2].objectives[1].numFulfilled = 2
+            event('QUEST_LOG_UPDATE')
+            assert(#timers == 1)
+            flush()
+            assert(scans == 2 and reads == 1, 'quest events should take precedence in a shared burst')
+            assert(NS.app.entries[2].done == 2)
+        ''')
+
+    def test_scanner_reuses_recent_tooltip_reads_until_plate_or_quest_changes(self):
+        self.lua.execute('''
+            local now=0
+            GetTime=function() return now end
+            plate('Waldwolf','Wölfe im Wald','Waldwolf getötet: 0/5')
+            boot()
+            assert(tooltipCalls==1)
+            now=1
+            NS.app:Poll()
+            assert(tooltipCalls==1)
+            event('NAME_PLATE_UNIT_ADDED','nameplate1'); flush()
+            assert(tooltipCalls==2, 'recycled nameplate must be rescanned')
+            event('QUEST_LOG_UPDATE'); flush()
+            assert(tooltipCalls==3, 'changed quest snapshot must be rescanned')
+            now=4
+            NS.app:Poll()
+            assert(tooltipCalls==4, 'periodic retry must remain available')
+        ''')
+
+    def test_scanner_shares_the_quest_title_index_across_tooltips(self):
+        self.lua.execute('''
+            local questList = NS.Core.ReadQuests(false)
+            local titlesRead = 0
+            for _, quest in ipairs(questList) do
+                local title = quest.title
+                quest.title = nil
+                setmetatable(quest, {__index = function(_, key)
+                    if key == 'title' then
+                        titlesRead = titlesRead + 1
+                        return title
+                    end
+                end})
+            end
+            for i=1,12 do plate('Wolf '..i,'Warme Felle','1/4 Wolfsfell') end
+            local learned = {}
+            assert(NS.Scanner.Scan(questList, learned))
+            assert(tooltipCalls == 12 and learned['2:1'].names['Wolf 12'])
+            assert(titlesRead == #questList, 'a scan should index each title once')
         ''')
 
     def test_scans_wait_until_combat_ends(self):

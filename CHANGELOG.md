@@ -4,6 +4,27 @@ Spielerchronik ab der ersten belegten Veröffentlichung. Die neueste Version ste
 
 [English](docs/changelog/enUS.md) · [Español](docs/changelog/esES.md) · [Français](docs/changelog/frFR.md) · [Türkçe](docs/changelog/trTR.md) · [简体中文](docs/changelog/zhCN.md)
 
+## 1.8.2 – 25.11.2026
+
+### Follow The Arrow
+- **Neu: Follow The Arrow ist jetzt integriert!** Aktiviere unter **Buttons & Leiste** die Option **Follow-The-Arrow-Guideziele verwenden**. Der Masterbutton übernimmt dann die Ziele des aktuellen Guide-Schritts aus **FTA Target**. Das funktioniert auch ohne QuestieDB. Das Makro muss in Follow The Arrow aktiviert sein. Die aktuelle Retail-Ausgabe von Follow The Arrow stellt es nicht bereit.
+
+Danke an **EscapeKeyEscapee** für den Vorschlag, Follow The Arrow zu unterstützen!
+
+### Polestar
+- Der **Masterbutton** versucht zuerst das aktuelle Polestar-Ziel, wenn QuestieDB fehlt und RestedXP keine Ziele liefert.
+- Wer nur Polestar als Guide verwendet, bekommt beim Einloggen keinen Hinweis auf fehlendes QuestieDB.
+- Der **Masterbutton** berücksichtigt jetzt auch Gegner, die Polestar als Quellen für Sammelziele oder Ziele für den Einsatz eines Questgegenstands vorgibt.
+- Wenn du Polestar ohne QuestieDB verwendest, erklärt das Questfenster, wie du die Polestar-Suche in Next einschaltest.
+
+### RareScanner
+- Der **RareScanner-Button** berücksichtigt jetzt die Einstellung **Button-Tooltips anzeigen**.
+- Ist nur ein Rare in der Liste, verwirft der violette Button tote Ziele bei jeder Markierungseinstellung.
+- Die **Zonensuche** lädt Fundorte in kleinen Gruppen. Die Zielnamen stehen sofort zur Suche bereit.
+
+### Performance
+- Namensplaketten lösen keine vollständige Questlog-Aktualisierung mehr aus. Die Zielleiste und Tracker-Buttons sparen Arbeit, wenn Ziele und Einstellungen gleich bleiben.
+
 ## 1.8.1 – 24.11.2026
 
 ### Addon-Name

@@ -9,7 +9,12 @@ Quest-targeting addon for **WoW Classic Era 1.15.9 (Interface 11509)**, **Burnin
 
 **Your next target, one button away.**
 
-**[Download the latest release](https://github.com/simonrath/questtargets/releases/latest)**
+**[Download the latest release](https://github.com/simonrath/next/releases/latest)**
+
+The master button can also target the current guide step from Follow The Arrow.
+Enable **Follow The Arrow guide targets** under **Buttons & Bar** and keep the
+**FTA Target** macro enabled in Follow The Arrow. The current Retail edition
+of Follow The Arrow does not provide that macro.
 
 ## Installation
 

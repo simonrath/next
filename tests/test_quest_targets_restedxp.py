@@ -6,6 +6,42 @@ import test_quest_targets as addon
 class RestedXPTests(unittest.TestCase):
     setUp = addon.QuestTargetsTests.setUp
 
+    def test_idle_sync_shares_guide_read_and_reuses_unchanged_entries(self):
+        self.lua.execute('''
+            local reads=0
+            local target='Wolf'
+            local rxp={RXPFrame={activeSteps={}},GetCreatureName=function(id) return id end,
+                targeting={GetCurrentTargets=function()
+                    reads=reads+1
+                    return {},{target},{}
+                end}}
+            local lib=LibStub
+            LibStub=function(name) if name=='AceAddon-3.0' then
+                return {GetAddon=function() return rxp end}
+            else return lib(name) end end
+            QuestTargetsDB={restedXPIntegration=true}
+            boot()
+            local app, master, blue=NS.app, NS.UI.master, NS.RestedXP.button
+            local firstMaster, firstBlue=master.entry,blue.entry
+            local layout=NS.UI.LayoutTargetButtons
+            local layouts=0
+            NS.UI.LayoutTargetButtons=function(a)
+                layouts=layouts+1
+                return layout(a)
+            end
+            reads=0
+            NS.RestedXP.Sync(app)
+            assert(reads==1, 'one RestedXP target read per sync')
+            assert(master.entry==firstMaster and blue.entry==firstBlue)
+            assert(layouts==0, 'unchanged visibility must not lay out the bar')
+            target='Bear'
+            NS.RestedXP.Sync(app)
+            assert(master.entry.names.Bear and blue.entry.names.Bear)
+            target='Boar'
+            master.scripts.PreClick(master,'LeftButton',false)
+            assert(master.entry.names.Boar)
+        ''')
+
     def test_combined_search_cursor_survives_shrinking_quest_target_list(self):
         for use_master in (True, False):
             for remaining in (11, 1, 0):

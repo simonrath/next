@@ -751,7 +751,7 @@ function UI.LayoutSettings(app)
     panel.pages, panel.tabs, panel.groups = {}, {}, {}
     local keys = {"general", "targetMarkers", "buttons", "hotkeys"}
     local feedbackSpace = #feedbackButtons * 32
-    local heights = {500, 308 + feedbackSpace, 1100, 310}
+    local heights = {500, 308 + feedbackSpace, 1130, 310}
     panel.body = CreateFrame("Frame", nil, panel, "BackdropTemplate")
     panel.body:SetPoint("TOPLEFT", 8, -78)
     panel.body:SetPoint("BOTTOMRIGHT", -8, 8)
@@ -797,7 +797,7 @@ function UI.LayoutSettings(app)
     local language = settingsBox(general, "language", -350, 102)
     local marking = settingsBox(markers, "targetMarkers", -32, 260 + feedbackSpace)
     local toggles = settingsBox(master, "buttons", -32, 334)
-    local bar = settingsBox(master, "targetBar", -390, 685)
+    local bar = settingsBox(master, "targetBar", -390, 715)
     local bindings = settingsBox(hotkeys, "hotkeys", -32, 271)
     panel.groups = {display, window, language, marking, toggles, bar, bindings}
     panel.displayText:Hide()
@@ -812,18 +812,19 @@ function UI.LayoutSettings(app)
     place(panel.questieOffsetControl, toggles, 22, -122)
     place(panel.ellesmereToggle, toggles, 18, -210)
     place(panel.ellesmereOffsetControl, toggles, 22, -240)
-    for i, control in ipairs({panel.masterToggle, panel.masterModulesToggle, panel.polestarToggle, panel.restedXPToggle, panel.itemTreeToggle,
-        panel.rareScannerToggle, panel.rareScannerZoneToggle}) do
-        place(control, bar, (control == panel.polestarToggle or control == panel.masterModulesToggle) and 38 or 18, -32 - (i-1)*30)
+    for i, control in ipairs({panel.masterToggle, panel.masterModulesToggle, panel.polestarToggle,
+        panel.followTheArrowToggle, panel.restedXPToggle, panel.itemTreeToggle, panel.rareScannerToggle,
+        panel.rareScannerZoneToggle}) do
+        place(control, bar, i >= 2 and i <= 4 and 38 or 18, -32 - (i-1)*30)
     end
-    place(master.orientationLabel, bar, 22, -247)
-    place(master.orientationDropdown, bar, 176, -239)
-    place(master.spacingControl, bar, 22, -280)
-    master.spacingControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -280)
-    place(master.backgroundToggle, bar, 18, -449)
-    place(master.borderToggle, bar, 18, -479)
-    place(master.dividersToggle, bar, 18, -509)
-    place(master.lockToggle, bar, 18, -539)
+    place(master.orientationLabel, bar, 22, -277)
+    place(master.orientationDropdown, bar, 176, -269)
+    place(master.spacingControl, bar, 22, -310)
+    master.spacingControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -310)
+    place(master.backgroundToggle, bar, 18, -479)
+    place(master.borderToggle, bar, 18, -509)
+    place(master.dividersToggle, bar, 18, -539)
+    place(master.lockToggle, bar, 18, -569)
     place(panel.scaleControl, window, 22, -31)
     panel.scaleControl:SetPoint("TOPRIGHT", window, "TOPRIGHT", -22, -31)
     place(panel.languageDropdown, language, 2, -42)
@@ -835,11 +836,11 @@ function UI.LayoutSettings(app)
     for index, choice in ipairs(panel.icons) do
         place(choice, marking, 20 + ((index - 1) % 4)*85, -71 - feedbackSpace - math.floor((index-1)/4)* 60)
     end
-    place(master.modernScaleControl, bar, 22, -365)
-    master.modernScaleControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -365)
-    place(master.moveButton, bar, 18, -584)
-    place(master.moveHelp, bar, 18, -620)
-    master.moveHelp:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -18, -620)
+    place(master.modernScaleControl, bar, 22, -395)
+    master.modernScaleControl:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -22, -395)
+    place(master.moveButton, bar, 18, -614)
+    place(master.moveHelp, bar, 18, -650)
+    master.moveHelp:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -18, -650)
     panel.bindingHeaders = {}
     for slot = 1, 2 do
         local header = label(bindings, 0, 0, 160, "GameFontNormalSmall")
@@ -1234,9 +1235,22 @@ local function nativeSettings(app)
             if InCombatLockdown() or not addonLoaded("Polestar") then return end
             app.db.polestarIntegration = value
             NS.RestedXP.Sync(app)
+            UI.UpdateStatus(app)
         end, "polestarIntegrationTip")
     child(polestarToggle, masterToggle, function()
         return not app.db.masterHidden and addonLoaded("Polestar")
+    end)
+
+    local followTheArrowToggle = checkboxSetting("followTheArrowIntegration", false,
+        function() return app.db.followTheArrowIntegration end,
+        function(value)
+            if InCombatLockdown() or not NS.RestedXP.FollowTheArrowAvailable() then return end
+            app.db.followTheArrowIntegration = value
+            NS.RestedXP.Sync(app)
+            UI.UpdateStatus(app)
+        end, "followTheArrowIntegrationTip")
+    child(followTheArrowToggle, masterToggle, function()
+        return not app.db.masterHidden and NS.RestedXP.FollowTheArrowAvailable()
     end)
 
     local restedXPToggle = checkboxSetting("restedXPIntegration", false,
@@ -1492,8 +1506,22 @@ function UI.RegisterSettings(app)
             if InCombatLockdown() or not addonLoaded("Polestar") then return end
             app.db.polestarIntegration = not app.db.polestarIntegration
             NS.RestedXP.Sync(app)
+            UI.UpdateStatus(app)
             UI.UpdateSettings(app)
         end)
+        panel.followTheArrowToggle = checkbox(panel, L("followTheArrowIntegration"), function()
+            if InCombatLockdown() or not NS.RestedXP.FollowTheArrowAvailable() then return end
+            app.db.followTheArrowIntegration = not app.db.followTheArrowIntegration
+            NS.RestedXP.Sync(app)
+            UI.UpdateStatus(app)
+            UI.UpdateSettings(app)
+        end)
+        panel.followTheArrowToggle:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L("followTheArrowIntegrationTip"), 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        panel.followTheArrowToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
         panel.itemTreeToggle = checkbox(panel, L("showItemTreeButton"), function()
             if InCombatLockdown() or not addonLoaded("ItemTree") then return end
             app.db.itemTreeButton = not app.db.itemTreeButton
@@ -1708,6 +1736,11 @@ function UI.UpdateSettings(app)
     UI.settings.polestarToggle:SetEnabled(polestarAvailable)
     local polestarGray = polestarAvailable and 1 or 0.5
     UI.settings.polestarToggle.caption:SetTextColor(polestarGray, polestarGray, polestarGray)
+    local followTheArrowAvailable = not app.db.masterHidden and NS.RestedXP.FollowTheArrowAvailable()
+    UI.settings.followTheArrowToggle:SetChecked(app.db.followTheArrowIntegration)
+    UI.settings.followTheArrowToggle:SetEnabled(followTheArrowAvailable)
+    local followTheArrowGray = followTheArrowAvailable and 1 or 0.5
+    UI.settings.followTheArrowToggle.caption:SetTextColor(followTheArrowGray, followTheArrowGray, followTheArrowGray)
     local first, second = GetBindingKey(MASTER_BINDING)
     if not UI.settings.hotkey.listening then UI.settings.hotkey:SetText(bindingText(first)) end
     if not UI.settings.hotkey2.listening then UI.settings.hotkey2:SetText(bindingText(second)) end
@@ -1789,6 +1822,7 @@ function UI.ApplyLanguage(app)
         panel.questieOffsetControl.caption:SetText(L("questieTrackerOffset"))
         panel.restedXPToggle.caption:SetText(L("restedXPIntegration"))
         panel.polestarToggle.caption:SetText(L("polestarIntegration"))
+        panel.followTheArrowToggle.caption:SetText(L("followTheArrowIntegration"))
         panel.itemTreeToggle.caption:SetText(L("showItemTreeButton"))
         panel.rareScannerToggle.caption:SetText(L("showRareScannerButton"))
         panel.rareScannerZoneToggle.caption:SetText(L("rareScannerZone"))
@@ -1985,5 +2019,14 @@ function UI.RenderRows(app)
 end
 
 function UI.UpdateStatus(app)
-    if UI.database then UI.database:SetText(NS.Database.status) end
+    if not UI.database then return end
+    local status = NS.Database.status
+    if status == L("dbMissing") and app.db.masterAllModules ~= false and not app.db.masterHidden then
+        if _G.Polestar and _G.Polestar.Engine and not app.db.polestarIntegration then
+            status = L("dbEnablePolestar")
+        elseif NS.RestedXP.FollowTheArrowAvailable() and not app.db.followTheArrowIntegration then
+            status = L("dbEnableFollowTheArrow")
+        end
+    end
+    UI.database:SetText(status)
 end

@@ -49,6 +49,13 @@ class RareScannerTests(unittest.TestCase):
             QuestTargetsDB={rareScannerZone=true}
             boot()
             local button=NS.RareScanner.markButton
+            GameTooltip:Hide()
+            button.scripts.OnEnter(button)
+            assert(not GameTooltip:IsShown(), 'RareScanner tooltip ignored the disabled setting')
+            NS.app.db.showTooltips=true
+            button.scripts.OnEnter(button)
+            assert(GameTooltip:IsShown() and GameTooltip.text==NS.L('rareScannerButton'))
+            button.scripts.OnLeave(button)
             assert(reads==4 and NS.Proximity.position==nil)
             button.scripts.PreClick(button,'LeftButton',false)
             assert(reads==4 and table.concat(button.markedNames,'|')==
@@ -100,6 +107,72 @@ class RareScannerTests(unittest.TestCase):
             assert(button:GetAttribute('macrotext1'):find('/targetexact [nocombat] Z Near Rare',1,true),
                 'a readable nearby plate must bypass the already advanced page')
 
+        ''')
+
+    def test_cold_zone_spawn_queries_are_batched_without_hiding_targets(self):
+        addon.QuestTargetsTests.setUp(self)
+        self.lua.execute('''
+            GetBuildInfo=function() return '1.60.1','','',16001 end
+            local now=0
+            GetTime=function() return now end
+            RegisterStateDriver=function() end
+            RSOverlayMixin={OnAcquired=function() end}
+            local rs={db={char={overlayActive={}},global={}}}
+            local originalLibStub=LibStub
+            LibStub=function(name,silent)
+                if name=='AceAddon-3.0' then return {GetAddon=function() return rs end} end
+                return originalLibStub(name,silent)
+            end
+            local mapID=20
+            C_Map={GetBestMapForUnit=function() return mapID end, GetMapArtID=function() return 42 end}
+            DropdownButtonMixin={SetupMenu=function(self,generator) self.menuGenerator=generator end}
+            RSWorldMapButtonMixin={SetupMenu=function(self)
+                DropdownButtonMixin.SetupMenu(self,function(_,root)
+                    local filter=root:CreateButton('NPCs'):CreateButton('Filter NPCs')
+                    if mapID==20 then
+                        for i=1,80 do filter:CreateCheckbox('Zone rare '..i..' ('..i..')') end
+                    else
+                        filter:CreateCheckbox('Other rare (81)')
+                    end
+                end)
+            end}
+            local reads, nextFrame=0,{}
+            RSExplorerRareList={OnElementSelectionChanged=function(self)
+                assert(not combat and self.mapID==mapID)
+                reads=reads+1
+            end}
+            local after=C_Timer.After
+            C_Timer.After=function(delay,fn)
+                if delay==0 then nextFrame[#nextFrame+1]=fn else after(delay,fn) end
+            end
+            QuestTargetsDB={rareScannerZone=true}
+            boot()
+            local b=NS.RareScanner.markButton
+            assert(#b.markedNames==80, 'every name must be available as soon as the list is built')
+            assert(reads>0 and reads<=8 and #nextFrame==1, 'cold reads must be spread over frames')
+            local first=reads
+            combat=true
+            table.remove(nextFrame,1)()
+            assert(reads==first and #nextFrame==0)
+            combat=false
+            tick()
+            while #nextFrame>0 do
+                local before=reads
+                table.remove(nextFrame,1)()
+                assert(reads-before<=8)
+            end
+            assert(reads==80)
+            now=16
+            tick()
+            assert(reads==80 and #nextFrame==0, 'a warm zone rebuild should reuse all spawn data')
+            now=61
+            tick()
+            assert(reads==88 and #nextFrame==1, 'a cold rebuild should start one batch')
+            mapID=21
+            table.remove(nextFrame,1)()
+            assert(reads==88 and #nextFrame==0, 'leaving the zone cancels the remaining work')
+            b.scripts.PreClick(b,'LeftButton',false)
+            assert(reads==89 and #b.markedNames==1 and b.markedNames[1]=='Other rare')
         ''')
 
     def test_opt_in_zone_search_uses_current_map_and_pages_all_zone_rares(self):
@@ -160,7 +233,7 @@ class RareScannerTests(unittest.TestCase):
             boot()
             local b=NS.RareScanner.markButton
             local option=NS.UI.settings.rareScannerZoneToggle
-            assert(not option:GetChecked() and reads==0 and b.attributes.macrotext1=='/targetexact Marked rare')
+            assert(not option:GetChecked() and reads==0 and b.attributes.macrotext1=='/targetexact Marked rare\\n/cleartarget [dead]')
             option.scripts.OnClick()
             assert(NS.app.db.rareScannerZone==true and reads==1 and b:GetAlpha()==1)
             assert(#b.markedNames==#expected)
@@ -182,7 +255,7 @@ class RareScannerTests(unittest.TestCase):
             assert(reads==1)
             combat=false
             tick()
-            assert(reads==2 and b.attributes.macrotext1=='/targetexact Other zone rare')
+            assert(reads==2 and b.attributes.macrotext1=='/targetexact Other zone rare\\n/cleartarget [dead]')
             mapID=22
             b.scripts.PreClick(b,'LeftButton',false)
             assert(b:IsShown() and b:GetAlpha()<1 and b.attributes.macrotext1==nil)
@@ -190,7 +263,7 @@ class RareScannerTests(unittest.TestCase):
             tick()
             assert(reads==4)
             option.scripts.OnClick()
-            assert(NS.app.db.rareScannerZone==false and b.attributes.macrotext1=='/targetexact Marked rare')
+            assert(NS.app.db.rareScannerZone==false and b.attributes.macrotext1=='/targetexact Marked rare\\n/cleartarget [dead]')
 
             local kind, instanceID='party',36
             GetInstanceInfo=function() return 'Dungeon',kind,1,'Normal',5,0,false,instanceID end
@@ -205,10 +278,10 @@ class RareScannerTests(unittest.TestCase):
             end
             mapID=nil
             option.scripts.OnClick()
-            assert(b.attributes.macrotext1=='/targetexact Miner Johnson')
+            assert(b.attributes.macrotext1=='/targetexact Miner Johnson\\n/cleartarget [dead]')
             mapID=20
             tick()
-            assert(b.attributes.macrotext1=='/targetexact Miner Johnson')
+            assert(b.attributes.macrotext1=='/targetexact Miner Johnson\\n/cleartarget [dead]')
             mapID=31
             tick()
             local names={}
@@ -221,7 +294,7 @@ class RareScannerTests(unittest.TestCase):
                 and b.attributes.macrotext1:find('Service entrance rare',1,true))
             kind, mapID='none',21
             tick()
-            assert(b.attributes.macrotext1=='/targetexact Other zone rare')
+            assert(b.attributes.macrotext1=='/targetexact Other zone rare\\n/cleartarget [dead]')
         ''')
 
     def test_bar_button_tracks_active_world_map_rare_and_checks_again_on_click(self):
@@ -296,7 +369,24 @@ class RareScannerTests(unittest.TestCase):
             units.target.player=true
             b.scripts.PreClick(b,'LeftButton',false)
             assert(macroHas('Singer'), 'a player with the same name must not block the search')
+            units.target={name='Singer',dead=true}
+            b.scripts.PreClick(b,'LeftButton',false)
+            assert(b.attributes.macrotext1:find('/cleartarget [dead]',1,true),
+                'a single unmarked target must also discard corpses')
             units.target=nil
+            plate('Singer','','')
+            C_Ping={SendMacroPing=function() end}
+            local markers={[2]='/tm ', [3]='/ping '}
+            for mode=1,3 do
+                NS.app.db.targetFeedback={rare=mode}
+                b.scripts.PreClick(b,'LeftButton',false)
+                local macro=b.attributes.macrotext1
+                assert(macro:find('/targetexact [nocombat] Singer',1,true))
+                assert(macro:find('/cleartarget [dead]',1,true) and #macro<=NS.Core.MACRO_BYTES)
+                if markers[mode] then assert(macro:find(markers[mode],1,true)) end
+            end
+            NS.app.db.targetFeedback=nil
+            nameplates, units.nameplate1={}, nil
             rs.db.char.overlayActive[11]=nil
             b.scripts.PreClick(b,'LeftButton',false)
             assert(b.attributes.macrotext1==nil)

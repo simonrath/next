@@ -1,5 +1,5 @@
 local _, NS = ...
-local P = {revision = 0}
+local P = {revision = 0, mapContinents = {}}
 NS.Proximity = P
 
 local function number(value)
@@ -116,6 +116,7 @@ function P.Sample()
         or position.continent ~= previous.continent) then
         -- Retry unavailable map projections when the client enters a new map.
         P.points = {}
+        P.mapContinents = {[position.mapID] = position.continent}
     end
     P.position, P.distances = position, {}
     P.revision = P.revision + 1
@@ -125,6 +126,18 @@ end
 -- These four Era zone frames differ in Forever. Older providers cannot safely
 -- rank their coordinates here without the additive conversion helper.
 local changedFrames = {[215]=true, [139]=true, [44]=true, [1519]=true}
+-- UI maps have a world instance, like the map origin used by HereBeDragons.
+-- Unknown maps still go through individual projection when a center isn't available.
+local function isOnCurrentContinent(mapID)
+    local continent = P.mapContinents[mapID]
+    if continent == nil then
+        local center = P.MapPoint(mapID, 0.5, 0.5)
+        continent = center and center.continent or false
+        P.mapContinents[mapID] = continent
+    end
+    return not continent or continent == P.position.continent
+end
+
 local function npcPoints(npcID)
     if P.points[npcID] then return P.points[npcID] end
     local result = {}
@@ -133,7 +146,8 @@ local function npcPoints(npcID)
     local classicEra = type(interface) == "number" and interface >= 11500 and interface < 11600
     for areaID, coords in pairs(P.Spawns(P.provider, npcID) or {}) do
         local mapID = mapping[areaID]
-        if number(mapID) and mapID > 0 and type(coords) == "table" and CreateVector2D then
+        if number(mapID) and mapID > 0 and type(coords) == "table" and #coords > 0
+            and isOnCurrentContinent(mapID) then
             for _, coord in ipairs(coords) do
                 local x, y = type(coord) == "table" and coord[1], type(coord) == "table" and coord[2]
                 if number(x) and number(y) and x >= 0 and y >= 0 and x <= 100 and y <= 100 then
@@ -231,6 +245,8 @@ function P.Order(entry, force)
     end
     table.sort(entry.nameList, function(a, b)
         if entry.distanceOrder then
+            if a == entry.preferredName then return b ~= entry.preferredName end
+            if b == entry.preferredName then return false end
             if distances[a] ~= distances[b] then return distances[a] < distances[b] end
             return guideOrder[a] < guideOrder[b]
         end

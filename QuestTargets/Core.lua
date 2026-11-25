@@ -526,20 +526,26 @@ function Core.Signature(objective)
     return tostring(objective.type) .. ":" .. Core.ObjectiveLabel(objective.text)
 end
 
-function Core.ReadQuests(watchedOnly)
+function Core.ReadQuests(watchedOnly, includeAll)
     local api = C_QuestLog
     local modern = api and type(api.GetNumQuestLogEntries) == "function" and type(api.GetInfo) == "function"
     local classic = type(GetNumQuestLogEntries) == "function" and type(GetQuestLogTitle) == "function"
     if not api or type(api.GetQuestObjectives) ~= "function" or not (modern or classic) then
         return {}, NS.L("apiMissing")
     end
+    -- The master and filtered list share quest objects from one log traversal.
+    local all = watchedOnly and includeAll and {} or nil
+    local filterError
     if watchedOnly and not (modern and type(api.GetQuestWatchType) == "function")
         and not (classic and type(IsQuestWatched) == "function") then
-        return {}, NS.L("filterMissing")
+        filterError = NS.L("filterMissing")
+        if not all then return {}, filterError end
     end
     local result, seen, pending = {}, {}, false
-    local count = modern and api.GetNumQuestLogEntries() or GetNumQuestLogEntries()
-    if not readable(count) or type(count) ~= "number" then return {}, NS.L("logPending") end
+    local count
+    if modern then count = api.GetNumQuestLogEntries()
+    else count = GetNumQuestLogEntries() end
+    if not readable(count) or type(count) ~= "number" then return {}, filterError or NS.L("logPending"), true end
     local zone
     for index = 1, count do
         local info
@@ -555,8 +561,8 @@ function Core.ReadQuests(watchedOnly)
         elseif info and readable(info.questID) and readable(info.isHeader) and not info.isHeader
             and type(info.questID) == "number" and info.questID > 0 and not seen[info.questID] then
             seen[info.questID] = true
-            local included = true
-            if watchedOnly then
+            local included = not filterError
+            if watchedOnly and included then
                 if modern and type(api.GetQuestWatchType) == "function" then
                     local watch = api.GetQuestWatchType(info.questID)
                     included = readable(watch) and watch ~= nil
@@ -565,7 +571,7 @@ function Core.ReadQuests(watchedOnly)
                     included = readable(watch) and (watch == true or watch == 1)
                 end
             end
-            if included then
+            if included or all then
                 local objectives = api.GetQuestObjectives(info.questID)
                 local ready = not modern and readable(info.complete) and info.complete == 1
                 if type(api.ReadyForTurnIn) == "function" then
@@ -601,11 +607,12 @@ function Core.ReadQuests(watchedOnly)
                 else
                     pending = true
                 end
-                result[#result + 1] = quest
+                if included then result[#result + 1] = quest end
+                if all then all[#all + 1] = quest end
             end
         end
     end
-    return result, nil, pending
+    return result, filterError, pending, all
 end
 
 local function sameResolutionInput(snapshot, quest)

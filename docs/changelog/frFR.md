@@ -2,6 +2,27 @@
 
 Changements pour les joueurs, de la version la plus récente à la plus ancienne. Les indications d’installation historiques s’appliquent à la version indiquée.
 
+## 1.8.2 – 25 nov. 2026
+
+### Follow The Arrow
+- **Nouveau : intégration de Follow The Arrow !** Dans **Boutons et barre**, activez **Suivre les cibles de Follow The Arrow**. Le bouton principal utilise les cibles de l’étape actuelle via **FTA Target**, même sans QuestieDB. Activez la macro dans Follow The Arrow. La version Retail actuelle de Follow The Arrow ne la fournit pas.
+
+Merci à **EscapeKeyEscapee** d’avoir suggéré la prise en charge de Follow The Arrow !
+
+### Polestar
+- Le **bouton principal** essaie d’abord la cible actuelle de Polestar lorsque QuestieDB est absent et que RestedXP ne fournit aucune cible.
+- Si Polestar est votre seul addon de guide, l’alerte signalant l’absence de QuestieDB ne s’affiche plus à la connexion.
+- Le **bouton principal** inclut désormais les créatures indiquées par Polestar pour collecter des objets ou utiliser un objet de quête.
+- Avec Polestar sans QuestieDB, la fenêtre de quête indique comment activer le ciblage Polestar dans Next.
+
+### RareScanner
+- Le **bouton RareScanner** respecte désormais l’option **Afficher les infobulles des boutons**.
+- Avec un seul rare dans la liste, le bouton violet écarte les cibles mortes quel que soit le réglage de marquage.
+- La **recherche par zone** charge les points d’apparition par petits lots. Les noms des cibles sont disponibles immédiatement.
+
+### Performances
+- Les changements de barres d’info ne rechargent plus tout le journal. La barre de ciblage et les boutons de suivi font moins de calculs quand les cibles et les réglages restent identiques.
+
 ## 1.8.1 – 24 nov. 2026
 
 ### Nom de l’addon

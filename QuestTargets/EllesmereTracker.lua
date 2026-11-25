@@ -66,8 +66,11 @@ function Integration.UpdateFocusMarks(app)
     end
 end
 
-function Integration.Sync(app)
+function Integration.Sync(app, periodic)
     if not app.db or InCombatLockdown() then return end
+    local now = GetTime and GetTime()
+    if periodic and now and Integration.nextSync and now < Integration.nextSync then return end
+    Integration.nextSync = now and now + 3
     if Integration.Available() and not Integration.registered then
         Integration.bySlot = {}
         Integration.registered = EllesmereUI.RegisterQuestTrackerRow("QuestTargets", function(slot, questID)
@@ -85,6 +88,7 @@ function Integration.Sync(app)
     if Integration.registered and Integration.Available() and app.db.ellesmereTrackerButtons ~= false then
         for _, entry in ipairs(Core.QuestEntriesFor(app, true)) do byID[entry.questID] = entry end
     end
+    local settings = Core.TargetFeedbackSettings(app.db, "ellesmere")
     for slot, questID in pairs(Integration.slots) do
         local entry = slot:IsVisible() and byID[questID]
         local button = Integration.bySlot and Integration.bySlot[slot]
@@ -98,16 +102,19 @@ function Integration.Sync(app)
                 button:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
                 button.positionX, button.positionY = x, y
             end
-            button:SetFrameStrata(slot:GetFrameStrata())
-            button:SetFrameLevel(slot:GetFrameLevel() + 1)
+            local strata, level = slot:GetFrameStrata(), slot:GetFrameLevel() + 1
+            if button:GetFrameStrata() ~= strata then button:SetFrameStrata(strata) end
+            if button:GetFrameLevel() ~= level then button:SetFrameLevel(level) end
             if button.questID ~= questID then
                 button.fallbackIndex, button.fallbackFinisherIndex = nil, nil
             end
             button.entry, button.questID = entry, questID
-            button:SetAttribute("macrotext1", Core.EntryMacro(entry, Core.TargetFeedbackSettings(app.db, "ellesmere")))
-            button:Show()
-            button.focusMark:SetShown(questID == app.db.focusQuestID)
-        elseif button then
+            local macro = Core.EntryMacro(entry, settings)
+            if button:GetAttribute("macrotext1") ~= macro then button:SetAttribute("macrotext1", macro) end
+            if not button:IsShown() then button:Show() end
+            local focused = questID == app.db.focusQuestID
+            if button.focusMark:IsShown() ~= focused then button.focusMark:SetShown(focused) end
+        elseif button and button.entry then
             clear(button)
         end
     end

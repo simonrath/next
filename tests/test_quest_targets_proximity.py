@@ -32,6 +32,26 @@ class ProximityTests(unittest.TestCase):
         ''')
 
 
+    def test_spawn_projection_skips_other_continents_and_retries_after_travel(self):
+        self.spatial()
+        self.lua.execute('''
+            local p = NS.Proximity
+            local world = C_Map.GetWorldPosFromMapPos
+            local foreign = 0
+            C_Map.GetWorldPosFromMapPos=function(id,pos)
+                if id==999 then foreign=foreign+1 end
+                return world(id,pos)
+            end
+            records.Npc[10].spawns[99]={{51,50},{55,56},{65,52},{70,52}}
+            p.Register(LibQuestieDB,10,'Waldwolf')
+            p.Sample()
+            assert(p.Distance('Waldwolf')==100)
+            assert(foreign==1, 'only classify the other map once')
+            mapID=999
+            p.Sample()
+            assert(p.Distance('Waldwolf')==100, 'project actual spawns after travel')
+        ''')
+
     def test_guide_buttons_rank_stoley_ahead_of_mobs_and_resample_on_click(self):
         for provider in ('restedxp', 'polestar'):
             with self.subTest(provider=provider):

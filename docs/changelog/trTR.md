@@ -2,6 +2,27 @@
 
 Oyuncuları ilgilendiren değişiklikler en yeni sürümden başlayarak sıralanır. Eski kurulum notları yalnızca belirtilen sürüm için geçerlidir.
 
+## 1.8.2 – 25 Kas 2026
+
+### Follow The Arrow
+- **Yeni: Follow The Arrow desteği!** **Düğmeler ve çubuk** altında **Follow The Arrow hedeflerini izle** seçeneğini aç. Ana düğme, QuestieDB olmasa bile **FTA Target** içindeki geçerli rehber adımının hedeflerini kullanır. Makroyu Follow The Arrow’da aç. Follow The Arrow’un güncel Retail sürümü bu makroyu sağlamıyor.
+
+Follow The Arrow desteğini öneren **EscapeKeyEscapee**’ye teşekkürler!
+
+### Polestar
+- QuestieDB yoksa ve RestedXP hedef sağlamıyorsa **ana düğme** önce Polestar’ın geçerli hedefini dener.
+- Tek rehber eklentin Polestar ise girişte QuestieDB eksik uyarısı artık gösterilmez.
+- **Ana düğme** artık Polestar’ın eşya toplamak veya görev eşyası kullanmak için gösterdiği yaratıkları da arar.
+- QuestieDB olmadan Polestar kullanıyorsan görev penceresi Next’te Polestar hedeflemesini nasıl açacağını gösterir.
+
+### RareScanner
+- **RareScanner düğmesi** artık **Düğme ipuçlarını göster** ayarına uyar.
+- Listede tek bir nadir yaratık varsa mor düğme, işaretleme ayarından bağımsız olarak ölü hedefi bırakır.
+- **Bölge araması** doğma noktalarını küçük gruplar hâlinde yükler. Hedef adları hemen kullanılabilir.
+
+### Performans
+- İsim plakası değişiklikleri artık görev günlüğünün tamamını yeniden yüklemez. Hedefler ve ayarlar aynı kaldığında hedef çubuğu ve takip düğmeleri daha az işlem yapar.
+
 ## 1.8.1 – 24 Kas 2026
 
 ### Eklenti adı

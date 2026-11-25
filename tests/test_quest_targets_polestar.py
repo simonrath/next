@@ -29,6 +29,110 @@ class PolestarTests(unittest.TestCase):
             assert(NS.app.db.masterLocked and NS.UI.master.entry.name=='Wolf')
         ''')
 
+    def test_first_click_prefers_polestars_current_goal_without_questiedb_or_restedxp(self):
+        self.lua.execute('''
+            C_AddOns={IsAddOnLoaded=function(name) return name=='Polestar' end}
+            local goals={}
+            for i=1,6 do
+                goals[i]={t='kill',status='pending',subject='Earlier Guide Objective '..i}
+            end
+            goals[7]={t='turnin',status='active',npcName='Current Guide NPC'}
+            local current=7
+            Polestar={Engine={GetStepIndex=function() return 1 end,
+                GetStepView=function() return {current=current,goals=goals} end}}
+            QuestTargetsDB={polestarIntegration=true,restedXPIntegration=true,autoMark=false}
+            boot()
+            assert(not NS.Database.Provider() and not NS.RestedXP.active)
+            local button=NS.UI.master
+            button.scripts.PreClick(button,'LeftButton',false)
+            local macro=button.attributes.macrotext1
+            assert(macro:match('/targetexact %[noexists%] ([^%c]+)')=='Current Guide NPC', macro)
+            assert(#macro<=NS.Core.MACRO_BYTES)
+            current=6
+            button.scripts.PreClick(button,'LeftButton',false)
+            macro=button.attributes.macrotext1
+            assert(macro:match('/targetexact %[noexists%] ([^%c]+)')=='Earlier Guide Objective 6', macro)
+        ''')
+
+    def test_polestar_only_login_skips_missing_questiedb_popup(self):
+        self.lua.execute('''
+            GetBuildInfo=function() return '1.60.1','','',16001 end
+            local installed={Polestar=true}
+            C_AddOns={IsAddOnLoaded=function(name) return installed[name]==true end}
+            local missingDialog='QUESTTARGETS_MISSING_QUESTIEDB'
+            local warnings=0
+            StaticPopupDialogs={}
+            StaticPopup_Show=function(key)
+                if key==missingDialog then warnings=warnings+1 end
+            end
+            boot()
+            assert(warnings==0, 'Polestar-only login showed the QuestieDB warning')
+            installed.RXPGuides=true
+            event('PLAYER_LOGIN')
+            assert(warnings==1)
+            installed.Polestar=nil
+            installed.RXPGuides=nil
+            event('PLAYER_LOGIN')
+            assert(warnings==2)
+        ''')
+
+    def test_missing_database_status_guides_polestar_first_run(self):
+        self.lua.execute('''
+            GetBuildInfo=function() return '1.60.1','','',16001 end
+            C_AddOns={IsAddOnLoaded=function(name) return name=='Polestar' end}
+            Polestar={Engine={GetStepIndex=function() return 1 end,
+                GetStepView=function() return {goals={{t='kill',status='active',subject='Wolf'}}} end}}
+            boot()
+            assert(not NS.app.db.polestarIntegration)
+            assert(NS.UI.database.text:find('Polestar',1,true), 'Missing first-run Polestar guidance')
+            NS.UI.Settings(NS.app)
+            NS.UI.settings.polestarToggle.scripts.OnClick()
+            assert(NS.UI.database.text==NS.L('dbMissing'))
+            assert(NS.UI.master.entry.name=='Wolf')
+        ''')
+
+    def test_current_collect_prioritizes_named_raw_npc_sources(self):
+        self.lua.execute('''
+            local raw={{t='kill',npc=12,target='Previous Mob'},
+                {t='collect',quest=94434,item=2589,
+                    fromNpcs={{npc=6497,npcName='Astor Hadren'},
+                        {npc=3617,npcName='Lordaeron Citizen'}, {npcName='Bad/quit'}}}}
+            Polestar={Names={Npc=function(id) if id==6497 then return 'Localized Astor' end end},
+                Engine={GetStepIndex=function() return 1 end,
+                    GetStepView=function() return {current=2,goals={
+                        {t='kill',status='pending',subject='Previous Mob'},
+                        {t='collect',status='active',subject='Linen Cloth'},
+                    }} end,
+                    GetGuide=function() return {steps={{goals=raw}}} end}}
+            QuestTargetsDB={polestarIntegration=true,autoMark=false}
+            boot()
+            local master=NS.UI.master
+            master.scripts.PreClick(master,'LeftButton',false)
+            local macro=master:GetAttribute('macrotext1')
+            assert(macro:match('/targetexact %[noexists%] ([^%c]+)')=='Localized Astor', macro)
+            assert(master.entry.names['Lordaeron Citizen'])
+            assert(not master.entry.names['Astor Hadren'] and not master.entry.names['Bad/quit'])
+        ''')
+
+    def test_current_use_targets_creatures_from_the_guide(self):
+        self.lua.execute('''
+            local raw={{t='use',item=13892,fromNpcs={
+                {npc=4700,npcName='Aged Kodo'}, {npc=4701,npcName='Dying Kodo'},
+            }}}
+            Polestar={Engine={GetStepIndex=function() return 1 end,
+                GetStepView=function() return {current=1,goals={
+                    {t='use',status='active',subject='Kodo Kombobulator'},
+                }} end,
+                GetGuide=function() return {steps={{goals=raw}}} end}}
+            QuestTargetsDB={polestarIntegration=true,autoMark=false}
+            boot()
+            local master=NS.UI.master
+            master.scripts.PreClick(master,'LeftButton',false)
+            local macro=master:GetAttribute('macrotext1')
+            assert(macro:match('/targetexact %[noexists%] ([^%c]+)')=='Aged Kodo', macro)
+            assert(master.entry.names['Dying Kodo'] and not master.entry.names['Kodo Kombobulator'])
+        ''')
+
     def test_collect_alternative_cycles_and_excludes_unsafe_or_object_sources(self):
         self.lua.execute('''
             Polestar={Engine={GetStepIndex=function() return 1 end,

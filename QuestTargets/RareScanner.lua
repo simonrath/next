@@ -10,16 +10,25 @@ local markHooked = false
 local observedMarks = {}
 local zoneCache
 local spawnCache, spawnCacheExpires = {}, 0
+local SPAWN_BATCH_SIZE = 8
 
 local function ignoreMenuItem() end
 
-local function spawnPoints(npcID, mapID)
-    if type(mapID) ~= "number" or mapID <= 0 or mapID >= 100000
-        or not C_Map or not C_Map.GetMapArtID or not RSExplorerRareList
-        or type(RSExplorerRareList.OnElementSelectionChanged) ~= "function" then return end
+local function canReadSpawns(mapID)
+    return type(mapID) == "number" and mapID > 0 and mapID < 100000
+        and C_Map and C_Map.GetMapArtID and RSExplorerRareList
+        and type(RSExplorerRareList.OnElementSelectionChanged) == "function"
+end
+
+local function cachedSpawns(mapID)
     local now = GetTime()
     if now >= spawnCacheExpires then spawnCache, spawnCacheExpires = {}, now + 60 end
-    local pointsByNpc = spawnCache[mapID]
+    return spawnCache[mapID]
+end
+
+local function spawnPoints(npcID, mapID)
+    if not canReadSpawns(mapID) then return end
+    local pointsByNpc = cachedSpawns(mapID)
     if not pointsByNpc then pointsByNpc = {}; spawnCache[mapID] = pointsByNpc end
     if pointsByNpc[npcID] then return pointsByNpc[npcID] end
 
@@ -209,6 +218,16 @@ local ignoredMenu = {
 function ignoredMenu:CreateButton() return ignoredMenu end
 ignoredMenu.CreateCheckbox = ignoredMenu.CreateButton
 
+local function addZoneSpawns(entry, name, points)
+    if not points or #points == 0 then return end
+    if entry.fallbackPoints[name] then
+        entry.mapPoints[name] = nil
+        entry.fallbackPoints[name] = nil
+    end
+    for _, point in ipairs(points) do addPoint(entry, name, point) end
+    entry.proximityRevision = nil
+end
+
 local function readZoneRares(mapID, entry)
     -- RareScanner builds the NPC filter from its zone catalogue, independently of visible pins.
     -- Collect the submenu labels without opening a menu or invoking any of its actions.
@@ -229,8 +248,23 @@ local function readZoneRares(mapID, entry)
                 entry.names[name] = true
                 entry.nameList[#entry.nameList + 1] = name
             end
-            addSpawnPoints(entry, name, id, mapID)
-            if not entry.mapPoints[name] then addPoint(entry, name, sightingPoint(entry.sightings[id])) end
+            if canReadSpawns(mapID) then
+                local cached = cachedSpawns(mapID)
+                local points = cached and cached[id]
+                if points then
+                    addZoneSpawns(entry, name, points)
+                else
+                    local pending = entry.pendingSpawns
+                    pending[#pending + 1] = {id=id, name=name, mapID=mapID}
+                end
+            end
+            if not entry.mapPoints[name] then
+                local point = sightingPoint(entry.sightings[id])
+                if point then
+                    addPoint(entry, name, point)
+                    entry.fallbackPoints[name] = true
+                end
+            end
         end
         return ignoredMenu
     end
@@ -247,7 +281,7 @@ local function collectZoneRares(mapID, instanceID)
     local db = scannerDB()
     local sightings = db and db.global and db.global.rares_found
     local entry = {nameList = {}, names = {}, refs = {}, mapPoints = {}, sightings = sightings or {},
-        scope = instanceID and ("dungeon:" .. instanceID) or mapID}
+        fallbackPoints = {}, pendingSpawns = {}, scope = instanceID and ("dungeon:" .. instanceID) or mapID}
     local seen = {}
     local function read(id)
         if not id or seen[id] then return end
@@ -272,18 +306,47 @@ local function collectZoneRares(mapID, instanceID)
     return entry
 end
 
-local function searchEntry(app)
-    if app.db.rareScannerZone ~= true then
-        zoneCache = nil
-        return markedEntry(app)
-    end
-    if not Integration.ZoneAvailable() then return end
+local function zoneLocation()
     local mapID = C_Map.GetBestMapForUnit("player")
     local instanceID
     if GetInstanceInfo then
         local _, kind, _, _, _, _, _, id = GetInstanceInfo()
         if kind == "party" and type(id) == "number" and id > 0 then instanceID = id end
     end
+    return mapID, instanceID
+end
+
+local function loadZoneSpawnBatch(app, cache)
+    local entry = cache.entry
+    local pending = entry.pendingSpawns
+    if not pending or cache.scheduled or InCombatLockdown() then return end
+    local last = math.min(cache.cursor + SPAWN_BATCH_SIZE - 1, #pending)
+    for i = cache.cursor, last do
+        local row = pending[i]
+        addZoneSpawns(entry, row.name, spawnPoints(row.id, row.mapID))
+    end
+    cache.cursor = last + 1
+    if cache.cursor > #pending then
+        entry.pendingSpawns, entry.fallbackPoints, entry.sightings = nil, nil, nil
+        return
+    end
+    cache.scheduled = true
+    C_Timer.After(0, function()
+        cache.scheduled = false
+        if zoneCache ~= cache or InCombatLockdown() or app.db.rareScannerZone ~= true
+            or app.db.rareScannerButton == false or not Integration.ZoneAvailable() then return end
+        local mapID, instanceID = zoneLocation()
+        if mapID == cache.mapID and instanceID == cache.instanceID then loadZoneSpawnBatch(app, cache) end
+    end)
+end
+
+local function searchEntry(app)
+    if app.db.rareScannerZone ~= true then
+        zoneCache = nil
+        return markedEntry(app)
+    end
+    if not Integration.ZoneAvailable() then return end
+    local mapID, instanceID = zoneLocation()
     if not mapID and not instanceID then
         zoneCache = nil
         return
@@ -293,9 +356,10 @@ local function searchEntry(app)
         or now >= zoneCache.refreshAt then
         zoneCache = {
             mapID = mapID, instanceID = instanceID, refreshAt = now + 15,
-            entry = collectZoneRares(mapID, instanceID),
+            entry = collectZoneRares(mapID, instanceID), cursor = 1,
         }
     end
+    loadZoneSpawnBatch(app, zoneCache)
     local entry = zoneCache.entry
     if entry and entry.name then return entry end
 end
@@ -323,6 +387,11 @@ local function prepareMarkMacro(target, entry, clicked, db)
         if name then
             local candidate = {name=name, nameList={name}, names={[name]=true}, refs={}}
             macro = core.ClickMacro(candidate, {}, settings, nil, nil, true)
+            if macro and #entry.nameList == 1 then
+                local clearDead = "\n/cleartarget [dead]"
+                if #macro + #clearDead <= core.MACRO_BYTES then macro = macro .. clearDead
+                else macro = core.Macro(name, settings) end
+            end
             target.markIndex = nil
         end
     end
@@ -345,7 +414,7 @@ local function prepareMarkMacro(target, entry, clicked, db)
         target.markKey, target.markScope, target.markIndex, target.markPosition = nil, nil, nil, nil
         if entry then
             macro = (settings.autoMark or settings.autoPing) and NS.Core.Macro(entry.name, settings)
-                or "/targetexact " .. entry.name
+                or "/targetexact " .. entry.name .. "\n/cleartarget [dead]"
         end
     end
     if target:GetAttribute("macrotext1") ~= macro then target:SetAttribute("macrotext1", macro) end
@@ -380,6 +449,7 @@ local function createMarkButton(app)
         end
     end)
     target:SetScript("OnEnter", function(self)
+        if not app.db.showTooltips then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(NS.L("rareScannerButton"))
         GameTooltip:AddLine(NS.L("rareScannerBindingTip"), 1, 1, 1, true)
@@ -397,16 +467,20 @@ local function createMarkButton(app)
 end
 
 function Integration.SyncMark(app)
-    if InCombatLockdown() or not NS.UI.master then return end
+    if InCombatLockdown() or not NS.UI.master then return false end
     observeOverlays()
     local show = Integration.MarkingAvailable() and app.db.rareScannerButton ~= false
     local target = Integration.markButton
-    if not target and show then target = createMarkButton(app) end
-    if not target then return end
+    local created = not target and show
+    if created then target = createMarkButton(app) end
+    if not target then return false end
     if not show then zoneCache = nil end
-    prepareMarkMacro(target, show and searchEntry(app) or nil, false, app.db)
-    if target:IsShown() ~= show then target:SetShown(show) end
-    NS.UI.LayoutTargetButtons(app)
+    local entry = show and searchEntry(app) or nil
+    prepareMarkMacro(target, entry, false, app.db)
+    local visibilityChanged = target:IsShown() ~= show
+    if visibilityChanged then target:SetShown(show) end
+    if created or visibilityChanged then NS.UI.LayoutTargetButtons(app) end
+    return entry or false
 end
 
 local function createFeedback()

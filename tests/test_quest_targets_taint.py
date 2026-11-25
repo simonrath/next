@@ -143,3 +143,34 @@ class TaintDiagnosticsTests(unittest.TestCase):
             event('ADDON_ACTION_BLOCKED','QuestTargets','UseAction()')
             assert(not NS.app.db.taintDiagnostics.events[2].probes.settingsMapAvailable)
         ''')
+
+    def test_periodic_sampling_is_shallow_skips_combat_and_stops(self):
+        self.lua.execute('''
+            boot()
+            local observer
+            for _, frame in ipairs(frames) do
+                if frame.events.ADDON_ACTION_BLOCKED then observer = frame end
+            end
+            local settingsMap = {}
+            for i=1,100 do settingsMap[{variable='option' .. i}] = true end
+            SettingsPanel = {settings=settingsMap}
+            local calls, registryCalls = 0, 0
+            issecurevariable = function(object)
+                calls = calls + 1
+                if object == settingsMap then registryCalls = registryCalls + 1 end
+                return true
+            end
+            combat = true
+            observer.scripts.OnUpdate(observer, 2)
+            assert(calls == 0, 'periodic probes should wait until out of combat')
+            combat = false
+            observer.scripts.OnUpdate(observer, 2)
+            assert(calls > 0 and calls <= 32 and registryCalls == 0)
+            observer.scripts.OnUpdate(observer, 2)
+            assert(observer.scripts.OnUpdate == nil, 'periodic sampling should stop after the startup window')
+
+            combat = true
+            event('ADDON_ACTION_BLOCKED','QuestTargets','UseAction()')
+            assert(registryCalls == 100)
+            assert(NS.app.db.taintDiagnostics.events[1].func == 'UseAction()')
+        ''')

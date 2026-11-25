@@ -280,9 +280,9 @@ function Integration.Sync(app)
         target.inBar = inBar
         target:SetAlpha(inBar and 1 or 0)
         target:EnableMouse(inBar)
+        NS.UI.LayoutTargetButtons(app)
     end
     if inBar and not target:IsShown() then target:Show() end
-    NS.UI.LayoutTargetButtons(app)
     local frame = ui and ui.Frame and ui.Frame.frame
     if not frame then return end
     if not Integration.button then

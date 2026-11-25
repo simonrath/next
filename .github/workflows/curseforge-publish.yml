@@ -24,7 +24,7 @@ concurrency:
 jobs:
   publish:
     if: >-
-      github.repository == 'simonrath/questtargets' &&
+      github.event.repository.id == 1387105477 &&
       (github.event_name == 'workflow_dispatch' ||
        (vars.CURSEFORGE_ENABLED == 'true' && !github.event.release.prerelease && !github.event.release.draft))
     runs-on: ubuntu-latest

@@ -2,6 +2,27 @@
 
 面向玩家的更新记录，按版本从新到旧排列。历史安装说明仅适用于所列版本。
 
+## 1.8.2 – 2026 年 11 月 25 日
+
+### Follow The Arrow
+- **新功能：现已支持 Follow The Arrow！** 在**按钮与栏**中启用**跟随 Follow The Arrow 指南目标**。主按钮会读取 **FTA Target** 中当前指南步骤的目标，无需 QuestieDB。 请在 Follow The Arrow 中启用此宏。Follow The Arrow 的当前正式服版本不提供此宏。
+
+感谢 **EscapeKeyEscapee** 提议支持 Follow The Arrow！
+
+### Polestar
+- 未安装 QuestieDB 且 RestedXP 未提供目标时，**主按钮**会优先尝试选中 Polestar 的当前目标。
+- 仅使用 Polestar 作为指南插件时，登录不再弹出缺少 QuestieDB 的提示。
+- **主按钮**现在也会搜索 Polestar 为收集物品或使用任务物品而指定的生物。
+- 未安装 QuestieDB 时，任务窗口会提示如何在 Next 中启用 Polestar 目标搜索。
+
+### RareScanner
+- **RareScanner 按钮**现在遵循**显示按钮提示**设置。
+- 列表中只有一个稀有怪时，无论标记设置如何，紫色按钮都会清除已死亡的目标。
+- **区域搜索**会分批加载刷新点。目标名称可立即用于搜索。
+
+### 性能
+- 姓名板变化不再触发整个任务日志的刷新。目标栏和任务追踪按钮会减少对未变化目标和设置的重复处理。
+
 ## 1.8.1 – 2026 年 11 月 24 日
 
 ### 插件名称

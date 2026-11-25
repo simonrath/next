@@ -2,6 +2,26 @@
 local _, NS = ...
 NS.PatchNotesData = {
     deDE = {
+        { version = "1.8.2", date = "25.11.2026", sections = {
+                { title = "Follow The Arrow", items = {
+                    "**Neu: Follow The Arrow ist jetzt integriert!** Aktiviere unter **Buttons & Leiste** die Option **Follow-The-Arrow-Guideziele verwenden**. Der Masterbutton übernimmt dann die Ziele des aktuellen Guide-Schritts aus **FTA Target**. Das funktioniert auch ohne QuestieDB. Das Makro muss in Follow The Arrow aktiviert sein. Die aktuelle Retail-Ausgabe von Follow The Arrow stellt es nicht bereit.",
+                    paragraph = "Danke an **EscapeKeyEscapee** für den Vorschlag, Follow The Arrow zu unterstützen!",
+                }},
+                { title = "Polestar", items = {
+                    "Der **Masterbutton** versucht zuerst das aktuelle Polestar-Ziel, wenn QuestieDB fehlt und RestedXP keine Ziele liefert.",
+                    "Wer nur Polestar als Guide verwendet, bekommt beim Einloggen keinen Hinweis auf fehlendes QuestieDB.",
+                    "Der **Masterbutton** berücksichtigt jetzt auch Gegner, die Polestar als Quellen für Sammelziele oder Ziele für den Einsatz eines Questgegenstands vorgibt.",
+                    "Wenn du Polestar ohne QuestieDB verwendest, erklärt das Questfenster, wie du die Polestar-Suche in Next einschaltest.",
+                }},
+                { title = "RareScanner", items = {
+                    "Der **RareScanner-Button** berücksichtigt jetzt die Einstellung **Button-Tooltips anzeigen**.",
+                    "Ist nur ein Rare in der Liste, verwirft der violette Button tote Ziele bei jeder Markierungseinstellung.",
+                    "Die **Zonensuche** lädt Fundorte in kleinen Gruppen. Die Zielnamen stehen sofort zur Suche bereit.",
+                }},
+                { title = "Performance", items = {
+                    "Namensplaketten lösen keine vollständige Questlog-Aktualisierung mehr aus. Die Zielleiste und Tracker-Buttons sparen Arbeit, wenn Ziele und Einstellungen gleich bleiben.",
+                }},
+            }},
         { version = "1.8.1", date = "24.11.2026", sections = {
                 { title = "Addon-Name", items = {
                     "**Next** ist ab Version 1.8.1 der Name des Addons. Deine Einstellungen und Tastenkürzel werden beim Update übernommen.",
@@ -275,6 +295,26 @@ NS.PatchNotesData = {
             }},
     },
     enUS = {
+        { version = "1.8.2", date = "Nov 25, 2026", sections = {
+                { title = "Follow The Arrow", items = {
+                    "**New: Follow The Arrow support!** Under **Buttons & Bar**, enable **Follow The Arrow guide targets**. The master button uses the current guide step’s targets from **FTA Target**, including without QuestieDB. Enable the macro in Follow The Arrow. The current Retail version of Follow The Arrow does not provide it.",
+                    paragraph = "Thanks to **EscapeKeyEscapee** for suggesting Follow The Arrow support!",
+                }},
+                { title = "Polestar", items = {
+                    "The **Master Button** tries the current Polestar target first when QuestieDB is absent and RestedXP provides no targets.",
+                    "If Polestar is your only guide addon, the missing QuestieDB popup no longer appears at login.",
+                    "The **Master Button** now includes creatures Polestar lists for collecting items or using a quest item.",
+                    "When you use Polestar without QuestieDB, the quest window shows how to enable Polestar targeting in Next.",
+                }},
+                { title = "RareScanner", items = {
+                    "The **RareScanner button** now respects **Show button tooltips**.",
+                    "With a single rare in the list, the purple button clears dead targets with every marking setting.",
+                    "**Zone search** loads spawn locations in small batches. Target names are available immediately.",
+                }},
+                { title = "Performance", items = {
+                    "Nameplate changes no longer reload the entire quest log. The targeting bar and tracker buttons do less work when targets and settings stay the same.",
+                }},
+            }},
         { version = "1.8.1", date = "Nov 24, 2026", sections = {
                 { title = "Addon name", items = {
                     "**Next** is the addon's name starting with version 1.8.1. Your settings and keybinds carry over when you update.",
@@ -548,6 +588,26 @@ NS.PatchNotesData = {
             }},
     },
     esES = {
+        { version = "1.8.2", date = "25 nov 2026", sections = {
+                { title = "Follow The Arrow", items = {
+                    "**Novedad: integración con Follow The Arrow.** En **Botones y barra**, activa **Seguir objetivos de Follow The Arrow**. El botón principal usa los objetivos del paso actual de la macro **FTA Target**, incluso sin QuestieDB. Activa la macro en Follow The Arrow. La versión Retail actual de Follow The Arrow no la incluye.",
+                    paragraph = "¡Gracias a **EscapeKeyEscapee** por sugerir la integración con Follow The Arrow!",
+                }},
+                { title = "Polestar", items = {
+                    "El **botón principal** intenta seleccionar primero el objetivo actual de Polestar si falta QuestieDB y RestedXP no aporta objetivos.",
+                    "Si Polestar es tu único addon de guías, al iniciar sesión ya no aparece el aviso de que falta QuestieDB.",
+                    "El **botón principal** incluye ahora a las criaturas que Polestar indica para recoger o usar objetos de misión.",
+                    "Si usas Polestar sin QuestieDB, la ventana de misiones indica cómo activar la búsqueda de Polestar en Next.",
+                }},
+                { title = "RareScanner", items = {
+                    "El **botón de RareScanner** ahora respeta la opción **Mostrar descripciones de botones**.",
+                    "Si solo hay un raro en la lista, el botón morado deselecciona los objetivos muertos con cualquier ajuste de marcado.",
+                    "La **búsqueda por zona** carga los puntos de aparición en pequeños grupos. Los nombres están disponibles de inmediato.",
+                }},
+                { title = "Rendimiento", items = {
+                    "Los cambios en las placas de nombre ya no recargan todo el registro de misiones. La barra de objetivos y los botones del rastreador hacen menos trabajo cuando los objetivos y los ajustes no cambian.",
+                }},
+            }},
         { version = "1.8.1", date = "24 nov 2026", sections = {
                 { title = "Nombre del addon", items = {
                     "**Next** es el nombre del addon a partir de la versión 1.8.1. Al actualizar, se conservan tus ajustes y atajos de teclado.",
@@ -821,6 +881,26 @@ NS.PatchNotesData = {
             }},
     },
     frFR = {
+        { version = "1.8.2", date = "25 nov. 2026", sections = {
+                { title = "Follow The Arrow", items = {
+                    "**Nouveau : intégration de Follow The Arrow !** Dans **Boutons et barre**, activez **Suivre les cibles de Follow The Arrow**. Le bouton principal utilise les cibles de l’étape actuelle via **FTA Target**, même sans QuestieDB. Activez la macro dans Follow The Arrow. La version Retail actuelle de Follow The Arrow ne la fournit pas.",
+                    paragraph = "Merci à **EscapeKeyEscapee** d’avoir suggéré la prise en charge de Follow The Arrow !",
+                }},
+                { title = "Polestar", items = {
+                    "Le **bouton principal** essaie d’abord la cible actuelle de Polestar lorsque QuestieDB est absent et que RestedXP ne fournit aucune cible.",
+                    "Si Polestar est votre seul addon de guide, l’alerte signalant l’absence de QuestieDB ne s’affiche plus à la connexion.",
+                    "Le **bouton principal** inclut désormais les créatures indiquées par Polestar pour collecter des objets ou utiliser un objet de quête.",
+                    "Avec Polestar sans QuestieDB, la fenêtre de quête indique comment activer le ciblage Polestar dans Next.",
+                }},
+                { title = "RareScanner", items = {
+                    "Le **bouton RareScanner** respecte désormais l’option **Afficher les infobulles des boutons**.",
+                    "Avec un seul rare dans la liste, le bouton violet écarte les cibles mortes quel que soit le réglage de marquage.",
+                    "La **recherche par zone** charge les points d’apparition par petits lots. Les noms des cibles sont disponibles immédiatement.",
+                }},
+                { title = "Performances", items = {
+                    "Les changements de barres d’info ne rechargent plus tout le journal. La barre de ciblage et les boutons de suivi font moins de calculs quand les cibles et les réglages restent identiques.",
+                }},
+            }},
         { version = "1.8.1", date = "24 nov. 2026", sections = {
                 { title = "Nom de l’addon", items = {
                     "**Next** est le nom de l’addon à partir de la version 1.8.1. Vos réglages et raccourcis sont conservés lors de la mise à jour.",
@@ -1094,6 +1174,26 @@ NS.PatchNotesData = {
             }},
     },
     trTR = {
+        { version = "1.8.2", date = "25 Kas 2026", sections = {
+                { title = "Follow The Arrow", items = {
+                    "**Yeni: Follow The Arrow desteği!** **Düğmeler ve çubuk** altında **Follow The Arrow hedeflerini izle** seçeneğini aç. Ana düğme, QuestieDB olmasa bile **FTA Target** içindeki geçerli rehber adımının hedeflerini kullanır. Makroyu Follow The Arrow’da aç. Follow The Arrow’un güncel Retail sürümü bu makroyu sağlamıyor.",
+                    paragraph = "Follow The Arrow desteğini öneren **EscapeKeyEscapee**’ye teşekkürler!",
+                }},
+                { title = "Polestar", items = {
+                    "QuestieDB yoksa ve RestedXP hedef sağlamıyorsa **ana düğme** önce Polestar’ın geçerli hedefini dener.",
+                    "Tek rehber eklentin Polestar ise girişte QuestieDB eksik uyarısı artık gösterilmez.",
+                    "**Ana düğme** artık Polestar’ın eşya toplamak veya görev eşyası kullanmak için gösterdiği yaratıkları da arar.",
+                    "QuestieDB olmadan Polestar kullanıyorsan görev penceresi Next’te Polestar hedeflemesini nasıl açacağını gösterir.",
+                }},
+                { title = "RareScanner", items = {
+                    "**RareScanner düğmesi** artık **Düğme ipuçlarını göster** ayarına uyar.",
+                    "Listede tek bir nadir yaratık varsa mor düğme, işaretleme ayarından bağımsız olarak ölü hedefi bırakır.",
+                    "**Bölge araması** doğma noktalarını küçük gruplar hâlinde yükler. Hedef adları hemen kullanılabilir.",
+                }},
+                { title = "Performans", items = {
+                    "İsim plakası değişiklikleri artık görev günlüğünün tamamını yeniden yüklemez. Hedefler ve ayarlar aynı kaldığında hedef çubuğu ve takip düğmeleri daha az işlem yapar.",
+                }},
+            }},
         { version = "1.8.1", date = "24 Kas 2026", sections = {
                 { title = "Eklenti adı", items = {
                     "**Next**, 1.8.1 sürümünden itibaren eklentinin adıdır. Güncelleme sırasında ayarların ve tuş atamaların korunur.",
@@ -1367,6 +1467,26 @@ NS.PatchNotesData = {
             }},
     },
     zhCN = {
+        { version = "1.8.2", date = "2026 年 11 月 25 日", sections = {
+                { title = "Follow The Arrow", items = {
+                    "**新功能：现已支持 Follow The Arrow！** 在**按钮与栏**中启用**跟随 Follow The Arrow 指南目标**。主按钮会读取 **FTA Target** 中当前指南步骤的目标，无需 QuestieDB。 请在 Follow The Arrow 中启用此宏。Follow The Arrow 的当前正式服版本不提供此宏。",
+                    paragraph = "感谢 **EscapeKeyEscapee** 提议支持 Follow The Arrow！",
+                }},
+                { title = "Polestar", items = {
+                    "未安装 QuestieDB 且 RestedXP 未提供目标时，**主按钮**会优先尝试选中 Polestar 的当前目标。",
+                    "仅使用 Polestar 作为指南插件时，登录不再弹出缺少 QuestieDB 的提示。",
+                    "**主按钮**现在也会搜索 Polestar 为收集物品或使用任务物品而指定的生物。",
+                    "未安装 QuestieDB 时，任务窗口会提示如何在 Next 中启用 Polestar 目标搜索。",
+                }},
+                { title = "RareScanner", items = {
+                    "**RareScanner 按钮**现在遵循**显示按钮提示**设置。",
+                    "列表中只有一个稀有怪时，无论标记设置如何，紫色按钮都会清除已死亡的目标。",
+                    "**区域搜索**会分批加载刷新点。目标名称可立即用于搜索。",
+                }},
+                { title = "性能", items = {
+                    "姓名板变化不再触发整个任务日志的刷新。目标栏和任务追踪按钮会减少对未变化目标和设置的重复处理。",
+                }},
+            }},
         { version = "1.8.1", date = "2026 年 11 月 24 日", sections = {
                 { title = "插件名称", items = {
                     "从 1.8.1 版起，插件更名为 **Next**。更新时会保留你的设置和按键绑定。",

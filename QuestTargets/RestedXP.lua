@@ -83,38 +83,43 @@ local function polestarNames(validNames)
     local friendlyTypes = {accept=true, turnin=true, talk=true, train=true, vendor=true,
         buy=true, auction=true, sethome=true, getfp=true, learn=true}
     local names, friendly, seen, npcIDs, points = {}, {}, {}, {}, {}
-    local function addName(raw, isFriendly, explicitFriendly)
-        local name = Core.SafeName(raw)
-        if name and not seen[name] then
+    local function npcName(id, name)
+        if id and ps.Names and type(ps.Names.Npc) == "function" then
+            local found, localized = pcall(ps.Names.Npc, id)
+            if found and localized then return localized end
+        end
+        return name
+    end
+    local function addName(name, isFriendly, explicitFriendly, id)
+        if not name then return end
+        if not seen[name] then
             seen[name] = true
             names[#names + 1] = name
         end
-        if name and isFriendly and (explicitFriendly or not validNames[name]) then friendly[name] = true end
+        if isFriendly and (explicitFriendly or not validNames[name]) then friendly[name] = true end
+        if type(id) == "number" and id > 0 then npcIDs[name] = id end
     end
+    local preferredName
     for i, goal in ipairs(view.goals) do
         if type(goal) == "table" and (goal.status == "active" or goal.status == "pending") then
             local source = type(raw[i]) == "table" and raw[i] or {}
             local kind = goal.t
-            if kind == "kill" or kind == "collect" or friendlyTypes[kind] then
-                local chosen = goal.npc ~= nil or goal.npcName ~= nil
+            local npcSources = (kind == "kill" or kind == "collect" or kind == "use") and source.fromNpcs
+            if kind == "kill" or kind == "collect" or friendlyTypes[kind] or type(npcSources) == "table" then
                 local id, name
-                if chosen then id, name = goal.npc, goal.npcName
-                else id, name = source.npc, source.npcName end
-                if id and ps.Names and type(ps.Names.Npc) == "function" then
-                    local found, localized = pcall(ps.Names.Npc, id)
-                    if found and localized then name = localized end
+                if kind ~= "use" then
+                    if goal.npc ~= nil or goal.npcName ~= nil then id, name = goal.npc, goal.npcName
+                    else id, name = source.npc, source.npcName end
+                    name = npcName(id, name)
                 end
                 if not name and kind == "kill" then name = goal.subject or source.target end
-                if not name and kind == "collect" and type(goal.source) == "table"
-                    and goal.source.kind == "npc" then name = goal.source.name end
                 local collectSource = kind == "collect" and type(goal.source) == "table"
                     and goal.source.kind == "npc" and goal.source or nil
+                if not name and collectSource then name = collectSource.name end
                 local sourceFriendly = collectSource and collectSource.enemy == false
-                local isSource = collectSource and Core.SafeName(name) ~= nil
-                    and Core.SafeName(name) == Core.SafeName(collectSource.name)
-                addName(name, friendlyTypes[kind] or (sourceFriendly and isSource), sourceFriendly and isSource)
                 local safe = Core.SafeName(name)
-                if safe and type(id) == "number" and id > 0 then npcIDs[safe] = id end
+                local isSource = sourceFriendly and safe and safe == Core.SafeName(collectSource.name)
+                addName(safe, friendlyTypes[kind] or isSource, isSource, id)
                 if safe and friendlyTypes[kind] and goal.f ~= "e"
                     and type(goal.x) == "number" and type(goal.y) == "number"
                     and (goal.x ~= 0 or goal.y ~= 0) then
@@ -125,25 +130,91 @@ local function polestarNames(validNames)
                         points[safe] = locations
                     end
                 end
-                if kind == "collect" and type(goal.source) == "table" and goal.source.kind == "npc" then
-                    addName(goal.source.also, sourceFriendly, sourceFriendly)
+                if collectSource then
+                    local alternative = Core.SafeName(collectSource.also)
+                    addName(alternative, sourceFriendly, sourceFriendly)
+                    safe = safe or alternative
+                end
+                if type(npcSources) == "table" then
+                    for _, candidate in ipairs(npcSources) do
+                        if type(candidate) == "table" then
+                            local candidateName = Core.SafeName(npcName(candidate.npc, candidate.npcName))
+                            addName(candidateName, nil, nil, candidate.npc)
+                            safe = safe or candidateName
+                        end
+                    end
+                end
+                if i == view.current then preferredName = safe end
+            end
+        end
+    end
+    return names, friendly, npcIDs, points, preferredName
+end
+
+function Integration.FollowTheArrowAvailable()
+    local isLoaded = C_AddOns and C_AddOns.IsAddOnLoaded or IsAddOnLoaded
+    return not Core.IsRetail() and type(isLoaded) == "function" and isLoaded("FollowTheArrow") == true
+        and type(GetMacroIndexByName) == "function" and type(GetMacroBody) == "function"
+end
+
+local function followTheArrowNames(validNames)
+    if not Integration.FollowTheArrowAvailable() then return end
+    local progress = FTACharDB and FTACharDB.progress
+    if not progress or type(progress.activeModuleId) ~= "string" or progress.activeModuleId == "" then return end
+    local profile = FTADB and FTADB.profile
+    if profile and profile.general and profile.general.enableTargetingMacro == false then return end
+    local index = GetMacroIndexByName("FTA Target")
+    if type(index) ~= "number" or index <= 0 then return end
+    local body = GetMacroBody(index)
+    if not Core.Readable(body) or type(body) ~= "string" or #body > Core.MACRO_BYTES then return end
+
+    -- Harldan's guide publishes localized targets in its own macro. Read just
+    -- the generated target block, never its optional marker or guide commands.
+    local lines = (body .. "\n"):gmatch("([^\r\n]*)\r?\n")
+    if lines() ~= "/cleartarget" then return end
+    local names, friendly = {}, {}
+    for slot = 1, 5 do
+        local line = lines()
+        if not line then break end
+        local pattern = slot == 1 and "^/targetexact (.+)$" or "^/targetexact %[noexists%] (.+)$"
+        local name = Core.SafeName(line:match(pattern))
+        if not name or lines() ~= "/cleartarget [dead]" then break end
+        names[#names + 1] = name
+        if not validNames[name] then friendly[name] = true end
+    end
+    return names, friendly
+end
+
+local function readRestedTargets(rxp, base)
+    if not rxp then return end
+    local names, friendly = currentNames(rxp, base.names)
+    for _, name in ipairs(names) do
+        if base.finisherNames[name] then friendly[name] = true end
+    end
+    return {names=names, friendly=friendly}
+end
+
+local function sameRanking(entry, previous)
+    if not previous or previous.proximityRevision ~= Proximity.revision
+        or previous.sourceOrder ~= entry.sourceOrder or previous.preferredName ~= entry.preferredName
+        or previous.title ~= entry.title then return false end
+    for _, name in ipairs(entry.nameList) do
+        if entry.finisherNames[name] ~= previous.finisherNames[name] then return false end
+        local points, old = entry.mapPoints[name], previous.mapPoints[name]
+        if points ~= old then
+            if not points or not old or #points ~= #old then return false end
+            for index, point in ipairs(points) do
+                local prior = old[index]
+                if point.continent ~= prior.continent or point.x ~= prior.x or point.y ~= prior.y then
+                    return false
                 end
             end
         end
     end
-    return names, friendly, npcIDs, points
+    return true
 end
 
-local function readGuide(provider, baseNames)
-    if provider == "restedxp" then
-        local rxp = restedXP()
-        if rxp then return currentNames(rxp, baseNames) end
-    elseif provider == "polestar" then
-        return polestarNames(baseNames)
-    end
-end
-
-local function rankedEntry(app, base)
+local function rankedEntry(app, base, rxpTargets, rareEntry, previous)
     local db = NS.Database.Provider()
     local entry = {nameList={}, names={}, finisherNames={}, refs={}, mapPoints={}, distanceOrder=true,
         title=NS.L(base and "active" or "restedXPButton"), questID=0}
@@ -171,36 +242,50 @@ local function rankedEntry(app, base)
     local questEntry = UI.master.defaultEntry
     local baseNames = questEntry.names or {}
     local useModules = app.db.masterAllModules ~= false
-    if app.db.restedXPIntegration and (not base or useModules) then
-        local names, friendly = readGuide("restedxp", baseNames)
-        for _, name in ipairs(names or {}) do
-            if questEntry.finisherNames and questEntry.finisherNames[name] then friendly[name] = true end
-        end
-        add(names, friendly, {})
+    if rxpTargets and (not base or useModules) then
+        add(rxpTargets.names, rxpTargets.friendly, {})
     end
     if base and useModules then
-        if app.db.polestarIntegration then add(readGuide("polestar", baseNames)) end
-        local itemTree = NS.ItemTree.SearchEntry(app)
-        local rareScanner = NS.RareScanner.SearchEntry(app)
-        if itemTree then add(itemTree.nameList, itemTree.finisherNames, {}, itemTree.mapPoints) end
-        if rareScanner then add(rareScanner.nameList, rareScanner.finisherNames, nil, rareScanner.mapPoints) end
-    end
-    if base then
-        local hasModules = hasSources
-        add(base.nameList, base.finisherNames)
-        if not hasModules then
-            Proximity.Order(entry)
-            if not entry.name or not Proximity.EntryDistance(entry, entry.name) then return base end
+        if app.db.polestarIntegration then
+            local names, friendly, ids, points, preferred = polestarNames(baseNames)
+            -- Without QuestieDB or active RestedXP targets, Polestar supplies the
+            -- first choice even if other names have better coordinate data.
+            if not db and not hasSources then entry.preferredName = preferred end
+            add(names, friendly, ids, points)
         end
+        if app.db.followTheArrowIntegration then
+            local names, friendly = followTheArrowNames(baseNames)
+            if names then
+                if not db and not hasSources then entry.preferredName = names[1] end
+                add(names, friendly, {})
+            end
+        end
+        local itemTree = NS.ItemTree.SearchEntry(app)
+        if rareEntry == nil then rareEntry = NS.RareScanner.SearchEntry(app) end
+        if itemTree then add(itemTree.nameList, itemTree.finisherNames, {}, itemTree.mapPoints) end
+        if rareEntry then add(rareEntry.nameList, rareEntry.finisherNames, nil, rareEntry.mapPoints) end
     end
-    if #entry.nameList == 0 then return end
+    local hasModules = hasSources
+    if base then
+        if not hasModules and (not Proximity.position or base.noDistanceRevision == Proximity.revision) then return base end
+        add(base.nameList, base.finisherNames)
+    end
+    if #entry.nameList == 0 then return base end
+    entry.sourceOrder = table.concat(entry.nameList, "\n")
+    if sameRanking(entry, previous) then return previous end
     Proximity.Order(entry)
+    if base and not hasModules and not Proximity.EntryDistance(entry, entry.name) then
+        base.noDistanceRevision = Proximity.revision
+        return base
+    end
     return entry
 end
 
 local function prepareClick(app, button, base, setting)
     Proximity.Sample()
-    local entry = rankedEntry(app, base)
+    local rxp = app.db.restedXPIntegration and (not base or app.db.masterAllModules ~= false) and restedXP()
+    local rxpTargets = readRestedTargets(rxp, UI.master.defaultEntry)
+    local entry = rankedEntry(app, base, rxpTargets, nil, button.entry)
     button.entry = entry
     local settings = Core.TargetFeedbackSettings(app.db, setting)
     Core.SetClickMacro(button, Core.ClickMacro(entry, {}, settings, button, nil, true), app.db)
@@ -251,21 +336,25 @@ local function createButton()
     return button
 end
 
-function Integration.Sync(app)
+function Integration.Sync(app, rareEntry)
     if InCombatLockdown() or not app.db or not UI.master then return end
     local rxp = app.db.restedXPIntegration and restedXP()
     Integration.active = rxp and true or false
     local polestar = app.db.polestarIntegration and _G.Polestar and type(_G.Polestar.Engine) == "table"
     if rxp or polestar or app.db.itemTreeButton then Proximity.PrepareNameIndex(NS.Database.Provider()) end
-    UI.master.entry = rankedEntry(app, UI.master.defaultEntry)
+    local rxpTargets = readRestedTargets(rxp, UI.master.defaultEntry)
+    UI.master.entry = rankedEntry(app, UI.master.defaultEntry, rxpTargets, rareEntry, UI.master.entry)
     prepareCombatMacro(app, UI.master, "master")
     if rxp and not Integration.button then Integration.button = createButton() end
-    if Integration.button then
-        Integration.button.entry = rxp and rankedEntry(app) or nil
-        prepareCombatMacro(app, Integration.button, "restedXP")
-        if Integration.button:IsShown() ~= Integration.active then Integration.button:SetShown(Integration.active) end
+    local button = Integration.button
+    if button then
+        button.entry = rxpTargets and rankedEntry(app, nil, rxpTargets, nil, button.entry) or nil
+        prepareCombatMacro(app, button, "restedXP")
+        if button:IsShown() ~= Integration.active then
+            button:SetShown(Integration.active)
+            UI.LayoutTargetButtons(app)
+        end
     end
-    UI.LayoutTargetButtons(app)
 end
 
 function Integration.PreClick(app, button)

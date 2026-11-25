@@ -46,6 +46,29 @@ class EllesmereTrackerTests(unittest.TestCase):
             assert(not panel.ellesmereOffsetControl.slider.enabled)
         ''')
 
+    def test_idle_tracker_uses_callback_and_skips_redundant_secure_writes(self):
+        self.tracker()
+        self.lua.execute('''
+            local now=0
+            GetTime=function() return now end
+            boot()
+            local slot=CreateFrame('Frame',nil,UIParent)
+            rowCallback(slot,1); flush()
+            local button=NS.EllesmereTracker.buttons[1]
+            local writes, reads=0,0
+            local setAttribute, getCenter=button.SetAttribute,slot.GetCenter
+            button.SetAttribute=function(self,...) writes=writes+1; return setAttribute(self,...) end
+            slot.GetCenter=function(self) reads=reads+1; return getCenter(self) end
+            now=1
+            NS.EllesmereTracker.Sync(NS.app,true)
+            assert(reads==0, 'row callback should handle immediate changes')
+            now=3
+            NS.EllesmereTracker.Sync(NS.app,true)
+            assert(reads==1 and writes==0, 'periodic check must not rewrite an identical secure macro')
+            rowCallback(slot,999); flush()
+            assert(not button:IsShown())
+        ''')
+
     def test_row_reuse_visibility_focus_and_combat(self):
         self.tracker()
         self.lua.execute('''

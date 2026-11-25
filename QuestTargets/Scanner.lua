@@ -2,19 +2,31 @@ local _, NS = ...
 local Core = NS.Core
 local Scanner = {cursor = 1}
 NS.Scanner = Scanner
+local tooltipReads, tooltipQuests = {}, nil
+local TOOLTIP_RECHECK = 3
+
+function Scanner.Invalidate(unit)
+    if Core.Readable(unit) and type(unit) == "string" then tooltipReads[unit] = nil end
+end
+
+local function questTitles(quests)
+    local titles = {}
+    for _, quest in ipairs(quests) do
+        local title = quest.title
+        if titles[title] ~= nil then titles[title] = false
+        else titles[title] = quest end
+    end
+    return titles
+end
 
 -- Match typed Blizzard quest lines to the player's actual open objectives.
 -- A title alone is never enough to associate an NPC with a specific objective.
-function Scanner.Match(quests, data)
+function Scanner.Match(quests, data, titles)
     local result, seen = {}, {}
     local enums = Enum and Enum.TooltipDataLineType
     if not enums or not Core.Readable(data) or type(data) ~= "table"
         or not Core.Readable(data.lines) or type(data.lines) ~= "table" then return result end
-    local titles = {}
-    for _, quest in ipairs(quests) do
-        if titles[quest.title] ~= nil then titles[quest.title] = false
-        else titles[quest.title] = quest end
-    end
+    titles = titles or questTitles(quests)
     local current
     for _, line in ipairs(data.lines) do
         if not Core.Readable(line) or type(line) ~= "table" or not Core.Readable(line.type)
@@ -71,7 +83,7 @@ function Scanner.Prune(quests, learned)
     end
 end
 
-function Scanner.Unit(unit, quests, learned)
+function Scanner.Unit(unit, quests, learned, titles, now)
     if InCombatLockdown() or not Scanner.Available() or type(unit) ~= "string" then return false end
     local exists = UnitExists(unit)
     local player, attackable, dead = UnitIsPlayer(unit), UnitCanAttack("player", unit), UnitIsDeadOrGhost(unit)
@@ -79,13 +91,21 @@ function Scanner.Unit(unit, quests, learned)
         or not Core.Readable(dead) or not exists or player or not attackable or dead then return false end
     local name = Core.SafeName(UnitName(unit))
     if not name then return false end
+    local guid = now and UnitGUID and UnitGUID(unit)
+    local track = Core.Readable(guid) and type(guid) == "string"
+    local previous = track and tooltipReads[unit]
+    if previous and previous.guid == guid and previous.name == name and now < previous.retryAt then return false end
     -- This reads tooltip data directly from a nameplate token. No target change,
     -- mouseover, visible tooltip, synthetic click, or CVar change is involved.
     local ok, data = pcall(C_TooltipInfo.GetUnit, unit)
     if not ok then Scanner.lastError = true; return false end
     if name ~= Core.SafeName(UnitName(unit)) then return false end
+    if track and Core.Readable(data) and type(data) == "table"
+        and Core.Readable(data.lines) and type(data.lines) == "table" and #data.lines > 0 then
+        tooltipReads[unit] = {guid=guid, name=name, retryAt=now + TOOLTIP_RECHECK}
+    end
     local changed = false
-    for _, ref in ipairs(Scanner.Match(quests, data)) do
+    for _, ref in ipairs(Scanner.Match(quests, data, titles)) do
         local saved = learned[ref.key]
         if type(saved) ~= "table" or saved.signature ~= ref.signature or type(saved.names) ~= "table" then
             saved = {signature = ref.signature, names = {}}
@@ -98,6 +118,7 @@ end
 
 function Scanner.Scan(quests, learned)
     if InCombatLockdown() then return false end
+    if tooltipQuests ~= quests then tooltipReads, tooltipQuests = {}, quests end
     if #quests == 0 then Scanner.status = nil; return false end
     if not Scanner.Available() then
         Scanner.status = NS.L("scannerUnavailable")
@@ -115,15 +136,18 @@ function Scanner.Scan(quests, learned)
     end
     -- Stable order makes bounded periodic retries reach every visible nameplate.
     table.sort(units)
+    for unit in pairs(tooltipReads) do
+        if not seen[unit] then tooltipReads[unit] = nil end
+    end
     if #units == 0 then
         Scanner.status = NS.L("scannerPlates")
         return false
     end
-    local changed = false
+    local changed, titles, now = false, questTitles(quests), GetTime and GetTime()
     Scanner.cursor = math.min(Scanner.cursor, #units)
     for offset = 0, math.min(#units, 12) - 1 do
         local index = (Scanner.cursor + offset - 1) % #units + 1
-        if Scanner.Unit(units[index], quests, learned) then changed = true end
+        if Scanner.Unit(units[index], quests, learned, titles, now) then changed = true end
     end
     Scanner.cursor = (Scanner.cursor + math.min(#units, 12) - 1) % #units + 1
     if Scanner.lastError then Scanner.status = NS.L("scannerLimited") end

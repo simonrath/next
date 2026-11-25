@@ -10,7 +10,7 @@ local bars = {"ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightBu
     "MultiBarRightButton", "MultiBarLeftButton", "MultiBar5Button", "MultiBar6Button",
     "MultiBar7Button"}
 
-local function snapshot()
+local function snapshot(shallow)
     local result, count = {}, 0
     local probes = {available=type(issecurevariable) == "function", attempted=0, failed=0,
         settingsMapAvailable=false, settingsEntriesScanned=0, settingsScanTruncated=false}
@@ -38,6 +38,7 @@ local function snapshot()
         inspect(panel, key, "SettingsPanel." .. key)
     end
     inspect(panel, "settings", "SettingsPanel.settings")
+    if shallow then return result, probes end
     local map = read(panel, "settings")
     if type(map) == "table" then
         probes.settingsMapAvailable = true
@@ -91,10 +92,10 @@ local function report(app)
     return saved
 end
 
-function D.Sample(app, phase)
+function D.Sample(app, phase, shallow)
     if not app or not app.db then return end
     if firstCaptured then return end
-    local values, probes = snapshot()
+    local values, probes = snapshot(shallow)
     if next(values) then
         report(app).first = {phase=phase, elapsed=GetTime and GetTime() or 0,
             fields=values, probes=probes}
@@ -141,15 +142,18 @@ function D.Print(app)
 end
 
 -- Observe only: no hooks, native-frame writes, protected calls or automatic reload.
-local frame, elapsed = CreateFrame("Frame"), 0
+local frame, elapsed, samples = CreateFrame("Frame"), 0, 0
 frame:RegisterEvent("ADDON_ACTION_BLOCKED")
 frame:RegisterEvent("ADDON_ACTION_FORBIDDEN")
 frame:SetScript("OnEvent", function(_, event, source, func)
     if source == addonName then D.Capture(NS.app, event, func) end
 end)
-frame:SetScript("OnUpdate", function(_, delta)
+-- Look for early global changes during startup. Full snapshots are event-driven.
+frame:SetScript("OnUpdate", function(self, delta)
     elapsed = elapsed + delta
     if elapsed < 2 then return end
     elapsed = 0
-    D.Sample(NS.app, "periodic")
+    samples = samples + 1
+    if not InCombatLockdown() then D.Sample(NS.app, "periodic", true) end
+    if firstCaptured or samples >= 3 then self:SetScript("OnUpdate", nil) end
 end)

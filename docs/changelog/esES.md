@@ -2,6 +2,27 @@
 
 Cambios para jugadores, empezando por la versión más reciente. Las indicaciones de instalación históricas se aplican a la versión indicada.
 
+## 1.8.2 – 25 nov 2026
+
+### Follow The Arrow
+- **Novedad: integración con Follow The Arrow.** En **Botones y barra**, activa **Seguir objetivos de Follow The Arrow**. El botón principal usa los objetivos del paso actual de la macro **FTA Target**, incluso sin QuestieDB. Activa la macro en Follow The Arrow. La versión Retail actual de Follow The Arrow no la incluye.
+
+¡Gracias a **EscapeKeyEscapee** por sugerir la integración con Follow The Arrow!
+
+### Polestar
+- El **botón principal** intenta seleccionar primero el objetivo actual de Polestar si falta QuestieDB y RestedXP no aporta objetivos.
+- Si Polestar es tu único addon de guías, al iniciar sesión ya no aparece el aviso de que falta QuestieDB.
+- El **botón principal** incluye ahora a las criaturas que Polestar indica para recoger o usar objetos de misión.
+- Si usas Polestar sin QuestieDB, la ventana de misiones indica cómo activar la búsqueda de Polestar en Next.
+
+### RareScanner
+- El **botón de RareScanner** ahora respeta la opción **Mostrar descripciones de botones**.
+- Si solo hay un raro en la lista, el botón morado deselecciona los objetivos muertos con cualquier ajuste de marcado.
+- La **búsqueda por zona** carga los puntos de aparición en pequeños grupos. Los nombres están disponibles de inmediato.
+
+### Rendimiento
+- Los cambios en las placas de nombre ya no recargan todo el registro de misiones. La barra de objetivos y los botones del rastreador hacen menos trabajo cuando los objetivos y los ajustes no cambian.
+
 ## 1.8.1 – 24 nov 2026
 
 ### Nombre del addon

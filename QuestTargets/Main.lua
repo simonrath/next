@@ -20,6 +20,9 @@ local function selectDatabaseLink(self)
 end
 local function showMissingDatabase()
     if Core.IsRetail() or LibQuestieDB or not StaticPopupDialogs or not StaticPopup_Show then return end
+    local isLoaded = C_AddOns and C_AddOns.IsAddOnLoaded or IsAddOnLoaded
+    if isLoaded and not isLoaded("RXPGuides")
+        and (isLoaded("Polestar") or NS.RestedXP.FollowTheArrowAvailable()) then return end
     local key = "QUESTTARGETS_MISSING_QUESTIEDB"
     local interface = GetBuildInfo and select(4, GetBuildInfo())
     local forever = type(interface) == "number" and interface >= 16000 and interface < 17000
@@ -46,16 +49,35 @@ local function showMissingDatabase()
     StaticPopup_Show(key)
 end
 
+local function rebuildEntries(app)
+    app.entries, app.metadata = Core.BuildEntries(app.quests, app.learned, app.resolutionCache)
+    app.allEntries = app.quests == app.allQuests and app.entries
+        or Core.BuildEntries(app.allQuests, app.learned, app.resolutionCache)
+end
+
+local function renderEntries(app)
+    UI.Render(app)
+    UI.RenderMaster(app)
+    app.renderedProximityRevision = NS.Proximity and NS.Proximity.revision
+end
+
+local function syncIntegrations(app, idle)
+    NS.QuestieTracker.Sync(app, idle)
+    NS.EllesmereTracker.Sync(app, idle)
+    NS.ItemTree.Sync(app)
+    local rareEntry = NS.RareScanner.SyncMark(app)
+    NS.RestedXP.Sync(app, rareEntry)
+end
+
 function app:Refresh(forceResolution)
     if not self.db then return end
     if InCombatLockdown() then self.dirty = true; UI.UpdateStatus(self); return end
     if UI.moving or UI.resizing then self.dirty = true; return end
     if not UI.frame then UI.Create(self) end
-    local quests, err, pending = Core.ReadQuests(self.db.watchedOnly)
-    local allQuests, allError, allPending = quests, err, pending
-    if self.db.watchedOnly then allQuests, allError, allPending = Core.ReadQuests(false) end
+    local quests, err, pending, allQuests = Core.ReadQuests(self.db.watchedOnly, true)
+    allQuests = allQuests or quests
     self.allQuests = allQuests
-    self.pendingData = pending or allPending
+    self.pendingData = pending
     self.quests = quests
     local provider = NS.Database and NS.Database.Provider()
     if forceResolution ~= false or self.zoneDirty or provider ~= self.resolutionProvider then
@@ -64,36 +86,26 @@ function app:Refresh(forceResolution)
         self.zoneDirty = false
     end
     self.resolutionProvider = provider
-    if not (err or allError or pending or allPending) and #allQuests > 0 then
-        Scanner.Prune(allQuests or {}, self.learned)
+    if not (err or pending) and #allQuests > 0 then
+        Scanner.Prune(allQuests, self.learned)
     end
+    self.scanPending = false
     Scanner.Scan(allQuests, self.learned)
     self.resolutionCache = self.resolutionCache or {}
-    self.entries, self.metadata = Core.BuildEntries(quests, self.learned, self.resolutionCache)
-    self.allEntries = self.db.watchedOnly and Core.BuildEntries(allQuests, self.learned, self.resolutionCache) or self.entries
-    if not (err or allError or pending or allPending) then
+    rebuildEntries(self)
+    if not (err or pending) then
         local active = {}
-        for _, quest in ipairs(allQuests or {}) do active[quest.id] = true end
+        for _, quest in ipairs(allQuests) do active[quest.id] = true end
         if self.db.focusQuestID and not active[self.db.focusQuestID] then self.db.focusQuestID = nil end
         for questID in pairs(self.resolutionCache) do
             if not active[questID] then self.resolutionCache[questID] = nil end
         end
     end
-    -- The unfiltered read also feeds the master button.  In tracked-only mode
-    -- it can fail independently of the first read (for example while the quest
-    -- log is temporarily unavailable), so do not report an ordinary empty
-    -- tracked list when the underlying full read actually failed.
-    self.error = err or allError
+    self.error = err
     self.dirty = false
-    UI.Render(self)
-    UI.RenderMaster(self)
-    self.renderedProximityRevision = NS.Proximity and NS.Proximity.revision
+    renderEntries(self)
     UI.SyncFocusBinding(self)
-    NS.QuestieTracker.Sync(self)
-    NS.EllesmereTracker.Sync(self)
-    NS.ItemTree.Sync(self)
-    NS.RareScanner.SyncMark(self)
-    NS.RestedXP.Sync(self)
+    syncIntegrations(self)
     if self.pendingVisibility ~= nil then
         UI.frame:SetShown(self.pendingVisibility)
         self.db.hidden = not self.pendingVisibility
@@ -101,13 +113,17 @@ function app:Refresh(forceResolution)
     end
 end
 
-function app:Schedule()
-    self.dirty = true
+function app:Schedule(scanOnly)
+    if scanOnly then self.scanPending = true else self.dirty = true end
     if self.scheduled then return end
     self.scheduled = true
     C_Timer.After(0.15, function()
         self.scheduled = false
-        if self.dirty then self:Refresh(false) end
+        if self.dirty then
+            self:Refresh(false)
+        elseif self.scanPending and self:Scan() then
+            syncIntegrations(self)
+        end
     end)
 end
 
@@ -132,27 +148,25 @@ function app:ToggleFilter()
     self:Refresh()
 end
 
+function app:Scan()
+    if not self.allQuests or InCombatLockdown() or UI.moving or UI.resizing then return end
+    self.scanPending = false
+    local revision = NS.Proximity and NS.Proximity.revision
+    local changed = Scanner.Scan(self.allQuests, self.learned)
+    if changed then rebuildEntries(self) end
+    if changed or self.renderedProximityRevision ~= revision then
+        renderEntries(self)
+        return true
+    end
+    UI.UpdateStatus(self)
+    return false
+end
+
 function app:Poll()
     if not self.db or not UI.frame or InCombatLockdown() then return end
     if self.dirty or self.pendingData then self:Refresh(false); return end
-    local revision = NS.Proximity and NS.Proximity.revision
-    if Scanner.Scan(self.allQuests or {}, self.learned) then
-        self.entries, self.metadata = Core.BuildEntries(self.quests or {}, self.learned, self.resolutionCache)
-        self.allEntries = self.db.watchedOnly and Core.BuildEntries(self.allQuests or {}, self.learned, self.resolutionCache) or self.entries
-        UI.Render(self)
-        UI.RenderMaster(self)
-    elseif self.renderedProximityRevision ~= revision then
-        UI.Render(self)
-        UI.RenderMaster(self)
-    else
-        UI.UpdateStatus(self)
-    end
-    self.renderedProximityRevision = revision
-    NS.QuestieTracker.Sync(self)
-    NS.EllesmereTracker.Sync(self)
-    NS.ItemTree.Sync(self)
-    NS.RareScanner.SyncMark(self)
-    NS.RestedXP.Sync(self)
+    local rendered = self:Scan()
+    if rendered ~= nil then syncIntegrations(self, not rendered) end
 end
 
 function app:Help()
@@ -240,6 +254,7 @@ events:SetScript("OnEvent", function(_, event, loadedName)
             and math.max(-240, math.min(240, math.floor(offset + 0.5))) or 35
         app.db.restedXPIntegration = app.db.restedXPIntegration == true
         app.db.polestarIntegration = app.db.polestarIntegration == true
+        app.db.followTheArrowIntegration = app.db.followTheArrowIntegration == true
         app.db.minimapStyle = nil -- remove the premature design-selection setting
         app.db.showTooltips = app.db.showTooltips == true
         app.db.muteDeadTargetSound = app.db.muteDeadTargetSound == true
@@ -291,6 +306,9 @@ events:SetScript("OnEvent", function(_, event, loadedName)
         UI.StopResizing(app)
         UI.StopMoving(app.db)
         app:Refresh(false)
+    elseif event == "NAME_PLATE_UNIT_ADDED" or event == "NAME_PLATE_UNIT_REMOVED" then
+        Scanner.Invalidate(loadedName)
+        if app.db and Scanner.Available() and not InCombatLockdown() then app:Schedule(true) end
     else
         if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED"
             or event == "ZONE_CHANGED_NEW_AREA" or event == "ZONE_CHANGED_INDOORS" then

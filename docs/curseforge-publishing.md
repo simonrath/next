@@ -1,7 +1,7 @@
 # GitHub-Releases automatisch auf CurseForge veröffentlichen
 
 Vorbereitet für [Next auf CurseForge](https://www.curseforge.com/wow/addons/questtargets),
-Projekt-ID **1709717**, und GitHub-Repository `simonrath/questtargets`.
+Projekt-ID **1709717**, und GitHub-Repository `simonrath/next`.
 Ab Version 1.5.0 wird ein gemeinsames Paket für alle fünf Clients veröffentlicht.
 
 ## Einmalige Einrichtung
@@ -18,7 +18,7 @@ Ab Version 1.5.0 wird ein gemeinsames Paket für alle fünf Clients veröffentli
    Token der **Upload API**, kein API-Key der allgemeinen CurseForge-Download-API.
    Das Konto muss Dateien für Projekt 1709717 hochladen dürfen.
 3. **Token auf GitHub hinterlegen.** Unter
-   [Repository → Settings → Secrets and variables → Actions](https://github.com/simonrath/questtargets/settings/secrets/actions)
+   [Repository → Settings → Secrets and variables → Actions](https://github.com/simonrath/next/settings/secrets/actions)
    auf **New repository secret** klicken:
    - Name: `CF_API_TOKEN`
    - Secret: der eben erzeugte CurseForge-Token.
@@ -30,7 +30,7 @@ Ab Version 1.5.0 wird ein gemeinsames Paket für alle fünf Clients veröffentli
    dürfen diesen Zugriff nicht sperren. Ein allgemeines Umschalten aller
    Workflows auf Schreibrechte ist nicht erforderlich.
 5. **Lesenden Probelauf starten.** Unter
-   [Actions](https://github.com/simonrath/questtargets/actions) den Workflow
+   [Actions](https://github.com/simonrath/next/actions) den Workflow
    **Publish GitHub release to CurseForge** auswählen → **Run workflow**:
    - Branch: `main`
    - Tag: `v1.5.0`

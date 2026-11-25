@@ -170,8 +170,14 @@ def main():
                         help='Use a captured CurseForge versions response for a token-free dry run only.')
     args = parser.parse_args()
     config = json.loads((ROOT / 'tools/curseforge.json').read_text(encoding='utf-8'))
-    repository = config['repository']
-    if os.environ.get('GITHUB_REPOSITORY', repository) != repository:
+    configured_repository = config['repository']
+    repository = os.environ.get('GITHUB_REPOSITORY', configured_repository)
+    repository_id = os.environ.get('GITHUB_REPOSITORY_ID')
+    if repository_id is not None:
+        allowed = repository_id == str(config['repositoryID'])
+    else:
+        allowed = repository == configured_repository
+    if not allowed:
         raise PublishError('Publishing is restricted to the configured source repository.')
     if args.publish and (os.environ.get('CURSEFORGE_ENABLED') != 'true' or args.offline_versions):
         raise PublishError('Publishing requires CURSEFORGE_ENABLED=true and live version lookup.')

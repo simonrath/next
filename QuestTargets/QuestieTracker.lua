@@ -57,9 +57,9 @@ local function hideFrom(index)
         button.questID = nil
         button.questieLine = nil
         button.fallbackIndex, button.fallbackFinisherIndex = nil, nil
-        button:SetAttribute("macrotext1", nil)
-        button.focusMark:Hide()
-        button:Hide()
+        if button:GetAttribute("macrotext1") then button:SetAttribute("macrotext1", nil) end
+        if button.focusMark:IsShown() then button.focusMark:Hide() end
+        if button:IsShown() then button:Hide() end
     end
 end
 
@@ -78,8 +78,11 @@ function Integration.UpdateFocusMarks(app)
     end
 end
 
-function Integration.Sync(app)
+function Integration.Sync(app, periodic)
     if not app.db or InCombatLockdown() then return end
+    local now = GetTime and GetTime()
+    if periodic and now and Integration.nextSync and now < Integration.nextSync then return end
+    Integration.nextSync = now and now + 2
     if app.db.questieTrackerButtons == false then hideFrom(1); return end
     local pool = trackerPool()
     if not pool then hideFrom(1); return end
@@ -88,6 +91,7 @@ function Integration.Sync(app)
         byID[entry.questID] = entry
     end
     local used = 0
+    local settings = Core.TargetFeedbackSettings(app.db, "questie")
     for i = 1, math.min(pool.GetHighestIndex() or 0, 250) do
         local line = pool.GetLine(i)
         if line and line.mode == "quest" and line.Quest and line.expandQuest
@@ -122,9 +126,11 @@ function Integration.Sync(app)
                     button.questID = entry.questID
                 end
                 button.entry = entry
-                button:SetAttribute("macrotext1", Core.EntryMacro(entry, Core.TargetFeedbackSettings(app.db, "questie")))
-                button:Show()
-                button.focusMark:SetShown(entry.questID == app.db.focusQuestID)
+                local macro = Core.EntryMacro(entry, settings)
+                if button:GetAttribute("macrotext1") ~= macro then button:SetAttribute("macrotext1", macro) end
+                if not button:IsShown() then button:Show() end
+                local focused = entry.questID == app.db.focusQuestID
+                if button.focusMark:IsShown() ~= focused then button.focusMark:SetShown(focused) end
             end
         end
     end

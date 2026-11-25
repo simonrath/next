@@ -147,14 +147,23 @@ class CurseForgeTests(unittest.TestCase):
              patch.object(cf, 'cf_json', side_effect=fake_cf), \
              patch.object(cf, 'reserve_upload', return_value=True) as reserve, \
              patch.dict(os.environ, {'CURSEFORGE_ENABLED': 'true', 'CF_API_TOKEN': 'test-token',
-                                     'GITHUB_REPOSITORY': 'simonrath/questtargets'}), \
+                                     'GITHUB_REPOSITORY': 'simonrath/next', 'GITHUB_REPOSITORY_ID': '1387105477'}), \
              patch.object(cf.sys, 'argv', ['publisher', '--tag', 'v1.8.1', '--publish']):
             cf.main()
-            reserve.assert_called_once_with('simonrath/questtargets', 'v1.8.1', 'All', 'a'*40)
+            reserve.assert_called_once_with('simonrath/next', 'v1.8.1', 'All', 'a'*40)
         self.assertEqual(len(uploads), 1)
         metadata = json.loads(uploads[0].split(b'\r\n\r\n')[1].split(b'\r\n--')[0])
         self.assertEqual(set(metadata['gameVersions']), {1, 2, 3, 4, 5})
         self.assertEqual(metadata['displayName'], 'Next 1.8.1')
+
+    def test_foreign_repository_id_is_rejected_before_api_calls(self):
+        with patch.dict(os.environ, {'GITHUB_REPOSITORY': 'simonrath/next',
+                                     'GITHUB_REPOSITORY_ID': '999999'}), \
+             patch.object(cf, 'gh') as github, \
+             patch.object(cf.sys, 'argv', ['publisher', '--tag', 'v1.8.1']):
+            with self.assertRaisesRegex(cf.PublishError, 'restricted'):
+                cf.main()
+            github.assert_not_called()
 
     def test_missing_one_supported_interface_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
