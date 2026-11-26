@@ -2,6 +2,20 @@
 local _, NS = ...
 NS.PatchNotesData = {
     deDE = {
+        { version = "1.8.3", date = "26.11.2026", sections = {
+                { title = "FlareUI", items = {
+                    "**Neu: FlareUI ist jetzt integriert!** Aktiviere unter **Buttons & Leiste** die **FlareUI-Integration**, um neben unterstützten Quests im FlareUI-Tracker einen Next-Zielbutton anzuzeigen. Linksklick visiert ein Ziel an, Rechtsklick setzt den Questfokus. Benötigt FlareUI 7.0.17 oder neuer auf Forever. Im Kampf werden die Buttons ausgeblendet.",
+                }},
+                { title = "Questliste", items = {
+                    "**Questbuttons:** Ein weiteres Klicken behält ein lebendes Ziel der ausgewählten Quest bei. Das gilt für die Next-Questliste und die Buttons in Questie, EllesmereUI und FlareUI.",
+                }},
+                { title = "ItemTree", items = {
+                    "Der **ItemTree-Button** zeigt im Tooltip alle aktuell importierten Mobnamen an.",
+                }},
+                { title = "Zielleiste", items = {
+                    "Die **Tooltips der Zielleiste** beginnen jetzt mit **Next**. Der Masterbutton erklärt kürzer, welche Ziele er sucht und wie sich die Leiste verschieben lässt.",
+                }},
+            }},
         { version = "1.8.2", date = "25.11.2026", sections = {
                 { title = "Follow The Arrow", items = {
                     "**Neu: Follow The Arrow ist jetzt integriert!** Aktiviere unter **Buttons & Leiste** die Option **Follow-The-Arrow-Guideziele verwenden**. Der Masterbutton übernimmt dann die Ziele des aktuellen Guide-Schritts aus **FTA Target**. Das funktioniert auch ohne QuestieDB. Das Makro muss in Follow The Arrow aktiviert sein. Die aktuelle Retail-Ausgabe von Follow The Arrow stellt es nicht bereit.",
@@ -295,6 +309,20 @@ NS.PatchNotesData = {
             }},
     },
     enUS = {
+        { version = "1.8.3", date = "Nov 26, 2026", sections = {
+                { title = "FlareUI", items = {
+                    "**New: FlareUI support!** Enable **FlareUI integration** under **Buttons & Bar** to show a Next targeting button beside supported quests in FlareUI’s tracker. Left-click to target and right-click to focus the quest. Requires FlareUI 7.0.17 or later on Forever. Buttons hide in combat.",
+                }},
+                { title = "Quest list", items = {
+                    "**Quest buttons:** Clicking again keeps a living target for that quest selected. This applies to the Next quest list and the buttons in Questie, EllesmereUI and FlareUI.",
+                }},
+                { title = "ItemTree", items = {
+                    "The **ItemTree button** tooltip lists all currently imported mobs.",
+                }},
+                { title = "Targeting bar", items = {
+                    "**Targeting bar** tooltip titles now start with **Next**. The master button makes it clearer what it searches and how to move the bar.",
+                }},
+            }},
         { version = "1.8.2", date = "Nov 25, 2026", sections = {
                 { title = "Follow The Arrow", items = {
                     "**New: Follow The Arrow support!** Under **Buttons & Bar**, enable **Follow The Arrow guide targets**. The master button uses the current guide step’s targets from **FTA Target**, including without QuestieDB. Enable the macro in Follow The Arrow. The current Retail version of Follow The Arrow does not provide it.",
@@ -588,6 +616,20 @@ NS.PatchNotesData = {
             }},
     },
     esES = {
+        { version = "1.8.3", date = "26 nov 2026", sections = {
+                { title = "FlareUI", items = {
+                    "**¡Nuevo: compatibilidad con FlareUI!** Activa **Integración con FlareUI** en **Botones y barra** para mostrar un botón de Next junto a las misiones compatibles en el rastreador de FlareUI. Haz clic izquierdo para seleccionar un objetivo y derecho para enfocar la misión. Requiere FlareUI 7.0.17 o posterior en Forever. Los botones se ocultan en combate.",
+                }},
+                { title = "Lista de misiones", items = {
+                    "**Botones de misión:** Otro clic mantiene seleccionado un objetivo vivo de esa misión. Se aplica a la lista de Next y a los botones de Questie, EllesmereUI y FlareUI.",
+                }},
+                { title = "ItemTree", items = {
+                    "La descripción del **botón de ItemTree** muestra todos los enemigos importados actualmente.",
+                }},
+                { title = "Barra de objetivos", items = {
+                    "Los títulos de la **barra de objetivos** empiezan por **Next**. El botón maestro explica qué busca y cómo mover la barra.",
+                }},
+            }},
         { version = "1.8.2", date = "25 nov 2026", sections = {
                 { title = "Follow The Arrow", items = {
                     "**Novedad: integración con Follow The Arrow.** En **Botones y barra**, activa **Seguir objetivos de Follow The Arrow**. El botón principal usa los objetivos del paso actual de la macro **FTA Target**, incluso sin QuestieDB. Activa la macro en Follow The Arrow. La versión Retail actual de Follow The Arrow no la incluye.",
@@ -881,6 +923,20 @@ NS.PatchNotesData = {
             }},
     },
     frFR = {
+        { version = "1.8.3", date = "26 nov. 2026", sections = {
+                { title = "FlareUI", items = {
+                    "**Nouveau : prise en charge de FlareUI !** Activez **Intégration FlareUI** dans **Boutons et barre** pour afficher un bouton Next à côté des quêtes prises en charge dans le suivi de FlareUI. Le clic gauche cible et le clic droit met la quête en surbrillance. Nécessite FlareUI 7.0.17 ou ultérieur sur Forever. Les boutons sont masqués en combat.",
+                }},
+                { title = "Liste des quêtes", items = {
+                    "**Boutons de quête :** Un nouveau clic conserve la cible vivante de la quête. Cela s’applique à la liste de Next et aux boutons de Questie, EllesmereUI et FlareUI.",
+                }},
+                { title = "ItemTree", items = {
+                    "L’infobulle du **bouton ItemTree** affiche tous les ennemis actuellement importés.",
+                }},
+                { title = "Barre de ciblage", items = {
+                    "Les titres des infobulles de la **barre de ciblage** commencent par **Next**. Le bouton principal indique quelles cibles il cherche et comment déplacer la barre.",
+                }},
+            }},
         { version = "1.8.2", date = "25 nov. 2026", sections = {
                 { title = "Follow The Arrow", items = {
                     "**Nouveau : intégration de Follow The Arrow !** Dans **Boutons et barre**, activez **Suivre les cibles de Follow The Arrow**. Le bouton principal utilise les cibles de l’étape actuelle via **FTA Target**, même sans QuestieDB. Activez la macro dans Follow The Arrow. La version Retail actuelle de Follow The Arrow ne la fournit pas.",
@@ -1174,6 +1230,20 @@ NS.PatchNotesData = {
             }},
     },
     trTR = {
+        { version = "1.8.3", date = "26 Kas 2026", sections = {
+                { title = "FlareUI", items = {
+                    "**Yeni: FlareUI desteği!** FlareUI takipçisindeki desteklenen görevlerin yanında bir Next hedef düğmesi göstermek için **Düğmeler ve Çubuk** bölümünde **FlareUI entegrasyonu** seçeneğini açın. Hedef için sol, göreve odaklanmak için sağ tıklayın. Forever’da FlareUI 7.0.17 veya üstü gerekir. Düğmeler savaşta gizlenir.",
+                }},
+                { title = "Görev listesi", items = {
+                    "**Görev düğmeleri:** Tekrar tıklamak görevin canlı hedefini seçili tutar. Bu, Next görev listesiyle Questie, EllesmereUI ve FlareUI düğmeleri için geçerlidir.",
+                }},
+                { title = "ItemTree", items = {
+                    "**ItemTree düğmesinin** ipucu, içe aktarılan tüm yaratıkları listeler.",
+                }},
+                { title = "Hedef çubuğu", items = {
+                    "**Hedef çubuğu** ipucu başlıkları artık **Next** ile başlıyor. Ana düğme hangi hedefleri aradığını ve çubuğun nasıl taşınacağını açıklıyor.",
+                }},
+            }},
         { version = "1.8.2", date = "25 Kas 2026", sections = {
                 { title = "Follow The Arrow", items = {
                     "**Yeni: Follow The Arrow desteği!** **Düğmeler ve çubuk** altında **Follow The Arrow hedeflerini izle** seçeneğini aç. Ana düğme, QuestieDB olmasa bile **FTA Target** içindeki geçerli rehber adımının hedeflerini kullanır. Makroyu Follow The Arrow’da aç. Follow The Arrow’un güncel Retail sürümü bu makroyu sağlamıyor.",
@@ -1467,6 +1537,20 @@ NS.PatchNotesData = {
             }},
     },
     zhCN = {
+        { version = "1.8.3", date = "2026 年 11 月 26 日", sections = {
+                { title = "FlareUI", items = {
+                    "**新增：支持 FlareUI！** 在**按钮与按钮栏**中启用 **FlareUI 集成**，即可在 FlareUI 追踪器中受支持的任务旁显示 Next 目标按钮。左键选中目标，右键聚焦任务。需要在 Forever 中使用 FlareUI 7.0.17 或更新版本。战斗中隐藏按钮。",
+                }},
+                { title = "任务列表", items = {
+                    "**任务按钮：** 再次点击会保留当前选中的存活任务目标。适用于 Next 任务列表，以及 Questie、EllesmereUI 和 FlareUI 中的按钮。",
+                }},
+                { title = "ItemTree", items = {
+                    "**ItemTree 按钮**的鼠标提示会列出当前导入的所有怪物。",
+                }},
+                { title = "目标按钮栏", items = {
+                    "**目标按钮栏**提示的标题现在均以 **Next** 开头。主按钮说明了搜索范围和移动按钮栏的方法。",
+                }},
+            }},
         { version = "1.8.2", date = "2026 年 11 月 25 日", sections = {
                 { title = "Follow The Arrow", items = {
                     "**新功能：现已支持 Follow The Arrow！** 在**按钮与栏**中启用**跟随 Follow The Arrow 指南目标**。主按钮会读取 **FTA Target** 中当前指南步骤的目标，无需 QuestieDB。 请在 Follow The Arrow 中启用此宏。Follow The Arrow 的当前正式服版本不提供此宏。",

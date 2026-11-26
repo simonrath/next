@@ -248,7 +248,7 @@ function Core.NextUnit(entry, entries)
     return candidates[1] and candidates[1].unit, candidates[1] and candidates[1].friendly
 end
 
-function Core.ClickMacro(entry, entries, settings, state, preserveEntry, positionSampled)
+function Core.ClickMacro(entry, entries, settings, state, preserveEntry, positionSampled, keepCurrent)
     Core.ConfirmSearchResult()
     Core.pendingSearch = nil -- a new hardware click supersedes the previous attempt
     Core.lastCycle = nil
@@ -259,7 +259,10 @@ function Core.ClickMacro(entry, entries, settings, state, preserveEntry, positio
     -- Prefer a concrete visible quest unit on the first click. If no valid
     -- nameplate token exists, fall back to name search for distant targets.
     local validCurrent = Core.ValidCurrentTarget(entry)
-    local unit, friendly = Core.NextUnit(entry, entries)
+    local unit, friendly
+    if not (keepCurrent and validCurrent) then
+        unit, friendly = Core.NextUnit(entry, entries)
+    end
     -- A visible but farther guide target must not jump the coordinate order
     -- when acquiring a target. Let the ordered macro also try names off-plate.
     if entry.distanceOrder and not validCurrent and unit and Core.SafeName(UnitName(unit)) ~= entry.name then
@@ -335,6 +338,13 @@ function Core.ClickMacro(entry, entries, settings, state, preserveEntry, positio
         return macro
     end
     return "/targetexact [nocombat] " .. name .. (friendly and "" or Core.MarkerMacro(settings, true))
+end
+
+function Core.PrepareQuestRowClick(button, app, feedback)
+    -- A quest row selects a target once. Repeating /targetexact can drop
+    -- the current unit when the next nameplate shares its name or disappears.
+    local settings = Core.TargetFeedbackSettings(app.db, feedback)
+    Core.SetClickMacro(button, Core.ClickMacro(button.entry, {}, settings, button, nil, false, true), app.db)
 end
 
 function Core.ValidCurrentTarget(entry, allowFriendly)

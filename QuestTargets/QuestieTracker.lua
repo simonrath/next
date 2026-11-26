@@ -31,7 +31,7 @@ local function createButton(index)
             return
         end
         if mouseButton == "LeftButton" then
-            Core.SetClickMacro(self, Core.ClickMacro(self.entry, {self.entry}, Core.TargetFeedbackSettings(NS.app.db, "questie"), self), NS.app.db)
+            Core.PrepareQuestRowClick(self, NS.app, "questie")
         end
     end)
     button:SetScript("PostClick", function(self, mouseButton, down)

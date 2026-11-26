@@ -159,9 +159,14 @@ local function createTarget(app)
     target:SetScript("OnEnter", function(self)
         if not app.db.showTooltips then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(NS.L("itemTreeBinding"))
+        GameTooltip:ClearLines()
+        GameTooltip:SetText(NS.L("itemTreeTooltipTitle"))
         GameTooltip:AddLine(NS.L("itemTreeBindingTip"), 1, 1, 1, true)
-        if not self.entry and not self:GetAttribute("macro1") then
+        if self.entry then
+            for _, name in ipairs(self.entry.nameList) do
+                GameTooltip:AddLine(name, 1, 1, 1, true)
+            end
+        elseif not self:GetAttribute("macro1") then
             GameTooltip:AddLine(NS.L("itemTreeImport"), 1, 1, 1, true)
         end
         GameTooltip:Show()

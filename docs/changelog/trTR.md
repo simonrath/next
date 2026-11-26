@@ -2,6 +2,20 @@
 
 Oyuncuları ilgilendiren değişiklikler en yeni sürümden başlayarak sıralanır. Eski kurulum notları yalnızca belirtilen sürüm için geçerlidir.
 
+## 1.8.3 – 26 Kas 2026
+
+### FlareUI
+- **Yeni: FlareUI desteği!** FlareUI takipçisindeki desteklenen görevlerin yanında bir Next hedef düğmesi göstermek için **Düğmeler ve Çubuk** bölümünde **FlareUI entegrasyonu** seçeneğini açın. Hedef için sol, göreve odaklanmak için sağ tıklayın. Forever’da FlareUI 7.0.17 veya üstü gerekir. Düğmeler savaşta gizlenir.
+
+### Görev listesi
+- **Görev düğmeleri:** Tekrar tıklamak görevin canlı hedefini seçili tutar. Bu, Next görev listesiyle Questie, EllesmereUI ve FlareUI düğmeleri için geçerlidir.
+
+### ItemTree
+- **ItemTree düğmesinin** ipucu, içe aktarılan tüm yaratıkları listeler.
+
+### Hedef çubuğu
+- **Hedef çubuğu** ipucu başlıkları artık **Next** ile başlıyor. Ana düğme hangi hedefleri aradığını ve çubuğun nasıl taşınacağını açıklıyor.
+
 ## 1.8.2 – 25 Kas 2026
 
 ### Follow The Arrow

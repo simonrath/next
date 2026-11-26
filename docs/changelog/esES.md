@@ -2,6 +2,20 @@
 
 Cambios para jugadores, empezando por la versión más reciente. Las indicaciones de instalación históricas se aplican a la versión indicada.
 
+## 1.8.3 – 26 nov 2026
+
+### FlareUI
+- **¡Nuevo: compatibilidad con FlareUI!** Activa **Integración con FlareUI** en **Botones y barra** para mostrar un botón de Next junto a las misiones compatibles en el rastreador de FlareUI. Haz clic izquierdo para seleccionar un objetivo y derecho para enfocar la misión. Requiere FlareUI 7.0.17 o posterior en Forever. Los botones se ocultan en combate.
+
+### Lista de misiones
+- **Botones de misión:** Otro clic mantiene seleccionado un objetivo vivo de esa misión. Se aplica a la lista de Next y a los botones de Questie, EllesmereUI y FlareUI.
+
+### ItemTree
+- La descripción del **botón de ItemTree** muestra todos los enemigos importados actualmente.
+
+### Barra de objetivos
+- Los títulos de la **barra de objetivos** empiezan por **Next**. El botón maestro explica qué busca y cómo mover la barra.
+
 ## 1.8.2 – 25 nov 2026
 
 ### Follow The Arrow

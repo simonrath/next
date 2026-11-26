@@ -290,6 +290,7 @@ function UI.ToggleFocus(app, entry)
     UI.RenderRows(app)
     UI.RenderFocus(app)
     if NS.EllesmereTracker then NS.EllesmereTracker.UpdateFocusMarks(app) end
+    NS.FlareUITracker.UpdateFocusMarks(app)
     if NS.QuestieTracker and NS.QuestieTracker.UpdateFocusMarks then
         NS.QuestieTracker.UpdateFocusMarks(app)
     end
@@ -489,7 +490,7 @@ function UI.Create(app)
                 NS.Core.PrepareDeadTargetSound(self:GetAttribute("macrotext1"), app.db)
             end
             if mouseButton ~= "LeftButton" or down or InCombatLockdown() then return end
-            NS.Core.SetClickMacro(self, NS.Core.ClickMacro(self.entry, app.entries, NS.Core.TargetFeedbackSettings(app.db, "questList"), self), app.db)
+            NS.Core.PrepareQuestRowClick(self, app, "questList")
         end)
         row:SetScript("PostClick", function(self, mouseButton, down)
             if down then return end
@@ -812,6 +813,7 @@ function UI.LayoutSettings(app)
     place(panel.questieOffsetControl, toggles, 22, -122)
     place(panel.ellesmereToggle, toggles, 18, -210)
     place(panel.ellesmereOffsetControl, toggles, 22, -240)
+    place(panel.flareUIToggle, toggles, 18, -298)
     for i, control in ipairs({panel.masterToggle, panel.masterModulesToggle, panel.polestarToggle,
         panel.followTheArrowToggle, panel.restedXPToggle, panel.itemTreeToggle, panel.rareScannerToggle,
         panel.rareScannerZoneToggle}) do
@@ -1342,6 +1344,15 @@ local function nativeSettings(app)
         return NS.EllesmereTracker.Available() and app.db.ellesmereTrackerButtons ~= false
     end)
 
+    local flareUIToggle = checkboxSetting("flareUITrackerButtons", false,
+        function() return app.db.flareUITrackerButtons == true end,
+        function(value)
+            if InCombatLockdown() or not NS.FlareUITracker.Available() then return end
+            app.db.flareUITrackerButtons = value
+            NS.FlareUITracker.Sync(app)
+        end, "flareUITrackerTip")
+    flareUIToggle:AddModifyPredicate(NS.FlareUITracker.Available)
+
     Settings.RegisterAddOnCategory(category)
     UI.nativeCategory = category
 end
@@ -1496,6 +1507,19 @@ function UI.RegisterSettings(app)
         panel.ellesmereOffsetControl = settingsSlider(panel, "QuestTargetsEllesmereOffsetSlider",
             "ellesmereTrackerOffset", -240, 240, 1, app)
         panel.ellesmereOffsetControl.caption:SetText(L("ellesmereTrackerOffset"))
+        panel.flareUIToggle = checkbox(panel, L("flareUITrackerButtons"), function()
+            if InCombatLockdown() or not NS.FlareUITracker.Available() then return end
+            app.db.flareUITrackerButtons = not app.db.flareUITrackerButtons
+            NS.FlareUITracker.Sync(app)
+            UI.UpdateSettings(app)
+        end)
+        panel.flareUIToggle:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L("flareUITrackerButtons"))
+            GameTooltip:AddLine(L("flareUITrackerTip"), 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        panel.flareUIToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
         panel.restedXPToggle = checkbox(panel, L("restedXPIntegration"), function()
             if InCombatLockdown() or not addonLoaded("RXPGuides") then return end
             app.db.restedXPIntegration = not app.db.restedXPIntegration
@@ -1717,6 +1741,11 @@ function UI.UpdateSettings(app)
     local ellesmereOffsetEnabled = ellesmereAvailable and app.db.ellesmereTrackerButtons ~= false
     UI.settings.ellesmereOffsetControl.slider:SetEnabled(ellesmereOffsetEnabled)
     UI.settings.ellesmereOffsetControl.edit:SetEnabled(ellesmereOffsetEnabled)
+    local flareUIAvailable = NS.FlareUITracker.Available()
+    UI.settings.flareUIToggle:SetEnabled(flareUIAvailable)
+    UI.settings.flareUIToggle:SetChecked(app.db.flareUITrackerButtons == true)
+    local flareUIGray = flareUIAvailable and 1 or 0.5
+    UI.settings.flareUIToggle.caption:SetTextColor(flareUIGray, flareUIGray, flareUIGray)
     local questieAvailable = addonLoaded("Questie")
     UI.settings.questieTrackerToggle:SetChecked(app.db.questieTrackerButtons)
     UI.settings.questieTrackerToggle:SetEnabled(questieAvailable)
@@ -1817,6 +1846,7 @@ function UI.ApplyLanguage(app)
         panel.tooltipToggle.caption:SetText(L("showTooltips"))
         panel.minimapToggle.caption:SetText(L("showMinimap"))
         panel.ellesmereToggle.caption:SetText(L("ellesmereTrackerButtons"))
+        panel.flareUIToggle.caption:SetText(L("flareUITrackerButtons"))
         panel.ellesmereOffsetControl.caption:SetText(L("ellesmereTrackerOffset"))
         panel.questieTrackerToggle.caption:SetText(L("questieTrackerButtons"))
         panel.questieOffsetControl.caption:SetText(L("questieTrackerOffset"))

@@ -10,7 +10,7 @@ class QuestTargetsTests(unittest.TestCase):
     def setUp(self):
         self.lua = LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute((ROOT / 'tests/quest_targets_mock.lua').read_text(encoding='utf-8'))
-        for name in ('Core.lua', 'Locale.lua', 'PatchNotesData.lua', 'PatchNotes.lua', 'Database.lua', 'Proximity.lua', 'Resolvers.lua', 'Scanner.lua', 'UI.lua', 'Resize.lua', 'Master.lua', 'QuestieTracker.lua', 'EllesmereTracker.lua', 'RestedXP.lua', 'ItemTree.lua', 'RareScanner.lua', 'Diagnostics.lua', 'Main.lua'):
+        for name in ('Core.lua', 'Locale.lua', 'PatchNotesData.lua', 'PatchNotes.lua', 'Database.lua', 'Proximity.lua', 'Resolvers.lua', 'Scanner.lua', 'UI.lua', 'Resize.lua', 'Master.lua', 'QuestieTracker.lua', 'EllesmereTracker.lua', 'FlareUITracker.lua', 'RestedXP.lua', 'ItemTree.lua', 'RareScanner.lua', 'Diagnostics.lua', 'Main.lua'):
             self.lua.execute('assert(loadstring(...))("QuestTargets", NS)',
                              (ROOT / 'QuestTargets' / name).read_text(encoding='utf-8'))
 
@@ -470,23 +470,24 @@ class QuestTargetsTests(unittest.TestCase):
             assert(ui.focusButton.attributes.macrotext1 == '')
         ''')
 
-    def test_master_tooltip_explains_right_button_drag_in_both_modes(self):
+    def test_master_tooltip_shows_target_mode_and_current_drag_instruction(self):
         self.lua.execute('''
             boot()
-            NS.app.db.showTooltips=true
-            GameTooltip:ClearLines()
-            NS.UI.master.scripts.OnEnter(NS.UI.master)
-            local function hasMoveTip()
-                for _,line in ipairs(GameTooltip.lines) do
-                    if line==NS.L('masterTip2') then return true end
+            local app, button = NS.app, NS.UI.master
+            app.db.showTooltips=true
+            for _, allModules in ipairs({true, false}) do
+                for _, locked in ipairs({true, false}) do
+                    app.db.masterAllModules=allModules
+                    app.db.masterLocked=locked
+                    GameTooltip:ClearLines()
+                    button.scripts.OnEnter(button)
+                    assert(GameTooltip.text=='Next Target')
+                    assert(GameTooltip.lines[1]==NS.L(allModules and 'masterTip1' or 'masterQuestOnlyTip'))
+                    assert(#GameTooltip.lines==2)
+                    assert(GameTooltip.lines[2]==NS.L(locked and 'masterLockTip' or 'masterTip2'))
+                    assert(GameTooltip.lines[2]:find('right mouse button',1,true))
                 end
-                return false
             end
-            assert(hasMoveTip())
-            NS.RestedXP.active=true
-            GameTooltip:ClearLines()
-            NS.UI.master.scripts.OnEnter(NS.UI.master)
-            assert(hasMoveTip())
         ''')
 
     def test_combat_during_window_drag_releases_refresh_gate_and_saves_position_later(self):
@@ -737,7 +738,7 @@ class QuestTargetsTests(unittest.TestCase):
                 'showItemTreeButton','showRareScannerButton','rareScannerZone','barAppearanceSection',
                 'masterOrientation','buttonSize','masterSpacing','masterBackground','masterBorder','masterDividers',
                 'masterLocked','masterMove','integrationSection','showTooltips',
-                'questieTrackerButtons','questieTrackerOffset','ellesmereTrackerButtons','ellesmereTrackerOffset'})
+                'questieTrackerButtons','questieTrackerOffset','ellesmereTrackerButtons','ellesmereTrackerOffset','flareUITrackerButtons'})
             local feedbackDescription=layout.initializers[11].data.description
             assert(feedbackDescription:find('255',1,true))
             assert((feedbackDescription:find('Show Pings in Chat',1,true)~=nil)==supportsPing)
@@ -1647,7 +1648,8 @@ class QuestTargetsTests(unittest.TestCase):
                 row.scripts.PostClick(row)
                 for _, expected in ipairs({'nameplate2','nameplate1','nameplate2'}) do
                     row.scripts.PreClick(row,'LeftButton',false)
-                    assert(row.attributes.macrotext1:find('/targetexact [nocombat] Waldwolf',1,true))
+                    local retarget = row.attributes.macrotext1:find('/targetexact [nocombat] Waldwolf',1,true)
+                    assert((retarget~=nil)==(row==NS.UI.master))
                     -- Name targeting may keep the same instance; do not model a token switch.
                     currentGUID = 'A'
                     row.scripts.PostClick(row)
@@ -1660,7 +1662,7 @@ class QuestTargetsTests(unittest.TestCase):
             assert(NS.Core.NameplateUnit({GetUnit=function() return SECRET end}) == nil)
         ''')
 
-    def test_repeated_click_uses_visible_name_without_claiming_same_name_cycle(self):
+    def test_repeated_click_keeps_quest_row_target_and_allows_master_search(self):
         self.lua.execute('''boot()
             plate('Waldwolf','','').guid='A'
             plate('Waldwolf','','').guid='B'
@@ -1676,13 +1678,17 @@ class QuestTargetsTests(unittest.TestCase):
                 row.scripts.PostClick(row,'LeftButton',false)
                 row.scripts.PreClick(row,'LeftButton',false)
                 local second=row.attributes.macrotext1
-                assert(second:find('/targetexact [nocombat] Waldwolf',1,true))
-                currentGUID='B'
+                if row==NS.UI.master then
+                    assert(second:find('/targetexact [nocombat] Waldwolf',1,true))
+                    currentGUID='B'
+                else
+                    assert(not second:find('/targetexact',1,true))
+                end
                 row.scripts.PostClick(row,'LeftButton',false)
             end
         ''')
 
-    def test_hybrid_far_target_then_nearby_cycle_for_both_buttons(self):
+    def test_hybrid_keeps_far_quest_row_target_and_allows_master_search(self):
         self.lua.execute('''boot()
             for _, row in ipairs({QuestTargetsTarget1, NS.UI.master}) do
                 nameplates = {}; units = {}; currentGUID = nil
@@ -1694,7 +1700,8 @@ class QuestTargetsTests(unittest.TestCase):
                 currentGUID = 'Far'
                 plate('Waldwolf','','').guid = 'Near'
                 row.scripts.PreClick(row,'LeftButton',false)
-                assert(row.attributes.macrotext1:find('/targetexact [nocombat] Waldwolf',1,true))
+                local retarget = row.attributes.macrotext1:find('/targetexact [nocombat] Waldwolf',1,true)
+                assert((retarget~=nil)==(row==NS.UI.master))
                 row.scripts.PostClick(row)
                 units.target = {name='Unrelated',guid='Other'}; currentGUID = 'Other'
                 row.scripts.PreClick(row,'LeftButton',false)
@@ -1816,13 +1823,16 @@ class QuestTargetsTests(unittest.TestCase):
                     assert(row.attributes.macrotext1 == before)
                     row.scripts.PreClick(row,'LeftButton',false)
                     local macro = row.attributes.macrotext1
-                    assert(macro:find('/targetexact [nocombat] '..UnitName(expected),1,true))
                     assert(not macro:find('/click',1,true))
                     assert(macro:find('/tm [nocombat,exists,harm,nodead] !8',1,true))
-                    -- Supply a matching name result; this does not prove same-name instance cycling.
-                    currentGUID = UnitGUID(expected)
+                    if row==NS.UI.master then
+                        assert(macro:find('/targetexact [nocombat] '..UnitName(expected),1,true))
+                        currentGUID = UnitGUID(expected)
+                    else
+                        assert(not macro:find('/targetexact',1,true))
+                    end
                     row.scripts.PostClick(row)
-                    assert(NS.Core.lastClick.selected == 'true')
+                    if row==NS.UI.master then assert(NS.Core.lastClick.selected == 'true') end
                     assert(not row.attributes.macrotext1:find('@nameplate',1,true))
                 end
             end
@@ -1868,7 +1878,7 @@ class QuestTargetsTests(unittest.TestCase):
         self.lua.execute('''boot()
             plate('Waldwolf', '', '').guid = 'A'
             plate('Waldwolf', '', '').guid = 'B'
-            currentGUID = 'A'
+            currentGUID = nil
             local row = QuestTargetsTarget1
             local fallback = row.attributes.macrotext1
             row.scripts.PreClick(row, 'LeftButton', true)

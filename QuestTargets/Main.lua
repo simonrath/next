@@ -64,6 +64,7 @@ end
 local function syncIntegrations(app, idle)
     NS.QuestieTracker.Sync(app, idle)
     NS.EllesmereTracker.Sync(app, idle)
+    NS.FlareUITracker.Sync(app, idle)
     NS.ItemTree.Sync(app)
     local rareEntry = NS.RareScanner.SyncMark(app)
     NS.RestedXP.Sync(app, rareEntry)
@@ -197,7 +198,7 @@ events:SetScript("OnEvent", function(_, event, loadedName)
     if event == "ADDON_LOADED" then
         if loadedName ~= addonName then
             if app.loggedIn then UI.RegisterSettings(app) end
-            if loadedName == "EllesmereUIQuestTracker" and app.db then app:Schedule() end
+            if (loadedName == "EllesmereUIQuestTracker" or loadedName == "FlareUI") and app.db then app:Schedule() end
             if loadedName == "QuestieDB" and app.db then app:Schedule() end
             return
         end

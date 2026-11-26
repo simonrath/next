@@ -4,6 +4,20 @@ Spielerchronik ab der ersten belegten Veröffentlichung. Die neueste Version ste
 
 [English](docs/changelog/enUS.md) · [Español](docs/changelog/esES.md) · [Français](docs/changelog/frFR.md) · [Türkçe](docs/changelog/trTR.md) · [简体中文](docs/changelog/zhCN.md)
 
+## 1.8.3 – 26.11.2026
+
+### FlareUI
+- **Neu: FlareUI ist jetzt integriert!** Aktiviere unter **Buttons & Leiste** die **FlareUI-Integration**, um neben unterstützten Quests im FlareUI-Tracker einen Next-Zielbutton anzuzeigen. Linksklick visiert ein Ziel an, Rechtsklick setzt den Questfokus. Benötigt FlareUI 7.0.17 oder neuer auf Forever. Im Kampf werden die Buttons ausgeblendet.
+
+### Questliste
+- **Questbuttons:** Ein weiteres Klicken behält ein lebendes Ziel der ausgewählten Quest bei. Das gilt für die Next-Questliste und die Buttons in Questie, EllesmereUI und FlareUI.
+
+### ItemTree
+- Der **ItemTree-Button** zeigt im Tooltip alle aktuell importierten Mobnamen an.
+
+### Zielleiste
+- Die **Tooltips der Zielleiste** beginnen jetzt mit **Next**. Der Masterbutton erklärt kürzer, welche Ziele er sucht und wie sich die Leiste verschieben lässt.
+
 ## 1.8.2 – 25.11.2026
 
 ### Follow The Arrow

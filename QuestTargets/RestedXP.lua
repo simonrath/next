@@ -326,7 +326,7 @@ local function createButton()
     button:SetScript("OnEnter", function(self)
         if not NS.app.db.showTooltips then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(NS.L("restedXPButton"))
+        GameTooltip:SetText(NS.L("restedXPTooltipTitle"))
         GameTooltip:AddLine(NS.L("restedXPSourceTip"), 1, 1, 1, true)
         if not self.entry then GameTooltip:AddLine(NS.L("restedXPNoTarget"), 1, 0.82, 0, true) end
         GameTooltip:Show()

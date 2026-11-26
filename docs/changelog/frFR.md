@@ -2,6 +2,20 @@
 
 Changements pour les joueurs, de la version la plus récente à la plus ancienne. Les indications d’installation historiques s’appliquent à la version indiquée.
 
+## 1.8.3 – 26 nov. 2026
+
+### FlareUI
+- **Nouveau : prise en charge de FlareUI !** Activez **Intégration FlareUI** dans **Boutons et barre** pour afficher un bouton Next à côté des quêtes prises en charge dans le suivi de FlareUI. Le clic gauche cible et le clic droit met la quête en surbrillance. Nécessite FlareUI 7.0.17 ou ultérieur sur Forever. Les boutons sont masqués en combat.
+
+### Liste des quêtes
+- **Boutons de quête :** Un nouveau clic conserve la cible vivante de la quête. Cela s’applique à la liste de Next et aux boutons de Questie, EllesmereUI et FlareUI.
+
+### ItemTree
+- L’infobulle du **bouton ItemTree** affiche tous les ennemis actuellement importés.
+
+### Barre de ciblage
+- Les titres des infobulles de la **barre de ciblage** commencent par **Next**. Le bouton principal indique quelles cibles il cherche et comment déplacer la barre.
+
 ## 1.8.2 – 25 nov. 2026
 
 ### Follow The Arrow

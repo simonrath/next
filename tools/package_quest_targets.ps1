@@ -22,7 +22,7 @@ foreach ($taskClientPin in $taskClientPins.flavors.PSObject.Properties) {
         throw "TOC interface differs from pinned $($taskClientPin.Name) client"
     }
 }
-$taskRuntimeFiles = @('QuestTargets.toc','Bindings.xml','Core.lua','Locale.lua','Database.lua','Proximity.lua','Resolvers.lua','Scanner.lua','UI.lua','Resize.lua','SettingsRows.xml','Master.lua','QuestieTracker.lua','EllesmereTracker.lua','RestedXP.lua','ItemTree.lua','RareScanner.lua','Diagnostics.lua','Main.lua','Textures/QuestCompassUp.tga','Textures/QuestCompassDown.tga','Textures/TransparencyEye.tga','Textures/FeedbackQR.tga','Textures/RarePulse.tga')
+$taskRuntimeFiles = @('QuestTargets.toc','Bindings.xml','Core.lua','Locale.lua','Database.lua','Proximity.lua','Resolvers.lua','Scanner.lua','UI.lua','Resize.lua','SettingsRows.xml','Master.lua','QuestieTracker.lua','EllesmereTracker.lua','FlareUITracker.lua','RestedXP.lua','ItemTree.lua','RareScanner.lua','Diagnostics.lua','Main.lua','Textures/QuestCompassUp.tga','Textures/QuestCompassDown.tga','Textures/TransparencyEye.tga','Textures/FeedbackQR.tga','Textures/RarePulse.tga')
 $taskRuntimeFiles += @('PatchNotes.lua', 'PatchNotesData.lua', 'Textures/TargetBarBorder.tga', 'Textures/TargetBarDivider.tga')
 $taskRuntimeFiles += @(Get-ChildItem -LiteralPath (Join-Path $taskAddon 'Libs') -File -Recurse | ForEach-Object {
     $_.FullName.Substring($taskAddon.Length + 1).Replace('\', '/')

@@ -2,6 +2,20 @@
 
 Player-facing changes, newest version first. Historical installation notes apply to the version listed.
 
+## 1.8.3 – Nov 26, 2026
+
+### FlareUI
+- **New: FlareUI support!** Enable **FlareUI integration** under **Buttons & Bar** to show a Next targeting button beside supported quests in FlareUI’s tracker. Left-click to target and right-click to focus the quest. Requires FlareUI 7.0.17 or later on Forever. Buttons hide in combat.
+
+### Quest list
+- **Quest buttons:** Clicking again keeps a living target for that quest selected. This applies to the Next quest list and the buttons in Questie, EllesmereUI and FlareUI.
+
+### ItemTree
+- The **ItemTree button** tooltip lists all currently imported mobs.
+
+### Targeting bar
+- **Targeting bar** tooltip titles now start with **Next**. The master button makes it clearer what it searches and how to move the bar.
+
 ## 1.8.2 – Nov 25, 2026
 
 ### Follow The Arrow

@@ -104,6 +104,14 @@ class ItemTreeTests(unittest.TestCase):
             button.scripts.OnClick()
             local target=NS.ItemTree.target
             assert(#target.entry.nameList==8 and target.attributes.macro1==nil)
+            GameTooltip:Hide()
+            target.scripts.OnEnter(target)
+            assert(not GameTooltip:IsShown())
+            NS.app.db.showTooltips=true
+            target.scripts.OnEnter(target)
+            assert(GameTooltip:IsShown() and #GameTooltip.lines==9)
+            for i=1,8 do assert(GameTooltip.lines[i+1]==target.entry.nameList[i]) end
+            target.scripts.OnLeave(target)
             target.scripts.PreClick(target,'LeftButton',false)
             assert(target.attributes.macrotext1:find('Wolf number 1',1,true))
             target.scripts.PostClick(target,'LeftButton',false)
@@ -137,6 +145,9 @@ class ItemTreeTests(unittest.TestCase):
             button.scripts.OnClick()
             assert(macro:find('Kojote',1,true))
             assert(target.entry.nameList[1]=='New mob')
+            target.scripts.OnEnter(target)
+            assert(#GameTooltip.lines==2 and GameTooltip.lines[2]=='New mob')
+            target.scripts.OnLeave(target)
             macroIndex=121
             button.scripts.OnClick()
             assert(macro:find('New mob',1,true) and not macro:find('Kojote',1,true))

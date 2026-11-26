@@ -42,7 +42,7 @@ local function createButton(slot)
         if down or InCombatLockdown() or not self.entry then return end
         if not valid(self, NS.app) then clear(self); return end
         if mouseButton == "LeftButton" then
-            Core.SetClickMacro(self, Core.ClickMacro(self.entry, {self.entry}, Core.TargetFeedbackSettings(NS.app.db, "ellesmere"), self), NS.app.db)
+            Core.PrepareQuestRowClick(self, NS.app, "ellesmere")
         end
     end)
     button:SetScript("PostClick", function(self, mouseButton, down)
