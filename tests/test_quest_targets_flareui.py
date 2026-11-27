@@ -17,7 +17,7 @@ class FlareUITrackerTests(unittest.TestCase):
             assert(#NS.FlareUITracker.buttons==0)
         """)
 
-    def test_opt_in_row_updates_and_combat_recovery(self):
+    def test_automatic_activation_row_updates_and_combat_recovery(self):
         self.lua.execute("""
             function RegisterStateDriver(button, state, condition)
                 assert(not combat and state=='combat' and condition=='[combat] combat; peace')
@@ -40,10 +40,10 @@ class FlareUITrackerTests(unittest.TestCase):
             boot()
             NS.UI.Settings(NS.app)
             local toggle=NS.UI.settings.flareUIToggle
-            assert(toggle.enabled and not rowCallback)
+            assert(toggle.enabled and toggle:GetChecked() and rowCallback)
             local line=CreateFrame('Frame',nil,UIParent)
             flareRows={{questID=1, point='TOPRIGHT', x=175, y=350, size=22, line=line}}
-            toggle.scripts.OnClick()
+            rowCallback(flareRows)
             local tracker=NS.FlareUITracker
             local button=tracker.buttons[1]
             assert(rowCallback and registrations==1 and button:IsShown() and button.parent==UIParent)

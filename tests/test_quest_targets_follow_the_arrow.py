@@ -35,7 +35,7 @@ class FollowTheArrowTests(unittest.TestCase):
             assert(not button.entry.names['New NPC'] and button.entry.names.Waldwolf)
         ''')
 
-    def test_opt_in_retail_and_invalid_or_stale_macro(self):
+    def test_automatic_activation_on_retail_and_invalid_or_stale_macro(self):
         self.lua.execute(r'''
             local loaded=true
             C_AddOns={IsAddOnLoaded=function(name) return loaded and name=='FollowTheArrow' end}
@@ -45,12 +45,10 @@ class FollowTheArrowTests(unittest.TestCase):
             GetMacroIndexByName=function() return 1 end
             GetMacroBody=function() return body end
             boot()
-            assert(not NS.app.db.followTheArrowIntegration)
+            assert(NS.app.db.followTheArrowIntegration==nil)
             NS.UI.Settings(NS.app)
             local toggle=NS.UI.settings.followTheArrowToggle
-            assert(toggle.enabled)
-            toggle.scripts.OnClick()
-            assert(NS.app.db.followTheArrowIntegration)
+            assert(toggle.enabled and toggle:GetChecked())
             local app, button=NS.app, NS.UI.master
             assert(button.entry==button.defaultEntry)
             body='/cleartarget\n/targetexact Guide NPC\n/cleartarget [dead]'

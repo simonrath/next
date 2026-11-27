@@ -13,7 +13,7 @@ class QuestRowTargetTests(unittest.TestCase):
                 self.lua.globals().testInterface = interface
                 self.lua.execute("""
                     GetBuildInfo=function() return '', '', '', testInterface end
-                    boot()
+                    QuestTargetsDB={ellesmereTrackerButtons=true}; boot()
                     local line=CreateFrame('Button',nil,UIParent)
                     line.mode='quest'
                     line.Quest={Id=1}

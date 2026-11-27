@@ -2,6 +2,20 @@
 local _, NS = ...
 NS.PatchNotesData = {
     deDE = {
+        { version = "1.8.4", date = "27.11.2026", sections = {
+                { title = "SilverDragon", items = {
+                    "**Neu: SilverDragon-Unterstützung!** Der violette Rare-Button und sein Hotkey visieren den auf der Weltkarte fokussierten SilverDragon-Rare an. **Alle Rares im Gebiet suchen** ist standardmäßig an und durchsucht die bekannten Rares der aktuellen Zone. Wenn beide Addons verfügbar sind, hat RareScanner Vorrang. Der Button erscheint automatisch, sobald eines der beiden Addons verfügbar ist.",
+                }},
+                { title = "Patchnotes", items = {
+                    "Ein Zwerg und ein Murloc begrüßen dich mit Sprechblasen im Patchnotes-Fenster.",
+                    "**Neue Patchnotes beim Start anzeigen** ist standardmäßig aus. Du kannst die Option unten im Patchnotes-Fenster aktivieren.",
+                }},
+                { title = "Standardeinstellungen", items = {
+                    "**Automatische Modulauswahl:** Sobald ein kompatibles Addon geladen ist, aktiviert Next dessen Integration und zeigt die zugehörigen Zielbuttons an. Manuell ausgeschaltete Module bleiben aus.",
+                    "Das Questfenster startet ausgeschaltet. Modulsuche, Trennlinien, Button-Tooltips und das Stummschalten des Abwahl-Sounds sind aktiv. Der Leistenabstand beträgt 0 px. Der Rare-Button verwendet Ping auf unterstützten Clients.",
+                    "Der **Standardwerte**-Button in den Next-Optionen auf Forever setzt nur Next-Optionen zurück.",
+                }},
+            }},
         { version = "1.8.3", date = "26.11.2026", sections = {
                 { title = "FlareUI", items = {
                     "**Neu: FlareUI ist jetzt integriert!** Aktiviere unter **Buttons & Leiste** die **FlareUI-Integration**, um neben unterstützten Quests im FlareUI-Tracker einen Next-Zielbutton anzuzeigen. Linksklick visiert ein Ziel an, Rechtsklick setzt den Questfokus. Benötigt FlareUI 7.0.17 oder neuer auf Forever. Im Kampf werden die Buttons ausgeblendet.",
@@ -309,6 +323,20 @@ NS.PatchNotesData = {
             }},
     },
     enUS = {
+        { version = "1.8.4", date = "Nov 27, 2026", sections = {
+                { title = "SilverDragon", items = {
+                    "**New: SilverDragon support!** The purple rare button and its hotkey target the rare you focus on SilverDragon’s world map. **Scan all rares in zone** is on by default and searches known rares in your current zone. RareScanner takes priority when both addons are available. The button appears automatically when either addon is available.",
+                }},
+                { title = "Patch notes", items = {
+                    "A dwarf and a murloc greet you with speech bubbles in the Patch Notes window.",
+                    "**Show new patch notes on startup** is off by default. You can enable it at the bottom of the Patch Notes window.",
+                }},
+                { title = "Default settings", items = {
+                    "**Automatic module activation:** When a compatible addon loads, Next enables its integration and shows its targeting buttons. Modules you turn off stay off.",
+                    "The quest window starts off. Module search, dividers, button tooltips and muting the target-clearing sound start on. Bar spacing is 0 px. The rare button uses Ping on supported clients.",
+                    "The **Defaults** button in Next’s options on Forever resets only Next options.",
+                }},
+            }},
         { version = "1.8.3", date = "Nov 26, 2026", sections = {
                 { title = "FlareUI", items = {
                     "**New: FlareUI support!** Enable **FlareUI integration** under **Buttons & Bar** to show a Next targeting button beside supported quests in FlareUI’s tracker. Left-click to target and right-click to focus the quest. Requires FlareUI 7.0.17 or later on Forever. Buttons hide in combat.",
@@ -616,6 +644,20 @@ NS.PatchNotesData = {
             }},
     },
     esES = {
+        { version = "1.8.4", date = "27 de noviembre de 2026", sections = {
+                { title = "SilverDragon", items = {
+                    "**¡Nuevo: compatibilidad con SilverDragon!** El botón morado y su atajo seleccionan el raro que enfoques en el mapa de SilverDragon. **Buscar todos los raros de la zona** está activada por defecto y busca los raros conocidos de tu zona. RareScanner tiene prioridad si ambos addons están disponibles. El botón aparece automáticamente cuando hay un complemento compatible disponible.",
+                }},
+                { title = "Notas del parche", items = {
+                    "Un enano y un múrloc te dan la bienvenida con bocadillos en la ventana de notas del parche.",
+                    "**Mostrar las nuevas notas del parche al iniciar** está desactivado por defecto. Puedes activarlo al pie de la ventana de notas.",
+                }},
+                { title = "Ajustes predeterminados", items = {
+                    "**Activación automática de módulos:** Cuando se carga un addon compatible, Next activa su integración y muestra sus botones de objetivo. Los módulos que desactives seguirán desactivados.",
+                    "La ventana de misiones empieza desactivada. La búsqueda en módulos, los separadores, las descripciones y el silencio al quitar un objetivo empiezan activados. El espacio es de 0 px. El botón de raros usa avisos en clientes compatibles.",
+                    "El botón de valores predeterminados de Next en Forever solo restablece las opciones de Next.",
+                }},
+            }},
         { version = "1.8.3", date = "26 nov 2026", sections = {
                 { title = "FlareUI", items = {
                     "**¡Nuevo: compatibilidad con FlareUI!** Activa **Integración con FlareUI** en **Botones y barra** para mostrar un botón de Next junto a las misiones compatibles en el rastreador de FlareUI. Haz clic izquierdo para seleccionar un objetivo y derecho para enfocar la misión. Requiere FlareUI 7.0.17 o posterior en Forever. Los botones se ocultan en combate.",
@@ -923,6 +965,20 @@ NS.PatchNotesData = {
             }},
     },
     frFR = {
+        { version = "1.8.4", date = "27 novembre 2026", sections = {
+                { title = "SilverDragon", items = {
+                    "**Nouveau : prise en charge de SilverDragon !** Le bouton violet et son raccourci ciblent le rare focalisé sur la carte de SilverDragon. L’option **Rechercher les rares de la zone** est activée par défaut et recherche les rares connus de la zone actuelle. RareScanner est prioritaire si les deux addons sont disponibles. Le bouton apparaît automatiquement dès qu’un de ces addons est disponible.",
+                }},
+                { title = "Notes de mise à jour", items = {
+                    "Un nain et un murloc t’accueillent avec des bulles dans la fenêtre des notes de mise à jour.",
+                    "**Afficher les nouvelles notes au démarrage** est désactivé par défaut. Activez cette option en bas de la fenêtre des notes.",
+                }},
+                { title = "Réglages par défaut", items = {
+                    "**Activation automatique des modules**. Quand un addon compatible se charge, Next active son intégration et affiche ses boutons de ciblage. Les modules que tu désactives restent désactivés.",
+                    "La fenêtre des quêtes est désactivée par défaut. La recherche dans les modules, les séparateurs, les infobulles et la coupure du son de perte de cible sont activés. L’espacement est de 0 px. Le bouton des rares émet un signal sur les clients compatibles.",
+                    "Sur Forever, le bouton des valeurs par défaut de Next réinitialise uniquement les options de Next.",
+                }},
+            }},
         { version = "1.8.3", date = "26 nov. 2026", sections = {
                 { title = "FlareUI", items = {
                     "**Nouveau : prise en charge de FlareUI !** Activez **Intégration FlareUI** dans **Boutons et barre** pour afficher un bouton Next à côté des quêtes prises en charge dans le suivi de FlareUI. Le clic gauche cible et le clic droit met la quête en surbrillance. Nécessite FlareUI 7.0.17 ou ultérieur sur Forever. Les boutons sont masqués en combat.",
@@ -1230,6 +1286,20 @@ NS.PatchNotesData = {
             }},
     },
     trTR = {
+        { version = "1.8.4", date = "27 Kasım 2026", sections = {
+                { title = "SilverDragon", items = {
+                    "**Yeni: SilverDragon desteği!** Mor düğme ve kısayolu SilverDragon dünya haritasında odaklandığın nadiri hedefler. **Bölgedeki tüm nadirleri ara** varsayılan olarak açıktır ve bulunduğun bölgedeki bilinen nadirleri arar. İki eklenti de kullanılabiliyorsa RareScanner önceliklidir. Bu eklentilerden biri kullanılabilir olduğunda düğme otomatik görünür.",
+                }},
+                { title = "Yama notları", items = {
+                    "Yama Notları penceresinde bir cüce ve bir murloc seni konuşma balonlarıyla karşılıyor.",
+                    "**Yeni yama notlarını başlangıçta göster** varsayılan olarak kapalıdır. Yama notları penceresinin altından açabilirsin.",
+                }},
+                { title = "Varsayılan ayarlar", items = {
+                    "**Otomatik modül etkinleştirme:** Uyumlu bir eklenti yüklendiğinde Next entegrasyonu etkinleştirir ve hedef düğmelerini gösterir. Kapattığın modüller kapalı kalır.",
+                    "Görev penceresi kapalı başlar. Modül araması, ayırıcılar, düğme ipuçları ve hedef bırakma sesini susturma açıktır. Düğme aralığı 0 px olur. Nadir hedef düğmesi destekleyen istemcilerde sinyal gönderir.",
+                    "Forever’da Next’in varsayılanlar düğmesi yalnızca Next seçeneklerini sıfırlar.",
+                }},
+            }},
         { version = "1.8.3", date = "26 Kas 2026", sections = {
                 { title = "FlareUI", items = {
                     "**Yeni: FlareUI desteği!** FlareUI takipçisindeki desteklenen görevlerin yanında bir Next hedef düğmesi göstermek için **Düğmeler ve Çubuk** bölümünde **FlareUI entegrasyonu** seçeneğini açın. Hedef için sol, göreve odaklanmak için sağ tıklayın. Forever’da FlareUI 7.0.17 veya üstü gerekir. Düğmeler savaşta gizlenir.",
@@ -1537,6 +1607,20 @@ NS.PatchNotesData = {
             }},
     },
     zhCN = {
+        { version = "1.8.4", date = "2026年11月27日", sections = {
+                { title = "SilverDragon", items = {
+                    "**新增 SilverDragon 支持！** 紫色按钮及其快捷键可选中你在 SilverDragon 世界地图上聚焦的稀有怪。**搜索区域内所有稀有怪**默认开启，会搜索当前区域的已知稀有怪。两个插件均可用时优先使用 RareScanner。 任一插件可用时，按钮会自动显示。",
+                }},
+                { title = "更新说明", items = {
+                    "矮人和鱼人会在更新说明窗口里用对话气泡和你打招呼。",
+                    "**启动时显示新的更新说明**默认关闭。你可以在更新说明窗口底部开启。",
+                }},
+                { title = "默认设置", items = {
+                    "**自动启用模块**。兼容插件加载后，Next 会启用对应的集成并显示其目标按钮。手动关闭的模块会保持关闭。",
+                    "任务窗口默认关闭。模块搜索、分隔线、按钮提示与取消目标音效静音默认开启。按钮间距为 0 像素。稀有怪按钮会在支持的客户端发送信号。",
+                    "在 Forever 中，Next 的默认值按钮只重置 Next 选项。",
+                }},
+            }},
         { version = "1.8.3", date = "2026 年 11 月 26 日", sections = {
                 { title = "FlareUI", items = {
                     "**新增：支持 FlareUI！** 在**按钮与按钮栏**中启用 **FlareUI 集成**，即可在 FlareUI 追踪器中受支持的任务旁显示 Next 目标按钮。左键选中目标，右键聚焦任务。需要在 Forever 中使用 FlareUI 7.0.17 或更新版本。战斗中隐藏按钮。",

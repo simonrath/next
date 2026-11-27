@@ -92,7 +92,7 @@ class DeadTargetSoundTests(unittest.TestCase):
             assert(#muted==0 and probe.attributes.macrotext1==macro)
         ''')
 
-    def test_actual_master_and_quest_clicks_use_option_and_default_is_off(self):
+    def test_actual_master_and_quest_clicks_use_option_and_default_is_on(self):
         self.prepare()
         self.lua.execute('''
             for _,button in ipairs({NS.UI.master,NS.UI.rows[1],NS.UI.focusButton}) do
@@ -103,7 +103,7 @@ class DeadTargetSoundTests(unittest.TestCase):
             end
         ''')
         self.setUp()
-        self.lua.execute('boot(); assert(NS.app.db.muteDeadTargetSound==false)')
+        self.lua.execute('boot(); assert(NS.app.db.muteDeadTargetSound==true)')
 
     def test_settings_toggle_enables_and_disables_saved_option(self):
         self.prepare()

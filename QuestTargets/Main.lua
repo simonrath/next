@@ -198,8 +198,12 @@ events:SetScript("OnEvent", function(_, event, loadedName)
     if event == "ADDON_LOADED" then
         if loadedName ~= addonName then
             if app.loggedIn then UI.RegisterSettings(app) end
-            if (loadedName == "EllesmereUIQuestTracker" or loadedName == "FlareUI") and app.db then app:Schedule() end
-            if loadedName == "QuestieDB" and app.db then app:Schedule() end
+            if app.db and (loadedName == "QuestieDB" or loadedName == "SilverDragon" or loadedName == "RareScanner"
+                or loadedName == "Questie" or loadedName == "RXPGuides" or loadedName == "ItemTree"
+                or loadedName == "Polestar" or loadedName == "FollowTheArrow"
+                or loadedName == "EllesmereUIQuestTracker" or loadedName == "FlareUI") then
+                app:Schedule()
+            end
             return
         end
         if type(QuestTargetsDB) ~= "table" then QuestTargetsDB = {} end
@@ -212,20 +216,20 @@ events:SetScript("OnEvent", function(_, event, loadedName)
         end
         app.learned = app.db.autoTargets.entries
         if not app.ticker then app.ticker = C_Timer.NewTicker(1, function() app:Poll() end) end
-        app.db.hidden = app.db.hidden == true
+        app.db.hidden = app.db.hidden ~= false
         app.db.transparencyMode = app.db.transparencyMode == true
         app.db.watchedOnly = app.db.watchedOnly == true
         app.db.masterHidden = app.db.masterHidden == true
         app.db.masterOrientation = app.db.masterOrientation == "vertical" and "vertical" or "horizontal"
         local spacing = app.db.masterSpacing
         app.db.masterSpacing = type(spacing) == "number" and spacing == spacing
-            and math.max(0, math.min(32, math.floor(spacing + 0.5))) or 4
+            and math.max(0, math.min(32, math.floor(spacing + 0.5))) or 0
         app.db.masterBackground = app.db.masterBackground == true
         app.db.masterBorder = app.db.masterBorder == true
         app.db.masterLocked = app.db.masterLocked == true
         if type(app.db.collapsedQuestZones) ~= "table" then app.db.collapsedQuestZones = {} end
-        if app.db.masterDividers == nil then app.db.masterDividers = app.db.masterBorder end
-        app.db.masterDividers = app.db.masterDividers == true
+        app.db.masterDividers = app.db.masterDividers ~= false
+        app.db.rareScannerZone = app.db.rareScannerZone ~= false
         app.db.actionBarMode = nil -- obsolete setting from the former docking mode
         local scale = app.db.masterModernScale
         if type(scale) == "number" and scale == scale and scale < math.huge then
@@ -245,20 +249,15 @@ events:SetScript("OnEvent", function(_, event, loadedName)
                     and angle * 180 / math.pi or 225}
         end
         app.db.minimapHidden = app.db.minimap.hide == true
-        app.db.ellesmereTrackerButtons = app.db.ellesmereTrackerButtons ~= false
         local ellesmereOffset = app.db.ellesmereTrackerOffset
         app.db.ellesmereTrackerOffset = type(ellesmereOffset) == "number" and ellesmereOffset == ellesmereOffset
             and math.max(-240, math.min(240, math.floor(ellesmereOffset + 0.5))) or 0
-        app.db.questieTrackerButtons = app.db.questieTrackerButtons ~= false
         local offset = app.db.questieTrackerOffset
         app.db.questieTrackerOffset = type(offset) == "number" and offset == offset
             and math.max(-240, math.min(240, math.floor(offset + 0.5))) or 35
-        app.db.restedXPIntegration = app.db.restedXPIntegration == true
-        app.db.polestarIntegration = app.db.polestarIntegration == true
-        app.db.followTheArrowIntegration = app.db.followTheArrowIntegration == true
         app.db.minimapStyle = nil -- remove the premature design-selection setting
-        app.db.showTooltips = app.db.showTooltips == true
-        app.db.muteDeadTargetSound = app.db.muteDeadTargetSound == true
+        app.db.showTooltips = app.db.showTooltips ~= false
+        app.db.muteDeadTargetSound = app.db.muteDeadTargetSound ~= false
         app.db.focusMarkEnabled = nil -- focused quests are always highlighted
         app.db.focusHotkeyEnabled = nil -- removed setting; an assigned key always works
         if type(app.db.focusQuestID) ~= "number" then app.db.focusQuestID = nil end

@@ -3,6 +3,92 @@ import test_quest_targets as addon
 
 
 class RareScannerTests(unittest.TestCase):
+    def test_silverdragon_reuses_rare_button_and_yields_to_rarescanner(self):
+        addon.QuestTargetsTests.setUp(self)
+        self.lua.execute("""
+            GetBuildInfo=function() return '1.60.1','','',16001 end
+            RegisterStateDriver=function() end
+            GetTime=function() return 0 end
+            local x, mapID = .2, 20
+            CreateVector2D=function(a,b) return {x=a,y=b} end
+            C_Map={
+                GetBestMapForUnit=function() return mapID end,
+                GetPlayerMapPosition=function() return CreateVector2D(x,.5) end,
+                GetWorldPosFromMapPos=function(_,pos) return 1,CreateVector2D(pos.x*1000,pos.y*500) end,
+            }
+            local names={'Far rare','Close rare','Ignored rare'}
+            local overlay={focus_id=2, IsFocused=function(self,id) return self.focus_id==id and not self.focus_treasure end}
+            boot()
+            NS.UI.Settings(NS.app)
+            assert(not NS.UI.settings.rareScannerToggle:GetChecked())
+            assert(not NS.RareScanner.markButton)
+            SilverDragon={
+                db={},
+                GetModule=function(_,name) assert(name=='Overlay'); return overlay end,
+                IterateRelevantMobs=function(_,zone)
+                    local list=zone==20 and {1,2,3} or {}
+                    return coroutine.wrap(function() for _,id in ipairs(list) do coroutine.yield(id) end end)
+                end,
+                NameForMob=function(_,id) return names[id] end,
+                ShouldIgnoreMob=function(_,id) return id==3 end,
+                GetData=function(_,id) return {locations={[20]={id==1 and 80005000 or 21005000}}} end,
+                GetXY=function(_,coord) return math.floor(coord/10000)/10000,(coord%10000)/10000 end,
+            }
+            event("ADDON_LOADED","SilverDragon"); flush()
+            NS.UI.UpdateSettings(NS.app)
+            assert(NS.UI.settings.rareScannerToggle:GetChecked())
+            local app, integration=NS.app,NS.RareScanner
+            local button=assert(integration.markButton)
+            assert(app.db.rareScannerZone==true)
+            assert(button:IsShown() and button.markedNames[1]=='Close rare' and #button.markedNames==2)
+            assert(integration.SearchEntry(app).names['Close rare'])
+            assert(NS.UI.master.entry.names['Close rare'])
+            app.db.masterAllModules=false
+            NS.RestedXP.Sync(app)
+            assert(not NS.UI.master.entry.names['Close rare'])
+            app.db.masterAllModules=true
+            app.db.showTooltips=true
+            button.scripts.OnEnter(button)
+            assert(GameTooltip.text==NS.L('silverDragonButton'))
+            button.scripts.OnLeave(button)
+            app.db.rareScannerZone=false
+            overlay.focus_treasure=true
+            integration.SyncMark(app)
+            assert(not button.markedNames)
+            app.db.rareScannerZone=true
+            button.scripts.PreClick(button,'LeftButton',false)
+            assert(table.concat(button.markedNames,'|')=='Close rare|Far rare')
+            x=.79
+            button.scripts.PreClick(button,'LeftButton',false)
+            assert(button.markedNames[1]=='Far rare')
+            mapID=21
+            integration.SyncMark(app)
+            assert(not button.markedNames and button:GetAttribute('macrotext1')==nil)
+            mapID=20
+            app.db.rareScannerZone=false
+            overlay.focus_treasure=false
+
+            local scanner={db={char={overlayActive={}},global={}}}
+            local lib=LibStub
+            LibStub=function(name,silent)
+                if name=='AceAddon-3.0' then return {GetAddon=function(_, key)
+                    assert(key=='RareScanner'); return scanner end} end
+                return lib(name,silent)
+            end
+            RSOverlayMixin={OnAcquired=function() end}
+            integration.SyncMark(app)
+            assert(integration.markButton==button and not button.markedNames)
+            assert(integration.SearchEntry(app)==nil)
+            NS.RestedXP.Sync(app)
+            assert(not NS.UI.master.entry.names['Close rare'])
+            scanner.db=nil
+            integration.SyncMark(app)
+            assert(button.markedNames[1]=='Close rare')
+            app.db.rareScannerButton=false
+            integration.SyncMark(app)
+            assert(not button:IsShown() and not integration.SearchEntry(app))
+        """)
+
     def test_search_prioritizes_rarescanner_spawns_and_reorders_after_movement(self):
         addon.QuestTargetsTests.setUp(self)
         self.lua.execute('''
@@ -46,7 +132,7 @@ class RareScannerTests(unittest.TestCase):
                     map.overlayIconsPool:Acquire():SetPoint('CENTER',map,'TOPLEFT',.12,-.5)
                 end
             end}
-            QuestTargetsDB={rareScannerZone=true}
+            QuestTargetsDB={rareScannerZone=true,showTooltips=false}
             boot()
             local button=NS.RareScanner.markButton
             GameTooltip:Hide()
@@ -233,8 +319,7 @@ class RareScannerTests(unittest.TestCase):
             boot()
             local b=NS.RareScanner.markButton
             local option=NS.UI.settings.rareScannerZoneToggle
-            assert(not option:GetChecked() and reads==0 and b.attributes.macrotext1=='/targetexact Marked rare\\n/cleartarget [dead]')
-            option.scripts.OnClick()
+            assert(option:GetChecked())
             assert(NS.app.db.rareScannerZone==true and reads==1 and b:GetAlpha()==1)
             assert(#b.markedNames==#expected)
             local searched={}
@@ -316,7 +401,7 @@ class RareScannerTests(unittest.TestCase):
             boot()
             local b=NS.RareScanner.markButton
             assert(b:IsShown() and b:GetAlpha()<1 and b.attributes.macrotext1==nil)
-            assert(NS.UI.settings.rareScannerToggle.caption:GetText()=='Show RareScanner button')
+            assert(NS.UI.settings.rareScannerToggle.caption:GetText()=='Show rare targeting button')
             local panel=NS.UI.settings
             local command='CLICK QuestTargetsRareScannerMark:LeftButton'
             assert(GetBindingKey(command)==nil and b.clicks[1]=='AnyUp')
@@ -385,7 +470,7 @@ class RareScannerTests(unittest.TestCase):
                 assert(macro:find('/cleartarget [dead]',1,true) and #macro<=NS.Core.MACRO_BYTES)
                 if markers[mode] then assert(macro:find(markers[mode],1,true)) end
             end
-            NS.app.db.targetFeedback=nil
+            NS.app.db.targetFeedback={rare=1}
             nameplates, units.nameplate1={}, nil
             rs.db.char.overlayActive[11]=nil
             b.scripts.PreClick(b,'LeftButton',false)

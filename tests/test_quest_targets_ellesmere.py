@@ -33,6 +33,7 @@ class EllesmereTrackerTests(unittest.TestCase):
             NS.UI.UpdateSettings(NS.app)
             assert(NS.UI.settings.ellesmereToggle.enabled)
             local panel=NS.UI.settings
+            assert(panel.ellesmereToggle:GetChecked())
             assert(panel.ellesmereOffsetControl.slider.enabled)
             for _,control in ipairs({panel.tooltipToggle,panel.minimapToggle,panel.questieTrackerToggle,
                 panel.questieOffsetControl,panel.ellesmereToggle,panel.ellesmereOffsetControl}) do
@@ -51,7 +52,7 @@ class EllesmereTrackerTests(unittest.TestCase):
         self.lua.execute('''
             local now=0
             GetTime=function() return now end
-            boot()
+            QuestTargetsDB={ellesmereTrackerButtons=true}; boot()
             local slot=CreateFrame('Frame',nil,UIParent)
             rowCallback(slot,1); flush()
             local button=NS.EllesmereTracker.buttons[1]
@@ -72,7 +73,7 @@ class EllesmereTrackerTests(unittest.TestCase):
     def test_row_reuse_visibility_focus_and_combat(self):
         self.tracker()
         self.lua.execute('''
-            boot()
+            QuestTargetsDB={ellesmereTrackerButtons=true}; boot()
             local slot=CreateFrame('Frame',nil,UIParent)
             slot:SetFrameStrata('HIGH'); slot:SetFrameLevel(10)
             slot.scale=0.5; slot.centerX=300; slot.centerY=400

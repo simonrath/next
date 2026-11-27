@@ -246,14 +246,14 @@ local function rankedEntry(app, base, rxpTargets, rareEntry, previous)
         add(rxpTargets.names, rxpTargets.friendly, {})
     end
     if base and useModules then
-        if app.db.polestarIntegration then
+        if app.db.polestarIntegration ~= false then
             local names, friendly, ids, points, preferred = polestarNames(baseNames)
             -- Without QuestieDB or active RestedXP targets, Polestar supplies the
             -- first choice even if other names have better coordinate data.
             if not db and not hasSources then entry.preferredName = preferred end
             add(names, friendly, ids, points)
         end
-        if app.db.followTheArrowIntegration then
+        if app.db.followTheArrowIntegration ~= false then
             local names, friendly = followTheArrowNames(baseNames)
             if names then
                 if not db and not hasSources then entry.preferredName = names[1] end
@@ -283,7 +283,7 @@ end
 
 local function prepareClick(app, button, base, setting)
     Proximity.Sample()
-    local rxp = app.db.restedXPIntegration and (not base or app.db.masterAllModules ~= false) and restedXP()
+    local rxp = app.db.restedXPIntegration ~= false and (not base or app.db.masterAllModules ~= false) and restedXP()
     local rxpTargets = readRestedTargets(rxp, UI.master.defaultEntry)
     local entry = rankedEntry(app, base, rxpTargets, nil, button.entry)
     button.entry = entry
@@ -338,10 +338,11 @@ end
 
 function Integration.Sync(app, rareEntry)
     if InCombatLockdown() or not app.db or not UI.master then return end
-    local rxp = app.db.restedXPIntegration and restedXP()
+    local rxp = app.db.restedXPIntegration ~= false and restedXP()
     Integration.active = rxp and true or false
-    local polestar = app.db.polestarIntegration and _G.Polestar and type(_G.Polestar.Engine) == "table"
-    if rxp or polestar or app.db.itemTreeButton then Proximity.PrepareNameIndex(NS.Database.Provider()) end
+    local polestar = app.db.polestarIntegration ~= false and _G.Polestar and type(_G.Polestar.Engine) == "table"
+    local itemTree = app.db.itemTreeButton ~= false and _G.ItemTree and _G.ItemTree.UI
+    if rxp or polestar or itemTree then Proximity.PrepareNameIndex(NS.Database.Provider()) end
     local rxpTargets = readRestedTargets(rxp, UI.master.defaultEntry)
     UI.master.entry = rankedEntry(app, UI.master.defaultEntry, rxpTargets, rareEntry, UI.master.entry)
     prepareCombatMacro(app, UI.master, "master")

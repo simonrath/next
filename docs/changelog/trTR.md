@@ -2,6 +2,20 @@
 
 Oyuncuları ilgilendiren değişiklikler en yeni sürümden başlayarak sıralanır. Eski kurulum notları yalnızca belirtilen sürüm için geçerlidir.
 
+## 1.8.4 – 27 Kasım 2026
+
+### SilverDragon
+- **Yeni: SilverDragon desteği!** Mor düğme ve kısayolu SilverDragon dünya haritasında odaklandığın nadiri hedefler. **Bölgedeki tüm nadirleri ara** varsayılan olarak açıktır ve bulunduğun bölgedeki bilinen nadirleri arar. İki eklenti de kullanılabiliyorsa RareScanner önceliklidir. Bu eklentilerden biri kullanılabilir olduğunda düğme otomatik görünür.
+
+### Yama notları
+- Yama Notları penceresinde bir cüce ve bir murloc seni konuşma balonlarıyla karşılıyor.
+- **Yeni yama notlarını başlangıçta göster** varsayılan olarak kapalıdır. Yama notları penceresinin altından açabilirsin.
+
+### Varsayılan ayarlar
+- **Otomatik modül etkinleştirme:** Uyumlu bir eklenti yüklendiğinde Next entegrasyonu etkinleştirir ve hedef düğmelerini gösterir. Kapattığın modüller kapalı kalır.
+- Görev penceresi kapalı başlar. Modül araması, ayırıcılar, düğme ipuçları ve hedef bırakma sesini susturma açıktır. Düğme aralığı 0 px olur. Nadir hedef düğmesi destekleyen istemcilerde sinyal gönderir.
+- Forever’da Next’in varsayılanlar düğmesi yalnızca Next seçeneklerini sıfırlar.
+
 ## 1.8.3 – 26 Kas 2026
 
 ### FlareUI

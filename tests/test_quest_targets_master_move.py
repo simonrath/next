@@ -129,7 +129,7 @@ class MasterMoveTests(unittest.TestCase):
             local panel=NS.UI.masterSettings
             assert(panel.moveButton, 'move option missing')
             assert(panel.moveHelp.text==NS.L('masterMoveHelp'))
-            assert(not NS.app.db.showTooltips)
+            assert(NS.app.db.showTooltips)
             panel.moveButton.scripts.OnClick()
             assert(NS.UI.masterMoveActive and not NS.UI.settings.shown)
             for _,language in ipairs({'enUS','deDE','esES','frFR','trTR','zhCN'}) do

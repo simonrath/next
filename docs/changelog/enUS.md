@@ -2,6 +2,20 @@
 
 Player-facing changes, newest version first. Historical installation notes apply to the version listed.
 
+## 1.8.4 – Nov 27, 2026
+
+### SilverDragon
+- **New: SilverDragon support!** The purple rare button and its hotkey target the rare you focus on SilverDragon’s world map. **Scan all rares in zone** is on by default and searches known rares in your current zone. RareScanner takes priority when both addons are available. The button appears automatically when either addon is available.
+
+### Patch notes
+- A dwarf and a murloc greet you with speech bubbles in the Patch Notes window.
+- **Show new patch notes on startup** is off by default. You can enable it at the bottom of the Patch Notes window.
+
+### Default settings
+- **Automatic module activation:** When a compatible addon loads, Next enables its integration and shows its targeting buttons. Modules you turn off stay off.
+- The quest window starts off. Module search, dividers, button tooltips and muting the target-clearing sound start on. Bar spacing is 0 px. The rare button uses Ping on supported clients.
+- The **Defaults** button in Next’s options on Forever resets only Next options.
+
 ## 1.8.3 – Nov 26, 2026
 
 ### FlareUI

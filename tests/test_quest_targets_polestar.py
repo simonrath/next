@@ -23,8 +23,7 @@ class PolestarTests(unittest.TestCase):
             assert(master.lockToggle.point[3] > master.moveButton.point[3])
             assert(master.moveHelp.point[5] - master.moveHelp.height >= -bar.height)
             assert(options.pages[3].content.height >= 390 + bar.height)
-            options.polestarToggle.scripts.OnClick()
-            assert(NS.app.db.polestarIntegration and NS.UI.master.entry.name=='Wolf')
+            assert(options.polestarToggle:GetChecked() and NS.UI.master.entry.name=='Wolf')
             master.lockToggle.scripts.OnClick()
             assert(NS.app.db.masterLocked and NS.UI.master.entry.name=='Wolf')
         ''')
@@ -76,15 +75,16 @@ class PolestarTests(unittest.TestCase):
             assert(warnings==2)
         ''')
 
-    def test_missing_database_status_guides_polestar_first_run(self):
+    def test_missing_database_status_guides_when_polestar_was_disabled(self):
         self.lua.execute('''
             GetBuildInfo=function() return '1.60.1','','',16001 end
             C_AddOns={IsAddOnLoaded=function(name) return name=='Polestar' end}
             Polestar={Engine={GetStepIndex=function() return 1 end,
                 GetStepView=function() return {goals={{t='kill',status='active',subject='Wolf'}}} end}}
+            QuestTargetsDB={polestarIntegration=false}
             boot()
-            assert(not NS.app.db.polestarIntegration)
-            assert(NS.UI.database.text:find('Polestar',1,true), 'Missing first-run Polestar guidance')
+            assert(NS.app.db.polestarIntegration==false)
+            assert(NS.UI.database.text:find('Polestar',1,true), 'Missing Polestar guidance when disabled')
             NS.UI.Settings(NS.app)
             NS.UI.settings.polestarToggle.scripts.OnClick()
             assert(NS.UI.database.text==NS.L('dbMissing'))

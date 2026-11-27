@@ -141,6 +141,7 @@ function methods:SetTexture(texture)
         or texture:match('^Interface\\Common\\dark%-goldframe%-button')
         or texture == 'Interface\\AddOns\\QuestTargets\\Textures\\RarePulse'
         or texture == 'Interface\\AddOns\\QuestTargets\\Textures\\TargetBarDivider'
+        or texture == 'Interface\\AddOns\\QuestTargets\\Textures\\PatchNotesGreetings'
         or texture == 'Interface\\Minimap\\MiniMap-TrackingBorder'
         or texture == 'Interface\\WorldMap\\UI-QuestPoi-NumberIcons'
         or texture == 'Interface\\AddOns\\QuestTargets\\Textures\\FeedbackQR'))
@@ -169,6 +170,7 @@ function methods:RegisterForDrag() guard(self) end
 function methods:SetPassThroughButtons(...) guard(self); self.passThrough = {...} end
 function methods:SetJustifyH() end
 function methods:SetTextColor(...) self.textColor = {...} end
+function methods:SetShadowColor(...) self.shadowColor = {...} end
 function methods:SetOwner() end
 function methods:ClearLines() self.lines = {}; self.text = nil end
 function methods:AddLine(value)

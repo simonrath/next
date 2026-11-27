@@ -987,6 +987,7 @@ local function nativeSettings(app)
     end
     if UI.nativeCategory then return end
 
+    local resetSettings
     local function privatePage(parent, key)
         -- Use the same template as SettingsPanel. A registered canvas keeps
         -- this private list's initializers out of the shared results layout.
@@ -1002,7 +1003,14 @@ local function nativeSettings(app)
         end
         page.Header.DefaultsButton.Text:SetText(SETTINGS_DEFAULTS)
         page.Header.DefaultsButton:SetScript("OnClick", function()
-            StaticPopup_Show("GAME_SETTINGS_APPLY_DEFAULTS")
+            if InCombatLockdown() or not StaticPopupDialogs or not StaticPopup_Show then return end
+            local dialog = "NEXT_RESTORE_DEFAULTS"
+            StaticPopupDialogs[dialog] = {
+                text=L("restoreNextDefaults"), button1=SETTINGS_DEFAULTS, button2=CANCEL,
+                timeout=0, whileDead=true, hideOnEscape=true,
+                OnAccept=resetSettings,
+            }
+            StaticPopup_Show(dialog)
         end)
         page:SetScript("OnShow", function()
             updateTitle()
@@ -1017,7 +1025,17 @@ local function nativeSettings(app)
     else category, layout = Settings.RegisterVerticalLayoutCategory(L("title")) end
     local activeCategory, activeLayout = category, layout
     local buttonsPage, buttonsLayout, updateButtonsTitle
-    local descriptions, actions = {}, {}
+    local descriptions, actions, registered = {}, {}, {}
+    local automaticOptions = {
+        polestarIntegration = "polestarIntegration",
+        followTheArrowIntegration = "followTheArrowIntegration",
+        restedXPIntegration = "restedXPIntegration",
+        showItemTreeButton = "itemTreeButton",
+        questieTrackerButtons = "questieTrackerButtons",
+        ellesmereTrackerButtons = "ellesmereTrackerButtons",
+        flareUITrackerButtons = "flareUITrackerButtons",
+        showRareScannerButton = "rareScannerButton",
+    }
     UI.nativeHeaders = {}
     UI.nativeButtons = {}
     local function section(key)
@@ -1029,8 +1047,12 @@ local function nativeSettings(app)
         -- Forever validates name callbacks outside securecallfunction before
         -- inserting the setting into the registry also read by ActionBar clicks.
         -- Keep registration data plain; localize only our displayed row below.
-        return Settings.RegisterProxySetting(activeCategory, "QUESTTARGETS_" .. key,
+        local value = Settings.RegisterProxySetting(activeCategory, "QUESTTARGETS_" .. key,
             Settings.VarType[kind], L(key), default, get, set)
+        if not automaticOptions[key] then
+            registered[#registered + 1] = {get=get, set=set, default=default}
+        end
+        return value
     end
     local function describe(description)
         if not description then return end
@@ -1119,8 +1141,20 @@ local function nativeSettings(app)
         end
     end
 
+    resetSettings = function()
+        if InCombatLockdown() then return end
+        for _, option in ipairs(registered) do
+            if option.get() ~= option.default then
+                option.set(option.default, true)
+            end
+        end
+        for _, field in pairs(automaticOptions) do app.db[field] = nil end
+        app:Refresh()
+        refresh()
+    end
+
     section("general")
-    dropdownSetting("language", NS.Language(), NS.Language, function(value)
+    dropdownSetting("language", 1, NS.Language, function(value)
         if InCombatLockdown() or value == NS.Language() then return end
         app.db.language = NS.LANGUAGES[value]
         UI.ApplyLanguage(app)
@@ -1151,7 +1185,7 @@ local function nativeSettings(app)
     UI.nativeFeedback = actionRow("feedback", "feedbackOpen", UI.FeedbackLink, "feedbackTip")
 
     section("questWindowSection")
-    checkboxSetting("showMenu", true, function()
+    checkboxSetting("showMenu", false, function()
         if app.pendingVisibility ~= nil then return app.pendingVisibility end
         return not app.db.hidden
     end, function(value)
@@ -1170,7 +1204,7 @@ local function nativeSettings(app)
     section("targetMarkers")
     for _, info in ipairs(feedbackButtons) do
         local key, labelKey = info[1], info[2]
-        dropdownSetting(labelKey, key == "rare" and 1 or 2,
+        dropdownSetting(labelKey, key == "rare" and NS.Core.TargetFeedbackMode({}, key) or 2,
             function() return NS.Core.TargetFeedbackMode(app.db, key) end,
             function(value)
                 app.db.targetFeedback[key] = value
@@ -1181,7 +1215,7 @@ local function nativeSettings(app)
         function(value) app.db.markerIcon = value; app:Schedule() end,
         function() return {strsplit(",", L("markers"))} end, "preferredRaidIconTip")
 
-    checkboxSetting("muteDeadTargetSound", false, function() return app.db.muteDeadTargetSound end,
+    checkboxSetting("muteDeadTargetSound", true, function() return app.db.muteDeadTargetSound end,
         function(value) app.db.muteDeadTargetSound = value end, "muteDeadTargetSoundTip")
 
     section("hotkeys")
@@ -1231,8 +1265,8 @@ local function nativeSettings(app)
         function() return app.db.masterAllModules ~= false end,
         function(value) app.db.masterAllModules = value; app:Schedule() end, "masterAllModulesTip")
     child(masterModulesToggle, masterToggle, function() return not app.db.masterHidden end)
-    local polestarToggle = checkboxSetting("polestarIntegration", false,
-        function() return app.db.polestarIntegration end,
+    local polestarToggle = checkboxSetting("polestarIntegration", not not addonLoaded("Polestar"),
+        function() return not not addonLoaded("Polestar") and app.db.polestarIntegration ~= false end,
         function(value)
             if InCombatLockdown() or not addonLoaded("Polestar") then return end
             app.db.polestarIntegration = value
@@ -1243,8 +1277,8 @@ local function nativeSettings(app)
         return not app.db.masterHidden and addonLoaded("Polestar")
     end)
 
-    local followTheArrowToggle = checkboxSetting("followTheArrowIntegration", false,
-        function() return app.db.followTheArrowIntegration end,
+    local followTheArrowToggle = checkboxSetting("followTheArrowIntegration", not not NS.RestedXP.FollowTheArrowAvailable(),
+        function() return not not NS.RestedXP.FollowTheArrowAvailable() and app.db.followTheArrowIntegration ~= false end,
         function(value)
             if InCombatLockdown() or not NS.RestedXP.FollowTheArrowAvailable() then return end
             app.db.followTheArrowIntegration = value
@@ -1255,8 +1289,8 @@ local function nativeSettings(app)
         return not app.db.masterHidden and NS.RestedXP.FollowTheArrowAvailable()
     end)
 
-    local restedXPToggle = checkboxSetting("restedXPIntegration", false,
-        function() return app.db.restedXPIntegration end,
+    local restedXPToggle = checkboxSetting("restedXPIntegration", not not addonLoaded("RXPGuides"),
+        function() return not not addonLoaded("RXPGuides") and app.db.restedXPIntegration ~= false end,
         function(value)
             if InCombatLockdown() or not addonLoaded("RXPGuides") then return end
             app.db.restedXPIntegration = value
@@ -1264,31 +1298,31 @@ local function nativeSettings(app)
         end, "restedXPIntegrationTip")
     restedXPToggle:AddModifyPredicate(function() return addonLoaded("RXPGuides") end)
 
-    local itemTreeToggle = checkboxSetting("showItemTreeButton", false,
-        function() return app.db.itemTreeButton == true end,
+    local itemTreeToggle = checkboxSetting("showItemTreeButton", not not addonLoaded("ItemTree"),
+        function() return not not addonLoaded("ItemTree") and app.db.itemTreeButton ~= false end,
         function(value)
             if InCombatLockdown() or not addonLoaded("ItemTree") then return end
             app.db.itemTreeButton = value
             NS.ItemTree.Sync(app)
         end, "itemTreeIntegrationTip")
     itemTreeToggle:AddModifyPredicate(function() return addonLoaded("ItemTree") end)
-    local rareScannerToggle = checkboxSetting("showRareScannerButton", true,
-        function() return app.db.rareScannerButton ~= false end,
+    local rareScannerToggle = checkboxSetting("showRareScannerButton", NS.RareScanner.MarkingAvailable(),
+        function() return NS.RareScanner.ButtonEnabled(app) end,
         function(value)
             if InCombatLockdown() or not NS.RareScanner.MarkingAvailable() then return end
             app.db.rareScannerButton = value
             NS.RareScanner.SyncMark(app)
         end, "rareScannerButtonTip")
     rareScannerToggle:AddModifyPredicate(NS.RareScanner.MarkingAvailable)
-    local rareScannerZoneToggle = checkboxSetting("rareScannerZone", false,
+    local rareScannerZoneToggle = checkboxSetting("rareScannerZone", true,
         function() return app.db.rareScannerZone == true end,
-        function(value)
-            if InCombatLockdown() or not NS.RareScanner.ZoneAvailable() then return end
+        function(value, restoring)
+            if InCombatLockdown() or (not restoring and not NS.RareScanner.ZoneAvailable()) then return end
             app.db.rareScannerZone = value
             NS.RareScanner.SyncMark(app)
         end, "rareScannerZoneTip")
     child(rareScannerZoneToggle, rareScannerToggle, function()
-        return app.db.rareScannerButton ~= false and NS.RareScanner.ZoneAvailable()
+        return NS.RareScanner.ButtonEnabled(app) and NS.RareScanner.ZoneAvailable()
     end)
 
     section("barAppearanceSection")
@@ -1300,12 +1334,12 @@ local function nativeSettings(app)
         end,
         function() return {L("masterHorizontal"), L("masterVertical")} end, "masterOrientationTip")
     sliderSetting("buttonSize", "masterModernScale", 0.3, 2, 0.01, false, 1, "buttonSizeTip")
-    sliderSetting("masterSpacing", "masterSpacing", 0, 32, 1, true, 4, "masterSpacingTip")
+    sliderSetting("masterSpacing", "masterSpacing", 0, 32, 1, true, 0, "masterSpacingTip")
     checkboxSetting("masterBackground", false, function() return app.db.masterBackground end,
         function(value) app.db.masterBackground = value; app:Schedule() end, "masterBackgroundTip")
     checkboxSetting("masterBorder", false, function() return app.db.masterBorder end,
         function(value) app.db.masterBorder = value; app:Schedule() end, "masterBorderTip")
-    checkboxSetting("masterDividers", false, function() return app.db.masterDividers end,
+    checkboxSetting("masterDividers", true, function() return app.db.masterDividers end,
         function(value) app.db.masterDividers = value; app:Schedule() end, "masterDividersTip")
     checkboxSetting("masterLocked", false, function() return app.db.masterLocked end,
         function(value) UI.SetTargetBarLocked(app, value) end, "masterLockTip")
@@ -1315,10 +1349,10 @@ local function nativeSettings(app)
     end, "masterMoveHelp")
 
     section("integrationSection")
-    checkboxSetting("showTooltips", false, function() return app.db.showTooltips end,
+    checkboxSetting("showTooltips", true, function() return app.db.showTooltips end,
         function(value) app.db.showTooltips = value end, "showTooltipsTip")
-    local questieToggle = checkboxSetting("questieTrackerButtons", true,
-        function() return app.db.questieTrackerButtons end,
+    local questieToggle = checkboxSetting("questieTrackerButtons", not not addonLoaded("Questie"),
+        function() return not not addonLoaded("Questie") and app.db.questieTrackerButtons ~= false end,
         function(value)
             if InCombatLockdown() or not addonLoaded("Questie") then return end
             app.db.questieTrackerButtons = value
@@ -1327,11 +1361,11 @@ local function nativeSettings(app)
     questieToggle:AddModifyPredicate(function() return addonLoaded("Questie") end)
     local questieOffset = sliderSetting("questieTrackerOffset", "questieTrackerOffset", -240, 240, 1, true, 35, "trackerSpacingTip")
     child(questieOffset, questieToggle, function()
-        return addonLoaded("Questie") and app.db.questieTrackerButtons
+        return addonLoaded("Questie") and app.db.questieTrackerButtons ~= false
     end)
 
-    local ellesmereToggle = checkboxSetting("ellesmereTrackerButtons", true,
-        function() return app.db.ellesmereTrackerButtons ~= false end,
+    local ellesmereToggle = checkboxSetting("ellesmereTrackerButtons", not not NS.EllesmereTracker.Available(),
+        function() return not not NS.EllesmereTracker.Available() and app.db.ellesmereTrackerButtons ~= false end,
         function(value)
             if InCombatLockdown() or not NS.EllesmereTracker.Available() then return end
             app.db.ellesmereTrackerButtons = value
@@ -1344,8 +1378,8 @@ local function nativeSettings(app)
         return NS.EllesmereTracker.Available() and app.db.ellesmereTrackerButtons ~= false
     end)
 
-    local flareUIToggle = checkboxSetting("flareUITrackerButtons", false,
-        function() return app.db.flareUITrackerButtons == true end,
+    local flareUIToggle = checkboxSetting("flareUITrackerButtons", not not NS.FlareUITracker.Available(),
+        function() return not not NS.FlareUITracker.Available() and app.db.flareUITrackerButtons ~= false end,
         function(value)
             if InCombatLockdown() or not NS.FlareUITracker.Available() then return end
             app.db.flareUITrackerButtons = value
@@ -1484,13 +1518,13 @@ function UI.RegisterSettings(app)
         panel.minimapToggle:SetPoint("TOPLEFT", 20, -338)
         panel.questieTrackerToggle = checkbox(panel, L("questieTrackerButtons"), function()
             if InCombatLockdown() or not addonLoaded("Questie") then return end
-            app.db.questieTrackerButtons = not app.db.questieTrackerButtons
+            app.db.questieTrackerButtons = app.db.questieTrackerButtons == false
             NS.QuestieTracker.Sync(app)
             UI.UpdateSettings(app)
         end)
         panel.ellesmereToggle = checkbox(panel, L("ellesmereTrackerButtons"), function()
             if InCombatLockdown() or not NS.EllesmereTracker.Available() then return end
-            app.db.ellesmereTrackerButtons = not app.db.ellesmereTrackerButtons
+            app.db.ellesmereTrackerButtons = app.db.ellesmereTrackerButtons == false
             NS.EllesmereTracker.Sync(app)
             UI.UpdateSettings(app)
         end)
@@ -1509,7 +1543,7 @@ function UI.RegisterSettings(app)
         panel.ellesmereOffsetControl.caption:SetText(L("ellesmereTrackerOffset"))
         panel.flareUIToggle = checkbox(panel, L("flareUITrackerButtons"), function()
             if InCombatLockdown() or not NS.FlareUITracker.Available() then return end
-            app.db.flareUITrackerButtons = not app.db.flareUITrackerButtons
+            app.db.flareUITrackerButtons = app.db.flareUITrackerButtons == false
             NS.FlareUITracker.Sync(app)
             UI.UpdateSettings(app)
         end)
@@ -1522,20 +1556,20 @@ function UI.RegisterSettings(app)
         panel.flareUIToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
         panel.restedXPToggle = checkbox(panel, L("restedXPIntegration"), function()
             if InCombatLockdown() or not addonLoaded("RXPGuides") then return end
-            app.db.restedXPIntegration = not app.db.restedXPIntegration
+            app.db.restedXPIntegration = app.db.restedXPIntegration == false
             NS.RestedXP.Sync(app)
             UI.UpdateSettings(app)
         end)
         panel.polestarToggle = checkbox(panel, L("polestarIntegration"), function()
             if InCombatLockdown() or not addonLoaded("Polestar") then return end
-            app.db.polestarIntegration = not app.db.polestarIntegration
+            app.db.polestarIntegration = app.db.polestarIntegration == false
             NS.RestedXP.Sync(app)
             UI.UpdateStatus(app)
             UI.UpdateSettings(app)
         end)
         panel.followTheArrowToggle = checkbox(panel, L("followTheArrowIntegration"), function()
             if InCombatLockdown() or not NS.RestedXP.FollowTheArrowAvailable() then return end
-            app.db.followTheArrowIntegration = not app.db.followTheArrowIntegration
+            app.db.followTheArrowIntegration = app.db.followTheArrowIntegration == false
             NS.RestedXP.Sync(app)
             UI.UpdateStatus(app)
             UI.UpdateSettings(app)
@@ -1548,7 +1582,7 @@ function UI.RegisterSettings(app)
         panel.followTheArrowToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
         panel.itemTreeToggle = checkbox(panel, L("showItemTreeButton"), function()
             if InCombatLockdown() or not addonLoaded("ItemTree") then return end
-            app.db.itemTreeButton = not app.db.itemTreeButton
+            app.db.itemTreeButton = app.db.itemTreeButton == false
             NS.ItemTree.Sync(app)
             UI.UpdateSettings(app)
         end)
@@ -1733,7 +1767,7 @@ function UI.UpdateSettings(app)
     UI.settings.tooltipToggle:SetChecked(app.db.showTooltips)
     UI.settings.minimapToggle:SetChecked(not app.db.minimapHidden)
     local ellesmereAvailable = NS.EllesmereTracker.Available()
-    UI.settings.ellesmereToggle:SetChecked(app.db.ellesmereTrackerButtons ~= false)
+    UI.settings.ellesmereToggle:SetChecked(not not ellesmereAvailable and app.db.ellesmereTrackerButtons ~= false)
     UI.settings.ellesmereToggle:SetEnabled(ellesmereAvailable)
     local ellesmereGray = ellesmereAvailable and 1 or 0.5
     UI.settings.ellesmereToggle.caption:SetTextColor(ellesmereGray, ellesmereGray, ellesmereGray)
@@ -1743,32 +1777,33 @@ function UI.UpdateSettings(app)
     UI.settings.ellesmereOffsetControl.edit:SetEnabled(ellesmereOffsetEnabled)
     local flareUIAvailable = NS.FlareUITracker.Available()
     UI.settings.flareUIToggle:SetEnabled(flareUIAvailable)
-    UI.settings.flareUIToggle:SetChecked(app.db.flareUITrackerButtons == true)
+    UI.settings.flareUIToggle:SetChecked(not not flareUIAvailable and app.db.flareUITrackerButtons ~= false)
     local flareUIGray = flareUIAvailable and 1 or 0.5
     UI.settings.flareUIToggle.caption:SetTextColor(flareUIGray, flareUIGray, flareUIGray)
     local questieAvailable = addonLoaded("Questie")
-    UI.settings.questieTrackerToggle:SetChecked(app.db.questieTrackerButtons)
+    UI.settings.questieTrackerToggle:SetChecked(not not questieAvailable and app.db.questieTrackerButtons ~= false)
     UI.settings.questieTrackerToggle:SetEnabled(questieAvailable)
     local gray = questieAvailable and 1 or 0.5
     UI.settings.questieTrackerToggle.caption:SetTextColor(gray, gray, gray)
     UI.settings.questieOffsetControl:Refresh()
-    local offsetEnabled = questieAvailable and app.db.questieTrackerButtons
+    local offsetEnabled = questieAvailable and app.db.questieTrackerButtons ~= false
     UI.settings.questieOffsetControl.slider:SetEnabled(offsetEnabled)
     UI.settings.questieOffsetControl.edit:SetEnabled(offsetEnabled)
-    UI.settings.restedXPToggle:SetChecked(app.db.restedXPIntegration)
     local restedXPAvailable = addonLoaded("RXPGuides")
+    UI.settings.restedXPToggle:SetChecked(not not restedXPAvailable and app.db.restedXPIntegration ~= false)
     UI.settings.restedXPToggle:SetEnabled(restedXPAvailable)
     UI.settings.restedXPToggle.caption:SetTextColor(restedXPAvailable and 1 or 0.5,
         restedXPAvailable and 1 or 0.5, restedXPAvailable and 1 or 0.5)
     local polestarAvailable = addonLoaded("Polestar")
-    UI.settings.polestarToggle:SetChecked(app.db.polestarIntegration)
+    UI.settings.polestarToggle:SetChecked(not not polestarAvailable and app.db.polestarIntegration ~= false)
     UI.settings.polestarToggle:SetEnabled(polestarAvailable)
     local polestarGray = polestarAvailable and 1 or 0.5
     UI.settings.polestarToggle.caption:SetTextColor(polestarGray, polestarGray, polestarGray)
-    local followTheArrowAvailable = not app.db.masterHidden and NS.RestedXP.FollowTheArrowAvailable()
-    UI.settings.followTheArrowToggle:SetChecked(app.db.followTheArrowIntegration)
-    UI.settings.followTheArrowToggle:SetEnabled(followTheArrowAvailable)
-    local followTheArrowGray = followTheArrowAvailable and 1 or 0.5
+    local followTheArrowAvailable = NS.RestedXP.FollowTheArrowAvailable()
+    UI.settings.followTheArrowToggle:SetChecked(not not followTheArrowAvailable and app.db.followTheArrowIntegration ~= false)
+    local followTheArrowEnabled = not app.db.masterHidden and followTheArrowAvailable
+    UI.settings.followTheArrowToggle:SetEnabled(followTheArrowEnabled)
+    local followTheArrowGray = followTheArrowEnabled and 1 or 0.5
     UI.settings.followTheArrowToggle.caption:SetTextColor(followTheArrowGray, followTheArrowGray, followTheArrowGray)
     local first, second = GetBindingKey(MASTER_BINDING)
     if not UI.settings.hotkey.listening then UI.settings.hotkey:SetText(bindingText(first)) end
@@ -1777,8 +1812,8 @@ function UI.UpdateSettings(app)
     if not UI.settings.focusHotkey.listening then UI.settings.focusHotkey:SetText(bindingText(first)) end
     if not UI.settings.focusHotkey2.listening then UI.settings.focusHotkey2:SetText(bindingText(second)) end
     local itemTreeAvailable = addonLoaded("ItemTree")
-    UI.settings.itemTreeToggle:SetChecked(app.db.itemTreeButton == true)
-    UI.settings.rareScannerToggle:SetChecked(app.db.rareScannerButton ~= false)
+    UI.settings.itemTreeToggle:SetChecked(not not itemTreeAvailable and app.db.itemTreeButton ~= false)
+    UI.settings.rareScannerToggle:SetChecked(NS.RareScanner.ButtonEnabled(app))
     local rareScannerAvailable = NS.RareScanner.MarkingAvailable()
     UI.settings.rareScannerToggle:SetEnabled(rareScannerAvailable)
     local rareGray = rareScannerAvailable and 1 or 0.5
@@ -2052,9 +2087,9 @@ function UI.UpdateStatus(app)
     if not UI.database then return end
     local status = NS.Database.status
     if status == L("dbMissing") and app.db.masterAllModules ~= false and not app.db.masterHidden then
-        if _G.Polestar and _G.Polestar.Engine and not app.db.polestarIntegration then
+        if _G.Polestar and _G.Polestar.Engine and app.db.polestarIntegration == false then
             status = L("dbEnablePolestar")
-        elseif NS.RestedXP.FollowTheArrowAvailable() and not app.db.followTheArrowIntegration then
+        elseif NS.RestedXP.FollowTheArrowAvailable() and app.db.followTheArrowIntegration == false then
             status = L("dbEnableFollowTheArrow")
         end
     end

@@ -4,6 +4,20 @@ Spielerchronik ab der ersten belegten Veröffentlichung. Die neueste Version ste
 
 [English](docs/changelog/enUS.md) · [Español](docs/changelog/esES.md) · [Français](docs/changelog/frFR.md) · [Türkçe](docs/changelog/trTR.md) · [简体中文](docs/changelog/zhCN.md)
 
+## 1.8.4 – 27.11.2026
+
+### SilverDragon
+- **Neu: SilverDragon-Unterstützung!** Der violette Rare-Button und sein Hotkey visieren den auf der Weltkarte fokussierten SilverDragon-Rare an. **Alle Rares im Gebiet suchen** ist standardmäßig an und durchsucht die bekannten Rares der aktuellen Zone. Wenn beide Addons verfügbar sind, hat RareScanner Vorrang. Der Button erscheint automatisch, sobald eines der beiden Addons verfügbar ist.
+
+### Patchnotes
+- Ein Zwerg und ein Murloc begrüßen dich mit Sprechblasen im Patchnotes-Fenster.
+- **Neue Patchnotes beim Start anzeigen** ist standardmäßig aus. Du kannst die Option unten im Patchnotes-Fenster aktivieren.
+
+### Standardeinstellungen
+- **Automatische Modulauswahl:** Sobald ein kompatibles Addon geladen ist, aktiviert Next dessen Integration und zeigt die zugehörigen Zielbuttons an. Manuell ausgeschaltete Module bleiben aus.
+- Das Questfenster startet ausgeschaltet. Modulsuche, Trennlinien, Button-Tooltips und das Stummschalten des Abwahl-Sounds sind aktiv. Der Leistenabstand beträgt 0 px. Der Rare-Button verwendet Ping auf unterstützten Clients.
+- Der **Standardwerte**-Button in den Next-Optionen auf Forever setzt nur Next-Optionen zurück.
+
 ## 1.8.3 – 26.11.2026
 
 ### FlareUI

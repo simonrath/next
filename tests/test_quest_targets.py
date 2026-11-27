@@ -39,12 +39,16 @@ class QuestTargetsTests(unittest.TestCase):
             rested.scripts.OnClick()
             assert(core.TargetFeedbackMode(app.db,'restedXP')==2)
             assert(core.TargetFeedbackMode(app.db,'itemTree')==3)
-            assert(core.TargetFeedbackMode(app.db,'rare')==1)
+            assert(core.TargetFeedbackMode(app.db,'rare')==3)
             app:Refresh()
             macro=ui.master.attributes.macrotext1
             assert(not macro:find('/ping',1,true) and not macro:find('/tm',1,true))
             assert(ui.rows[1].attributes.macrotext1:find('/ping',1,true))
+            app.db.targetFeedback.rare=1
+            assert(core.TargetFeedbackMode(app.db,'rare')==1)
+            app.db.targetFeedback.rare=nil
             C_Ping=nil
+            assert(core.TargetFeedbackMode(app.db,'rare')==1)
             assert(not core.Macro('Wolf', app.db):find('/ping',1,true))
         ''')
 
@@ -759,13 +763,18 @@ class QuestTargetsTests(unittest.TestCase):
             assert(not controls.polestarIntegration.predicate())
             assert(not controls.followTheArrowIntegration.predicate())
             assert(not controls.rareScannerZone.predicate())
-            local zoneAvailable=NS.RareScanner.ZoneAvailable
+            assert(nativeSettings.QUESTTARGETS_showRareScannerButton.default==false)
+            assert(not nativeSettings.QUESTTARGETS_showRareScannerButton.GetValue())
+            local zoneAvailable, markingAvailable=NS.RareScanner.ZoneAvailable,NS.RareScanner.MarkingAvailable
             NS.RareScanner.ZoneAvailable=function() return true end
+            NS.RareScanner.MarkingAvailable=function() return true end
             assert(controls.rareScannerZone.predicate())
             NS.app.db.rareScannerButton=false
             assert(not controls.rareScannerZone.predicate())
+            assert(nativeSettings.QUESTTARGETS_showRareScannerButton.default==false)
+            assert(not nativeSettings.QUESTTARGETS_showRareScannerButton.GetValue())
             NS.app.db.rareScannerButton=true
-            NS.RareScanner.ZoneAvailable=zoneAvailable
+            NS.RareScanner.ZoneAvailable,NS.RareScanner.MarkingAvailable=zoneAvailable,markingAvailable
             local allOptions={}
             for _,layoutToRead in ipairs({layout,buttonsLayout}) do
                 for _,item in ipairs(layoutToRead.initializers) do allOptions[#allOptions+1]=item end
@@ -792,8 +801,42 @@ class QuestTargetsTests(unittest.TestCase):
             assert(NS.app.db.polestarIntegration==true)
             polestarSetting.SetValue(false)
             assert(NS.app.db.polestarIntegration==false)
+            local defaults = {showMenu=false, feedbackRareScanner=supportsPing and 3 or 1,
+                muteDeadTargetSound=true, masterAllModules=true, masterDividers=true,
+                showTooltips=true, ellesmereTrackerButtons=false, masterSpacing=0}
+            for key, expected in pairs(defaults) do
+                assert(nativeSettings['QUESTTARGETS_'..key].default==expected, key)
+            end
+            if settingsTestInterface==16001 then
+                local app=NS.app
+                local otherSetting=17
+                nativeSettings.UNRELATED={SetValue=function() otherSetting=0 end}
+                local oldPopup=StaticPopup_Show
+                StaticPopup_Show=function(key)
+                    assert(key=='NEXT_RESTORE_DEFAULTS', key)
+                    shownPopup=key
+                end
+                for _,category in ipairs({nativeCategory,NS.UI.nativeButtonsCategory}) do
+                    app.db.showTooltips=false
+                    app.db.masterSpacing=19
+                    app.db.ellesmereTrackerButtons=true
+                    app.db.rareScannerButton=false
+                    category.page.Header.DefaultsButton.scripts.OnClick()
+                    assert(shownPopup=='NEXT_RESTORE_DEFAULTS')
+                    assert(not app.db.showTooltips and app.db.masterSpacing==19)
+                    combat=true
+                    StaticPopupDialogs[shownPopup].OnAccept()
+                    assert(app.db.masterSpacing==19)
+                    combat=false
+                    StaticPopupDialogs[shownPopup].OnAccept()
+                    assert(app.db.showTooltips and app.db.masterSpacing==0)
+                    assert(not app.db.ellesmereTrackerButtons and otherSetting==17)
+                    assert(app.db.rareScannerButton==nil)
+                end
+                StaticPopup_Show=oldPopup
+            end
             local soundSetting=nativeSettings.QUESTTARGETS_muteDeadTargetSound
-            assert(soundSetting.GetValue()==false)
+            assert(soundSetting.GetValue()==true)
             soundSetting.SetValue(true)
             assert(NS.app.db.muteDeadTargetSound==true)
             soundSetting.SetValue(false)
@@ -814,15 +857,16 @@ class QuestTargetsTests(unittest.TestCase):
             end
             assert(masterCheckbox and masterCheckbox.data.description==NS.L('masterMoveTip'))
             assert(not nativeSettings.QUESTTARGETS_focusHotkeyEnabled)
-            assert(nativeSettings.QUESTTARGETS_questieTrackerButtons.GetValue()==true)
+            assert(nativeSettings.QUESTTARGETS_questieTrackerButtons.GetValue()==false)
             nativeSettings.QUESTTARGETS_questieTrackerButtons.SetValue(false)
-            assert(NS.app.db.questieTrackerButtons==true) -- absent addon
+            assert(NS.app.db.questieTrackerButtons==nil) -- absent addon
             for _,item in ipairs(allOptions) do
                 if item.data.setting and item.data.setting.variable=='QUESTTARGETS_questieTrackerOffset' then
                     assert(not item.predicate())
                 end
             end
             loadedAddons.Questie=true
+            assert(nativeSettings.QUESTTARGETS_questieTrackerButtons.GetValue()==true)
             nativeSettings.QUESTTARGETS_questieTrackerButtons.SetValue(false)
             assert(NS.app.db.questieTrackerButtons==false)
             nativeSettings.QUESTTARGETS_questieTrackerButtons.SetValue(true)
@@ -1154,7 +1198,7 @@ class QuestTargetsTests(unittest.TestCase):
         """)
 
     def test_native_settings_tooltips_minimap_and_hotkey(self):
-        self.lua.execute('''boot()
+        self.lua.execute('''QuestTargetsDB={showTooltips=false,hidden=false}; boot()
             assert(NS.UI.minimap and NS.UI.minimap.shown)
             assert(not NS.app.db.showTooltips)
             NS.UI.Tooltip(QuestTargetsTarget1)
@@ -1362,7 +1406,7 @@ class QuestTargetsTests(unittest.TestCase):
         ''')
 
     def test_button_bar_options_reflow_secure_buttons_and_edit_outline(self):
-        self.lua.execute('''boot()
+        self.lua.execute('''QuestTargetsDB={masterDividers=false}; boot()
             local app, ui = NS.app, NS.UI
             local master, options = ui.master, ui.masterSettings
             local rare = CreateFrame('Button', nil, UIParent, 'SecureActionButtonTemplate')
@@ -1372,7 +1416,7 @@ class QuestTargetsTests(unittest.TestCase):
             NS.RareScanner.SyncMark = function() end
             NS.ItemTree.Sync = function() end
             ui.LayoutTargetButtons(app)
-            assert(item.point[1]=='LEFT' and item.point[2]==master and item.point[4]==4)
+            assert(item.point[1]=='LEFT' and item.point[2]==master and item.point[4]==0)
             assert(rare.point[2]==item and not master.barBorder)
             options.backgroundToggle.scripts.OnClick()
             flush()
@@ -1591,7 +1635,7 @@ class QuestTargetsTests(unittest.TestCase):
     def test_master_includes_untracked_quests_with_hidden_menu(self):
         self.lua.execute('''
             quests[2].objectives = {{type='monster',text='Bär getötet: 0/3',numFulfilled=0,numRequired=3,finished=false}}
-            boot(); NS.app:ToggleFilter(); NS.app:Toggle()
+            QuestTargetsDB={hidden=false}; boot(); NS.app:ToggleFilter(); NS.app:Toggle()
             assert(not NS.UI.frame.shown and NS.UI.master.shown)
             assert(#NS.app.questEntries == 1)
             assert(NS.UI.master.entry.names['Bär'] and NS.UI.master.entry.names.Waldwolf)
@@ -1606,7 +1650,7 @@ class QuestTargetsTests(unittest.TestCase):
         ''')
 
     def test_master_settings_scale_position_and_combat_deferred(self):
-        self.lua.execute('''boot(); NS.UI.Settings(NS.app)
+        self.lua.execute('''QuestTargetsDB={hidden=false}; boot(); NS.UI.Settings(NS.app)
             local settings, master = NS.UI.settings, NS.UI.master
             master.scripts.OnDragStart(master)
             assert(master.moving)
@@ -1979,7 +2023,7 @@ class QuestTargetsTests(unittest.TestCase):
         ''')
 
     def test_combat_freezes_actions_and_defers_visibility(self):
-        self.lua.execute('''boot()
+        self.lua.execute('''QuestTargetsDB={hidden=false}; boot()
             local old = QuestTargetsTarget1.attributes.macrotext1
             combat = true; event('PLAYER_REGEN_DISABLED')
             quests[1].objectives[1].finished = true
@@ -1997,7 +2041,7 @@ class QuestTargetsTests(unittest.TestCase):
         ''')
 
     def test_reload_in_combat_defers_all_ui_creation(self):
-        self.lua.execute('''combat = true; boot()
+        self.lua.execute('''combat = true; QuestTargetsDB={hidden=false}; boot()
             assert(NS.UI.frame == nil)
             NS.app:Toggle(); NS.app:Toggle()
             combat = false; event('PLAYER_REGEN_ENABLED')

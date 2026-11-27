@@ -168,7 +168,7 @@ function Core.TargetFeedbackMode(settings, button)
     local mode = settings.targetFeedback and settings.targetFeedback[button]
     if mode == 1 or mode == 2 then return mode end
     if mode == 3 then return Core.PingAvailable() and 3 or 1 end
-    if button == "rare" then return 1 end
+    if button == "rare" then return Core.PingAvailable() and 3 or 1 end
     if Core.PingEnabled(settings) then return 3 end
     return settings.autoMark and 2 or 1
 end

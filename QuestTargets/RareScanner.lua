@@ -99,15 +99,94 @@ local function scannerDB()
     return addon and addon.db
 end
 
-function Integration.MarkingAvailable()
+local function rareScannerAvailable()
     return RSOverlayMixin ~= nil and type(RSOverlayMixin.OnAcquired) == "function"
         and type(RegisterStateDriver) == "function" and scannerDB() ~= nil
 end
 
+local function silverDragon()
+    local addon = _G.SilverDragon
+    if type(addon) == "table" and addon.db and type(RegisterStateDriver) == "function"
+        and type(addon.NameForMob) == "function" and type(addon.GetData) == "function"
+        and type(addon.GetXY) == "function" and type(addon.GetModule) == "function"
+        and type(addon.IterateRelevantMobs) == "function" and type(addon.ShouldIgnoreMob) == "function" then
+        return addon
+    end
+end
+
+local function provider()
+    if rareScannerAvailable() then return "RareScanner" end
+    if silverDragon() then return "SilverDragon" end
+end
+
+function Integration.MarkingAvailable()
+    return provider() ~= nil
+end
+
+function Integration.ButtonEnabled(app)
+    return app.db.rareScannerButton ~= false and Integration.MarkingAvailable()
+end
+
 function Integration.ZoneAvailable()
-    return Integration.MarkingAvailable() and C_Map and type(C_Map.GetBestMapForUnit) == "function"
+    if provider() == "SilverDragon" then
+        return C_Map ~= nil and type(C_Map.GetBestMapForUnit) == "function"
+    end
+    return rareScannerAvailable() and C_Map and type(C_Map.GetBestMapForUnit) == "function"
         and RSWorldMapButtonMixin and type(RSWorldMapButtonMixin.SetupMenu) == "function"
         and DropdownButtonMixin and type(DropdownButtonMixin.SetupMenu) == "function"
+end
+
+local silverZoneCache
+local function addSilverDragonMob(entry, addon, id, zone, onlyZone)
+    if addon:ShouldIgnoreMob(id, zone) or (onlyZone and addon.IsMobInPhase
+        and not addon:IsMobInPhase(id, zone)) then return end
+    local name = NS.Core.SafeName(addon:NameForMob(id))
+    if not name or (UNKNOWN and name == UNKNOWN) or (UNKNOWNOBJECT and name == UNKNOWNOBJECT) then return end
+    if not entry.names[name] then
+        entry.names[name] = true
+        entry.nameList[#entry.nameList + 1] = name
+    end
+    local data = addon:GetData(id)
+    for mapID, coords in pairs(data and data.locations or {}) do
+        if not onlyZone or mapID == zone then
+            for _, coord in ipairs(coords) do
+                if not addon.CoordGateMet or addon:CoordGateMet(data, mapID, coord) then
+                    local x, y = addon:GetXY(coord)
+                    if x ~= 0 or y ~= 0 then addPoint(entry, name, NS.Proximity.MapPoint(mapID, x, y)) end
+                end
+            end
+        end
+    end
+end
+
+local function silverDragonEntry(zoneSearch)
+    local addon = silverDragon()
+    if not addon then return end
+    local zone = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+    local entry = {nameList={}, names={}, refs={}, mapPoints={}}
+    if zoneSearch then
+        if not zone then return end
+        local now = GetTime()
+        if silverZoneCache and silverZoneCache.addon == addon and silverZoneCache.zone == zone
+            and now < silverZoneCache.expires then return silverZoneCache.entry end
+        entry.scope = "SilverDragon:zone:" .. zone
+        for id in addon:IterateRelevantMobs(zone, true) do addSilverDragonMob(entry, addon, id, zone, true) end
+        table.sort(entry.nameList)
+        entry.name = entry.nameList[1]
+        entry = entry.name and entry or nil
+        -- The catalogue can change as the provider learns names or applies filters.
+        silverZoneCache = {addon=addon, zone=zone, expires=now + 10, entry=entry}
+        return entry
+    end
+
+    silverZoneCache = nil
+    local overlay = addon:GetModule("Overlay", true)
+    local id = overlay and overlay.focus_id
+    if type(id) ~= "number" or type(overlay.IsFocused) ~= "function" or not overlay:IsFocused(id, false) then return end
+    entry.scope = "SilverDragon:focus:" .. id
+    addSilverDragonMob(entry, addon, id, zone, false)
+    entry.name = entry.nameList[1]
+    if entry.name then return entry end
 end
 
 local function observeMark(_, x, y, _, _, _, source, groupPin)
@@ -132,7 +211,7 @@ local function observeMark(_, x, y, _, _, _, source, groupPin)
 end
 
 local function observeOverlays()
-    if markHooked or not Integration.MarkingAvailable() then return end
+    if markHooked or not rareScannerAvailable() then return end
     hooksecurefunc(RSOverlayMixin, "OnAcquired", observeMark)
     markHooked = true
 end
@@ -334,18 +413,24 @@ local function loadZoneSpawnBatch(app, cache)
     C_Timer.After(0, function()
         cache.scheduled = false
         if zoneCache ~= cache or InCombatLockdown() or app.db.rareScannerZone ~= true
-            or app.db.rareScannerButton == false or not Integration.ZoneAvailable() then return end
+            or app.db.rareScannerButton == false or not rareScannerAvailable() or not Integration.ZoneAvailable() then return end
         local mapID, instanceID = zoneLocation()
         if mapID == cache.mapID and instanceID == cache.instanceID then loadZoneSpawnBatch(app, cache) end
     end)
 end
 
 local function searchEntry(app)
-    if app.db.rareScannerZone ~= true then
+    local source = provider()
+    if source == "SilverDragon" then
+        zoneCache = nil
+        return silverDragonEntry(app.db.rareScannerZone == true and Integration.ZoneAvailable())
+    end
+    silverZoneCache = nil
+    if source ~= "RareScanner" then return end
+    if app.db.rareScannerZone ~= true or not Integration.ZoneAvailable() then
         zoneCache = nil
         return markedEntry(app)
     end
-    if not Integration.ZoneAvailable() then return end
     local mapID, instanceID = zoneLocation()
     if not mapID and not instanceID then
         zoneCache = nil
@@ -365,7 +450,7 @@ local function searchEntry(app)
 end
 
 function Integration.SearchEntry(app)
-    if app.db.rareScannerButton ~= false and Integration.MarkingAvailable() then
+    if Integration.ButtonEnabled(app) then
         return searchEntry(app)
     end
 end
@@ -445,19 +530,22 @@ local function createMarkButton(app)
     target:SetScript("PreClick", function(self, mouseButton, down)
         if mouseButton == "LeftButton" and not down and not InCombatLockdown() then
             NS.Proximity.Sample()
-            prepareMarkMacro(self, app.db.rareScannerButton ~= false and searchEntry(app) or nil, true, app.db)
+            prepareMarkMacro(self, Integration.ButtonEnabled(app) and searchEntry(app) or nil, true, app.db)
         end
     end)
     target:SetScript("OnEnter", function(self)
         if not app.db.showTooltips then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(NS.L("rareScannerButton"))
+        GameTooltip:ClearLines()
+        local silver = provider() == "SilverDragon"
+        GameTooltip:SetText(NS.L(silver and "silverDragonButton" or "rareScannerButton"))
         GameTooltip:AddLine(NS.L("rareScannerBindingTip"), 1, 1, 1, true)
-        local zone = app.db.rareScannerZone == true
+        local zone = app.db.rareScannerZone == true and Integration.ZoneAvailable()
         if zone then GameTooltip:AddLine(NS.L("rareScannerZone"), 0.82, 0.82, 0.82, true) end
         for _, name in ipairs(self.markedNames or {}) do GameTooltip:AddLine(name, 1, 1, 1, true) end
         if not self.markedNames then
-            GameTooltip:AddLine(NS.L(zone and "rareScannerNoZoneRares" or "rareScannerNoMarks"), 1, 0.82, 0, true)
+            local empty = zone and "rareScannerNoZoneRares" or (silver and "silverDragonNoFocus" or "rareScannerNoMarks")
+            GameTooltip:AddLine(NS.L(empty), 1, 0.82, 0, true)
         end
         GameTooltip:Show()
     end)
@@ -469,12 +557,12 @@ end
 function Integration.SyncMark(app)
     if InCombatLockdown() or not NS.UI.master then return false end
     observeOverlays()
-    local show = Integration.MarkingAvailable() and app.db.rareScannerButton ~= false
+    local show = Integration.ButtonEnabled(app)
     local target = Integration.markButton
     local created = not target and show
     if created then target = createMarkButton(app) end
     if not target then return false end
-    if not show then zoneCache = nil end
+    if not show then zoneCache, silverZoneCache = nil, nil end
     local entry = show and searchEntry(app) or nil
     prepareMarkMacro(target, entry, false, app.db)
     local visibilityChanged = target:IsShown() ~= show

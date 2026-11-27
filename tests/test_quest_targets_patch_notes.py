@@ -5,30 +5,32 @@ import test_quest_targets as addon
 class PatchNotesTests(unittest.TestCase):
     setUp = addon.QuestTargetsTests.setUp
 
-    def test_skip_automatic_notes_persists_across_updates_and_can_be_reversed(self):
+    def test_automatic_notes_default_off_and_allow_opt_in(self):
         self.lua.execute('''
             local version='1.7.3'
             GetAddOnMetadata=function() return version end
             boot()
+            assert(not QuestTargetsPatchNotes)
+            NS.PatchNotes.Open()
             local panel=QuestTargetsPatchNotes
             local toggle=panel.autoOpenToggle
             assert(panel:IsShown() and not toggle:GetChecked())
+            assert(toggle.caption:GetText()==NS.L('patchNotesShowAutomatic'))
             toggle:SetChecked(true); toggle.scripts.OnClick(toggle)
             panel:Hide()
             version='1.7.4'; NS.PatchNotes.OnLogin(); flush()
-            assert(not panel:IsShown() and QuestTargetsNewsDB.seenVersion=='1.7.3')
-            NS.PatchNotes.Open()
-            assert(panel:IsShown() and toggle:GetChecked())
+            assert(panel:IsShown() and toggle:GetChecked() and QuestTargetsNewsDB.seenVersion=='1.7.4')
             toggle:SetChecked(false); toggle.scripts.OnClick(toggle)
             panel:Hide()
             version='1.7.5'; NS.PatchNotes.OnLogin(); flush()
-            assert(panel:IsShown() and QuestTargetsNewsDB.seenVersion=='1.7.5')
+            assert(not panel:IsShown() and QuestTargetsNewsDB.seenVersion=='1.7.4')
         ''')
 
     def test_complete_history_updates_in_place_for_each_language(self):
         self.lua.execute('''
             GetAddOnMetadata=function() return '1.7.0' end
             boot()
+            NS.PatchNotes.Open()
             local panel=QuestTargetsPatchNotes
             local expected={
                 enUS={'Targeting bar','Patch Notes window'},
@@ -43,6 +45,8 @@ class PatchNotesTests(unittest.TestCase):
                 NS.app.db.language=locale
                 NS.UI.ApplyLanguage(NS.app)
                 assert(panel:IsShown() and #panel.cards==26)
+                assert(panel.dwarfGreeting:GetText()==NS.L('patchNotesDwarfGreeting'))
+                assert(panel.murlocGreeting:GetText()==NS.L('patchNotesMurlocGreeting'))
                 assert(panel.cards[26].heading:GetText()=='1.0.11')
                 firstCard=firstCard or panel.cards[1]
                 assert(panel.cards[1]==firstCard)
@@ -75,6 +79,7 @@ class PatchNotesTests(unittest.TestCase):
 
     def test_update_opens_once_and_manual_view_stays_open(self):
         self.lua.execute('''
+            QuestTargetsNewsDB={showAutomatic=true}
             local version='1.7.0-preview.20261119T010000Z'
             GetAddOnMetadata=function(_, key) if key=='Version' then return version end end
             boot()
@@ -106,7 +111,7 @@ class PatchNotesTests(unittest.TestCase):
 
     def test_auto_open_waits_until_out_of_combat(self):
         self.lua.execute('''
-            QuestTargetsNewsDB={seenVersion='1.7.0'}
+            QuestTargetsNewsDB={seenVersion='1.7.0',showAutomatic=true}
             GetAddOnMetadata=function() return '1.7.1' end
             event('ADDON_LOADED','QuestTargets')
             combat=true

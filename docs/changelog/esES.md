@@ -2,6 +2,20 @@
 
 Cambios para jugadores, empezando por la versión más reciente. Las indicaciones de instalación históricas se aplican a la versión indicada.
 
+## 1.8.4 – 27 de noviembre de 2026
+
+### SilverDragon
+- **¡Nuevo: compatibilidad con SilverDragon!** El botón morado y su atajo seleccionan el raro que enfoques en el mapa de SilverDragon. **Buscar todos los raros de la zona** está activada por defecto y busca los raros conocidos de tu zona. RareScanner tiene prioridad si ambos addons están disponibles. El botón aparece automáticamente cuando hay un complemento compatible disponible.
+
+### Notas del parche
+- Un enano y un múrloc te dan la bienvenida con bocadillos en la ventana de notas del parche.
+- **Mostrar las nuevas notas del parche al iniciar** está desactivado por defecto. Puedes activarlo al pie de la ventana de notas.
+
+### Ajustes predeterminados
+- **Activación automática de módulos:** Cuando se carga un addon compatible, Next activa su integración y muestra sus botones de objetivo. Los módulos que desactives seguirán desactivados.
+- La ventana de misiones empieza desactivada. La búsqueda en módulos, los separadores, las descripciones y el silencio al quitar un objetivo empiezan activados. El espacio es de 0 px. El botón de raros usa avisos en clientes compatibles.
+- El botón de valores predeterminados de Next en Forever solo restablece las opciones de Next.
+
 ## 1.8.3 – 26 nov 2026
 
 ### FlareUI

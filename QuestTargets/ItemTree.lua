@@ -269,7 +269,7 @@ local function syncTarget(app)
 end
 
 function Integration.SearchEntry(app)
-    if app.db.itemTreeButton and ItemTree and ItemTree.UI and Integration.target then
+    if app.db.itemTreeButton ~= false and ItemTree and ItemTree.UI and Integration.target then
         return Integration.target.entry
     end
 end
@@ -279,7 +279,7 @@ function Integration.Sync(app)
     Integration.SyncMacro(app)
     syncTarget(app)
     local ui = ItemTree and ItemTree.UI
-    local inBar = ui ~= nil and app.db.itemTreeButton == true
+    local inBar = ui ~= nil and app.db.itemTreeButton ~= false
     local target = Integration.target or (inBar and createTarget(app))
     if target and target.inBar ~= inBar then
         target.inBar = inBar

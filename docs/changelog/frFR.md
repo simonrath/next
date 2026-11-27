@@ -2,6 +2,20 @@
 
 Changements pour les joueurs, de la version la plus récente à la plus ancienne. Les indications d’installation historiques s’appliquent à la version indiquée.
 
+## 1.8.4 – 27 novembre 2026
+
+### SilverDragon
+- **Nouveau : prise en charge de SilverDragon !** Le bouton violet et son raccourci ciblent le rare focalisé sur la carte de SilverDragon. L’option **Rechercher les rares de la zone** est activée par défaut et recherche les rares connus de la zone actuelle. RareScanner est prioritaire si les deux addons sont disponibles. Le bouton apparaît automatiquement dès qu’un de ces addons est disponible.
+
+### Notes de mise à jour
+- Un nain et un murloc t’accueillent avec des bulles dans la fenêtre des notes de mise à jour.
+- **Afficher les nouvelles notes au démarrage** est désactivé par défaut. Activez cette option en bas de la fenêtre des notes.
+
+### Réglages par défaut
+- **Activation automatique des modules**. Quand un addon compatible se charge, Next active son intégration et affiche ses boutons de ciblage. Les modules que tu désactives restent désactivés.
+- La fenêtre des quêtes est désactivée par défaut. La recherche dans les modules, les séparateurs, les infobulles et la coupure du son de perte de cible sont activés. L’espacement est de 0 px. Le bouton des rares émet un signal sur les clients compatibles.
+- Sur Forever, le bouton des valeurs par défaut de Next réinitialise uniquement les options de Next.
+
 ## 1.8.3 – 26 nov. 2026
 
 ### FlareUI

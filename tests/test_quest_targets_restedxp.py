@@ -327,10 +327,7 @@ class RestedXPTests(unittest.TestCase):
                 return {GetAddon=function(_,addonName) if addonName=='RXPGuides' then return rxp end end}
             else return standardLibStub(name) end end
             boot(); NS.UI.Settings(NS.app)
-            assert(NS.UI.settings.restedXPToggle:GetChecked()==false)
-            assert(NS.UI.master.entry.nameList[1]=='Spinne' or NS.UI.master.entry.nameList[1]=='Waldwolf')
-            NS.UI.settings.restedXPToggle.scripts.OnClick()
-            assert(NS.app.db.restedXPIntegration)
+            assert(NS.UI.settings.restedXPToggle:GetChecked())
             assert(NS.UI.master.entry.name=='Nicht im Questlog')
             local button=NS.RestedXP.button
             assert(button and button.parent==UIParent and button:IsVisible())
@@ -339,7 +336,7 @@ class RestedXPTests(unittest.TestCase):
             assert(button:GetNormalTexture():GetTexture()==compass)
             ItemTree={UI={}}
             NS.app.db.itemTreeTargets={{name='Imported-only mob'}}
-            NS.UI.settings.itemTreeToggle.scripts.OnClick()
+            event('ADDON_LOADED','ItemTree'); flush()
             local item=NS.ItemTree.target
             assert(item and item.inBar and item.point[2]==button)
             assert(item.attributes.macrotext1:find('Imported-only mob',1,true))

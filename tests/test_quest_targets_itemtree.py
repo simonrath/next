@@ -47,7 +47,7 @@ class ItemTreeTests(unittest.TestCase):
 
     def test_import_current_mob_drops_and_assign_key(self):
         self.lua.execute('''
-            boot()
+            QuestTargetsDB={showTooltips=false}; boot()
             local frame=CreateFrame('Frame',nil,UIParent)
             local pane=CreateFrame('Frame',nil,frame)
             local function row(name, source, depth)
